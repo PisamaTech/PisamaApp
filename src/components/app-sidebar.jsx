@@ -1,41 +1,37 @@
-import * as React from "react"
+import * as React from "react";
 import {
   AudioWaveform,
   BookOpen,
   Bot,
   Command,
-  Frame,
+  Sofa,
   GalleryVerticalEnd,
   Map,
   PieChart,
   Settings2,
   SquareTerminal,
-} from "lucide-react"
+} from "lucide-react";
 
-import { NavMain } from "@/components/nav-main"
-import { NavProjects } from "@/components/nav-projects"
-import { NavUser } from "@/components/nav-user"
-import { TeamSwitcher } from "@/components/team-switcher"
+import { NavMain } from "@/components/nav-main";
+import { NavProjects } from "@/components/nav-projects";
+import { NavUser } from "@/components/nav-user";
+import { TeamSwitcher } from "@/components/team-switcher";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
-} from "@/components/ui/sidebar"
-
+} from "@/components/ui/sidebar";
+import { useAuthStore } from "@/stores/authStore";
+import logo from "../assets/EspacioPimasaLogo-100.webp";
 // This is sample data.
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
   teams: [
     {
-      name: "Acme Inc",
-      logo: GalleryVerticalEnd,
-      plan: "Enterprise",
+      name: "Espacio Pisama",
+      logo: Sofa,
+      plan: "Alquiler de consultorios",
     },
     {
       name: "Acme Corp.",
@@ -50,37 +46,29 @@ const data = {
   ],
   navMain: [
     {
-      title: "Playground",
+      title: "Disponibilidad",
       url: "#",
       icon: SquareTerminal,
       isActive: true,
       items: [
         {
-          title: "History",
-          url: "#",
+          title: "Diaria",
+          url: "/calendario",
         },
         {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
+          title: "Semanal",
           url: "#",
         },
       ],
     },
     {
-      title: "Models",
+      title: "Reservas",
       url: "#",
-      icon: Bot,
+      icon: BookOpen,
       items: [
         {
-          title: "Genesis",
-          url: "#",
-        },
-        {
-          title: "Explorer",
-          url: "#",
+          title: "Listado",
+          url: "/reservas",
         },
         {
           title: "Quantum",
@@ -89,87 +77,68 @@ const data = {
       ],
     },
     {
-      title: "Documentation",
+      title: "Facturación",
       url: "#",
-      icon: BookOpen,
+      icon: Bot,
       items: [
         {
-          title: "Introduction",
-          url: "#",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
+          title: "Mensual",
+          url: "/facturas",
         },
       ],
     },
     {
-      title: "Settings",
+      title: "Perfil",
       url: "#",
       icon: Settings2,
       items: [
         {
           title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
+          url: "/perfil",
         },
       ],
     },
   ],
-  projects: [
-    {
-      name: "Design Engineering",
-      url: "#",
-      icon: Frame,
-    },
-    {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: PieChart,
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: Map,
-    },
-  ],
-}
+  // projects: [
+  //   {
+  //     name: "Design Engineering",
+  //     url: "#",
+  //     icon: Frame,
+  //   },
+  //   {
+  //     name: "Sales & Marketing",
+  //     url: "#",
+  //     icon: PieChart,
+  //   },
+  //   {
+  //     name: "Travel",
+  //     url: "#",
+  //     icon: Map,
+  //   },
+  // ],
+};
 
-export function AppSidebar({
-  ...props
-}) {
+export function AppSidebar({ ...props }) {
+  const { profile, user } = useAuthStore();
+  const userData = {
+    name: `${profile.firstName} ${profile.lastName}`,
+    email: `${user.email}`,
+    avatar: "/avatars/shadcn.jpg",
+  };
+
   return (
-    (<Sidebar collapsible="icon" {...props}>
+    <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
+        {/* <NavProjects projects={data.projects} /> */}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={userData} />
       </SidebarFooter>
       <SidebarRail />
-    </Sidebar>)
+    </Sidebar>
   );
 }

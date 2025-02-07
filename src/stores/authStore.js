@@ -4,7 +4,7 @@ import { supabase } from "../supabase/supabase.config.js";
 
 export const useAuthStore = create(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null, // Estado del usuario autenticado
       loading: false, // Estado de carga
       error: null, // Estado de error

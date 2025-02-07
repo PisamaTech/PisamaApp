@@ -26,7 +26,7 @@ export const registerSchema = z
         message: "El teléfono no puede tener más de 15 caracteres.",
       })
       .refine((phone) => !isNaN(phone), {
-        message: "Debes ingresar sólo números",
+        message: "Debes ingresar sólo números.",
       }),
     email: z.string().email({
       message: "Por favor, introduce un email válido.",
