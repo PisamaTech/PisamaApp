@@ -1,144 +1,92 @@
-import * as React from "react";
-import {
-  AudioWaveform,
-  BookOpen,
-  Bot,
-  Command,
-  Sofa,
-  GalleryVerticalEnd,
-  Map,
-  PieChart,
-  Settings2,
-  SquareTerminal,
-} from "lucide-react";
+import { Link } from "react-router-dom";
 
-import { NavMain } from "@/components/nav-main";
-import { NavProjects } from "@/components/nav-projects";
-import { NavUser } from "@/components/nav-user";
-import { TeamSwitcher } from "@/components/team-switcher";
+import { Calendar, List, Wallet, UserPlus, Settings } from "lucide-react";
+
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarHeader,
-  SidebarRail,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarSeparator,
 } from "@/components/ui/sidebar";
-import { useAuthStore } from "@/stores/authStore";
-import logo from "../assets/EspacioPimasaLogo-100.webp";
-// This is sample data.
-const data = {
-  teams: [
-    {
-      name: "Espacio Pisama",
-      logo: Sofa,
-      plan: "Alquiler de consultorios",
-    },
-    {
-      name: "Acme Corp.",
-      logo: AudioWaveform,
-      plan: "Startup",
-    },
-    {
-      name: "Evil Corp.",
-      logo: Command,
-      plan: "Free",
-    },
-  ],
-  navMain: [
-    {
-      title: "Disponibilidad",
-      url: "#",
-      icon: SquareTerminal,
-      isActive: true,
-      items: [
-        {
-          title: "Diaria",
-          url: "/calendario",
-        },
-        {
-          title: "Semanal",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Reservas",
-      url: "#",
-      icon: BookOpen,
-      items: [
-        {
-          title: "Listado",
-          url: "/reservas",
-        },
-        {
-          title: "Quantum",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Facturación",
-      url: "#",
-      icon: Bot,
-      items: [
-        {
-          title: "Mensual",
-          url: "/facturas",
-        },
-      ],
-    },
-    {
-      title: "Perfil",
-      url: "#",
-      icon: Settings2,
-      items: [
-        {
-          title: "General",
-          url: "/perfil",
-        },
-      ],
-    },
-  ],
-  // projects: [
-  //   {
-  //     name: "Design Engineering",
-  //     url: "#",
-  //     icon: Frame,
-  //   },
-  //   {
-  //     name: "Sales & Marketing",
-  //     url: "#",
-  //     icon: PieChart,
-  //   },
-  //   {
-  //     name: "Travel",
-  //     url: "#",
-  //     icon: Map,
-  //   },
-  // ],
-};
 
-export function AppSidebar({ ...props }) {
+import { NavUser } from "./nav-user";
+import { HeaderMenu } from "./HeaderMenu";
+
+import { useAuthStore } from "@/stores/authStore";
+
+// Menu items.
+const items = [
+  {
+    title: "Disponibilidad",
+    url: "/calendario",
+    icon: Calendar,
+  },
+  {
+    title: "Reservas",
+    url: "/reservas",
+    icon: List,
+  },
+  {
+    title: "Facturas",
+    url: "/facturas",
+    icon: Wallet,
+  },
+  {
+    title: "Perfil",
+    url: "/perfil",
+    icon: Settings,
+  },
+  {
+    title: "Administrador",
+    url: "/admin",
+    icon: UserPlus,
+  },
+];
+
+export function AppSidebar() {
   const { profile, user } = useAuthStore();
-  const userData = {
-    name: `${profile.firstName} ${profile.lastName}`,
-    email: `${user.email}`,
-    avatar: "/avatars/shadcn.jpg",
+
+  const data = {
+    user: {
+      name: `${profile.firstName} ${profile.lastName}`,
+      email: `${user.email}`,
+      avatar: "/avatars/shadcn.jpg",
+    },
   };
 
   return (
-    <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
-      </SidebarHeader>
+    <Sidebar collapsible="icon">
+      {/* <img src={logoPisama} alt="Pisama" className="max-w-16" /> */}
+      <HeaderMenu />
+      <SidebarSeparator className="mt-1 mb-2" />
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        {/* <NavProjects projects={data.projects} /> */}
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {items.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <Link to={item.url}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
+
+      <SidebarSeparator className="my-1" />
       <SidebarFooter>
-        <NavUser user={userData} />
+        <NavUser user={data.user} />
       </SidebarFooter>
-      <SidebarRail />
     </Sidebar>
   );
 }

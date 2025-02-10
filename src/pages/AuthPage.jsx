@@ -21,6 +21,7 @@ import {
 } from "../validations/validationSchemas.js"; // Importamos los esquemas de validación
 // import { handleSignIn, handleSignUp } from "../helpers/authFunctions";
 
+import "animate.css";
 import logoPisama from "../assets/EspacioPimasaLogo-300.webp";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuthStore } from "../stores/authStore.js";
@@ -49,7 +50,6 @@ export const AuthPage = () => {
 
   // Manejador de envío del formulario de inicio de sesión
   const onLoginSubmit = async ({ email, password }) => {
-    console.log(email, password);
     await signIn(email, password);
   };
 
@@ -68,7 +68,7 @@ export const AuthPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-orange-300 from-10% via-neutral-400 via-45% to-teal-300 to-90%">
       <div className="w-full max-w-md p-4">
-        <Card className="w-full">
+        <Card className="w-full animate__animated animate__jackInTheBox animate__slow">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center text-primary">
               Bienvenido
@@ -91,7 +91,10 @@ export const AuthPage = () => {
                 <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
                 <TabsTrigger value="register">Registrarse</TabsTrigger>
               </TabsList>
-              <TabsContent value="login" className="mt-4">
+              <TabsContent
+                value="login"
+                className="mt-4 animate__animated animate__fadeIn animate__slow"
+              >
                 <form onSubmit={handleLoginSubmit(onLoginSubmit)}>
                   <div className="space-y-4">
                     <div className="space-y-2">
@@ -153,17 +156,16 @@ export const AuthPage = () => {
                       </div>
                       <p>Forgot password?</p>
                     </div>
-                    <Button
-                      type="submit"
-                      className="w-full mt-3"
-                      disabled={loading}
-                    >
+                    <Button type="submit" className="w-full" disabled={loading}>
                       {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
                     </Button>
                   </div>
                 </form>
               </TabsContent>
-              <TabsContent value="register" className="mt-4">
+              <TabsContent
+                value="register"
+                className="mt-4 animate__animated animate__fadeIn animate__slow"
+              >
                 <form onSubmit={handleRegisterSubmit(onRegisterSubmit)}>
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -304,9 +306,15 @@ export const AuthPage = () => {
                         </p>
                       )}
                     </div>
-                    <Button type="submit" className="w-full" disabled={loading}>
-                      {loading ? "Registrando..." : "Registrarse"}
-                    </Button>
+                    <div className="space-y-2">
+                      <Button
+                        type="submit"
+                        className="w-full"
+                        disabled={loading}
+                      >
+                        {loading ? "Registrando..." : "Registrarse"}
+                      </Button>
+                    </div>
                   </div>
                 </form>
               </TabsContent>

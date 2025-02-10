@@ -54,6 +54,28 @@ export const useAuthStore = create(
         }
       },
 
+      checkAuth: async () => {
+        try {
+          const {
+            data: { session },
+            error,
+          } = await supabase.auth.getSession();
+
+          if (error) throw error;
+
+          if (session?.user) {
+            set({ user: session.user });
+          } else {
+            set({ user: null });
+          }
+        } catch (error) {
+          console.error("Error verifying session:", error);
+          set({ user: null });
+        } finally {
+          set({ loading: false });
+        }
+      },
+
       // Registrar nuevo usuario
 
       signUp: async (email, password, firstName, lastName, phone) => {
