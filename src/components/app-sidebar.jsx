@@ -18,6 +18,7 @@ import { NavUser } from "./nav-user";
 import { HeaderMenu } from "./HeaderMenu";
 
 import { useAuthStore } from "@/stores/authStore";
+import { DarkLightMode } from "./Dark-LightMode";
 
 // Menu items.
 const items = [
@@ -83,6 +84,9 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
+      <SidebarFooter>
+        <DarkLightMode />
+      </SidebarFooter>
       <SidebarSeparator className="my-1" />
       <SidebarFooter>
         <NavUser user={data.user} />

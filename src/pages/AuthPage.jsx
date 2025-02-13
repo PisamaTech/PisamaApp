@@ -25,11 +25,12 @@ import "animate.css";
 import logoPisama from "../assets/EspacioPimasaLogo-300.webp";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuthStore } from "../stores/authStore.js";
+import { Link } from "react-router-dom";
 
 export const AuthPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { profile, signOut, loading, signIn, signUp } = useAuthStore();
+  const { profile, loading, signIn, signUp } = useAuthStore();
   // Configuración de React Hook Form para el inicio de sesión
   const {
     register: loginRegister,
@@ -61,7 +62,6 @@ export const AuthPage = () => {
     lastName,
     phone,
   }) => {
-    console.log("solicitado");
     await signUp(email, password, firstName, lastName, phone);
   };
 
@@ -154,11 +154,16 @@ export const AuthPage = () => {
                           Recordarme
                         </label>
                       </div>
-                      <p>Forgot password?</p>
+                      <Button variant="link">
+                        <Link to="/recuperar-password">
+                          ¿Has olvidado la contraseña?
+                        </Link>
+                      </Button>
                     </div>
                     <Button type="submit" className="w-full" disabled={loading}>
                       {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
                     </Button>
+                    <div className="h-0.5" />
                   </div>
                 </form>
               </TabsContent>
@@ -306,6 +311,7 @@ export const AuthPage = () => {
                         </p>
                       )}
                     </div>
+                    <div className="h-px" />
                     <div className="space-y-2">
                       <Button
                         type="submit"

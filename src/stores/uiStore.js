@@ -4,6 +4,7 @@ export const useUIStore = create((set) => ({
   loading: false,
   error: null,
   loadingCount: 0, // Para manejar múltiples cargas simultáneas
+  theme: "light",
 
   startLoading: () =>
     set((state) => ({
@@ -28,4 +29,7 @@ export const useUIStore = create((set) => ({
     }),
 
   clearError: () => set({ error: null }),
+
+  setTheme: () =>
+    set((state) => ({ theme: state.theme === "light" ? "dark" : "light" })),
 }));
