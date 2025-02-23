@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useState } from "react";
-import { useForm } from "react-hook-form"; // Importamos useForm y SubmitHandler
+import { useForm } from "react-hook-form"; // Importamos useForm
 import { zodResolver } from "@hookform/resolvers/zod"; // Importamos el resolver de Zod
 import {
   loginSchema,
@@ -26,16 +26,19 @@ import logoPisama from "../assets/EspacioPimasaLogo-300.webp";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuthStore } from "../stores/authStore.js";
 import { Link } from "react-router-dom";
+import { useUIStore } from "@/stores/uiStore";
 
 export const AuthPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { profile, loading, signIn, signUp } = useAuthStore();
+  const { profile, signIn, signUp } = useAuthStore();
+  const { loading } = useUIStore();
   // Configuración de React Hook Form para el inicio de sesión
   const {
     register: loginRegister,
     handleSubmit: handleLoginSubmit,
     formState: { errors: loginErrors },
+    reset,
   } = useForm({
     resolver: zodResolver(loginSchema),
   });
@@ -52,6 +55,7 @@ export const AuthPage = () => {
   // Manejador de envío del formulario de inicio de sesión
   const onLoginSubmit = async ({ email, password }) => {
     await signIn(email, password);
+    reset();
   };
 
   // Manejador de envío del formulario de registro
@@ -63,6 +67,7 @@ export const AuthPage = () => {
     phone,
   }) => {
     await signUp(email, password, firstName, lastName, phone);
+    reset();
   };
 
   return (

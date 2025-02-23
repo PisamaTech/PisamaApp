@@ -13,18 +13,16 @@ import {
   BreadcrumbSeparator,
   Separator,
 } from "./ui";
-import { useLocation } from "react-router-dom";
-const pageTitles = {
-  "/calendario": "Disponibilidad",
-  "/reservas": "Reservas",
-  "/facturas": "Facturas",
-  "/perfil": "Perfil",
-  "/admin": "Administrador",
-};
+import { Link, useLocation, Outlet } from "react-router-dom";
+import { menuItems } from "@/utils/menuItems";
 
-export default function Layout({ children }) {
+function getTitleByURL(url) {
+  const item = menuItems.find((item) => item.url === url); // Busca el elemento con la URL específica
+  return item ? item.title : ""; // Devuelve el título si se encuentra o sino un string vacío.
+}
+
+export default function Layout() {
   const location = useLocation();
-  const pageTitle = pageTitles[location.pathname] || ""; // Si no encuentra la ruta, muestra ""
 
   return (
     <SidebarProvider>
@@ -37,18 +35,25 @@ export default function Layout({ children }) {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">Inicio</BreadcrumbLink>
+                  <BreadcrumbLink asChild>
+                    <Link to="/">Inicio</Link>
+                  </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>{pageTitle}</BreadcrumbPage>
+                  <BreadcrumbPage>
+                    {getTitleByURL(location.pathname)}
+                  </BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
           </div>
         </header>
-        <div className="relative flex min-h-svh flex-1 flex-col bg-background peer-data-[variant=inset]:min-h-[calc(100svh-theme(spacing.4))] md:peer-data-[variant=inset]:m-2 md:peer-data-[state=collapsed]:peer-data-[variant=inset]:ml-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow">
-          {children}
+        <div
+          className="relative flex flex-1 flex-col bg-background overflow-auto"
+          style={{ height: "calc(100vh - 48px)" }}
+        >
+          <Outlet />
         </div>
       </SidebarInset>
     </SidebarProvider>

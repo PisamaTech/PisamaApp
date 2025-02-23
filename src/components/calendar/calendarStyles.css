@@ -1,0 +1,43 @@
+.rbc-allday-cell {
+  display: none; /* Oculta la celda de "todo el día" */
+}
+
+.rbc-allday-events {
+  display: none; /* Oculta el contenedor de eventos de "todo el día" */
+}
+
+.rbc-row-content {
+  margin-top: 0px;
+}
+
+.rbc-time-header.rbc-overflowing {
+  border-right: 1px solid #ddd;
+}
+
+/* .rbc-time-content {
+  border-top: 0;
+} */
+
+.rbc-header {
+  padding: 8px 0;
+}
+
+.rbc-row.rbc-row-resource {
+  border-bottom: 0;
+}
+
+.rbc-time-slot {
+  display: flex; /* Activa Flexbox para estos elementos */
+  justify-content: center; /* Centra horizontalmente el contenido (texto) */
+  align-items: center; /* Centra verticalmente el contenido (texto) */
+  font-size: 0.9rem; /* Ajusta el tamaño de fuente */
+  /* Opcional: Puedes ajustar otros estilos aquí si lo deseas, como el tamaño de fuente, etc. */
+}
+
+.rbc-toolbar-label {
+  text-transform: capitalize; /* Convierte el texto en mayúsculas */
+}
+
+.rbc-event-label {
+  display: none; /* Oculta la etiqueta de los eventos */
+}

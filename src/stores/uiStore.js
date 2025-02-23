@@ -5,30 +5,48 @@ export const useUIStore = create((set) => ({
   error: null,
   loadingCount: 0, // Para manejar múltiples cargas simultáneas
   theme: "light",
+  toast: {
+    isOpen: false,
+    type: "error", // "error" o "success"
+    title: "",
+    message: "",
+  },
 
-  startLoading: () =>
-    set((state) => ({
-      loading: true,
-      loadingCount: state.loadingCount + 1,
-    })),
+  //Manejo de cargas
+  startLoading: () => set({ loading: true }),
 
-  stopLoading: () =>
-    set((state) => {
-      const newCount = state.loadingCount - 1;
-      return {
-        loading: newCount > 0,
-        loadingCount: newCount,
-      };
-    }),
+  stopLoading: () => set({ loading: false }),
 
+  //Seteo de errores
   setError: (error) =>
     set({
       error: error?.message || error || "Error desconocido",
       loading: false,
-      loadingCount: 0,
     }),
 
   clearError: () => set({ error: null }),
+
+  // Acción para mostrar el toast
+  showToast: ({ type, title, message }) =>
+    set({
+      toast: {
+        isOpen: true,
+        type,
+        title,
+        message,
+      },
+    }),
+
+  // Acción para cerrar el toast
+  hideToast: () =>
+    set({
+      toast: {
+        isOpen: false,
+        type: "error",
+        title: "",
+        message: "",
+      },
+    }),
 
   setTheme: () =>
     set((state) => ({ theme: state.theme === "light" ? "dark" : "light" })),

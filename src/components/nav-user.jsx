@@ -27,11 +27,12 @@ import {
 } from "@/components/ui/sidebar";
 
 import { useAuthStore } from "@/stores/authStore";
-import logoPisama from "@/assets/EspacioPisama_Logo_Minimal.webp";
+import { useNavigate } from "react-router-dom";
 
 export function NavUser({ user }) {
   const { isMobile } = useSidebar();
   const { signOut } = useAuthStore();
+  const navigate = useNavigate();
 
   return (
     <SidebarMenu>
@@ -92,6 +93,7 @@ export function NavUser({ user }) {
             <DropdownMenuItem
               onClick={() => {
                 signOut();
+                navigate("/");
               }}
             >
               <LogOut />

@@ -1,7 +1,4 @@
-import { Link } from "react-router-dom";
-
-import { Calendar, List, Wallet, UserPlus, Settings } from "lucide-react";
-
+import { Link, useLocation } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -13,77 +10,54 @@ import {
   SidebarMenuItem,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
-
 import { NavUser } from "./nav-user";
 import { HeaderMenu } from "./HeaderMenu";
-
 import { useAuthStore } from "@/stores/authStore";
 import { DarkLightMode } from "./Dark-LightMode";
-
-// Menu items.
-const items = [
-  {
-    title: "Disponibilidad",
-    url: "/calendario",
-    icon: Calendar,
-  },
-  {
-    title: "Reservas",
-    url: "/reservas",
-    icon: List,
-  },
-  {
-    title: "Facturas",
-    url: "/facturas",
-    icon: Wallet,
-  },
-  {
-    title: "Perfil",
-    url: "/perfil",
-    icon: Settings,
-  },
-  {
-    title: "Administrador",
-    url: "/admin",
-    icon: UserPlus,
-  },
-];
+import { menuItems } from "@/utils/menuItems";
 
 export function AppSidebar() {
-  const { profile, user } = useAuthStore();
+  const { profile } = useAuthStore();
+  const location = useLocation();
 
   const data = {
     user: {
       name: `${profile.firstName} ${profile.lastName}`,
-      email: `${user.email}`,
+      email: `${profile.email}`,
       avatar: "/avatars/shadcn.jpg",
     },
   };
 
   return (
     <Sidebar collapsible="icon">
-      {/* <img src={logoPisama} alt="Pisama" className="max-w-16" /> */}
       <HeaderMenu />
       <SidebarSeparator className="mt-1 mb-2" />
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <Link to={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {menuItems.map((item) => {
+                const isActive = location.pathname === item.url;
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <Link
+                        to={item.url}
+                        style={{
+                          fontWeight: isActive ? "bold" : "normal",
+                        }}
+                      >
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-
       <SidebarFooter>
         <DarkLightMode />
       </SidebarFooter>
