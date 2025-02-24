@@ -1,5 +1,3 @@
-import dayjs from "dayjs";
-
 export const calendarMessages = {
   date: "Fecha",
   time: "Hora",
@@ -56,3 +54,20 @@ const miFormatoEncabezadoDiaDayjs = (date, culture, localizer) => {
 export const formatosPersonalizadosDayjs = {
   dayHeaderFormat: miFormatoEncabezadoDiaDayjs,
 };
+
+// Componente personalizado para mostrar el icono "+" en el centro
+// export const slotPropGetter = (date, resourceId) => {
+//   const isSelected = selectedSlots.some(
+//     (slot) => dayjs(slot.start).isSame(date) && slot.resourceId === resourceId
+//   );
+
+//   if (isSelected) {
+//     return {
+//       style: {
+//         backgroundColor: "#f0f0f0", // Color de fondo para slots seleccionados
+//         position: "relative",
+//       },
+//     };
+//   }
+//   return {};
+// };

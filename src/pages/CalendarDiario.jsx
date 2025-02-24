@@ -27,6 +27,10 @@ import { Label } from "@/components/ui/label";
 const localizer = dayjsLocalizer(dayjs);
 dayjs.locale("es");
 
+const handleSelectSlot = (slotInfo) => {
+  console.log(slotInfo);
+};
+
 export const CalendarDiario = () => {
   // Estado para el consultorio seleccionado
   const [selectedConsultorio, setSelectedConsultorio] = useState(
@@ -88,6 +92,7 @@ export const CalendarDiario = () => {
             event: CustomEventComponent,
           }}
           selectable={true}
+          onSelectSlot={handleSelectSlot}
         />
       </div>
     </div>

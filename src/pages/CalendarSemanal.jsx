@@ -1,12 +1,11 @@
-import { Calendar, dayjsLocalizer, Views } from "react-big-calendar";
+import { Calendar, dayjsLocalizer } from "react-big-calendar";
 import dayjs from "dayjs";
 import "dayjs/locale/es";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { useState } from "react";
-import { Plus } from "lucide-react";
 // import ReservationDialog from '@/components/ReservationDialog';
 import "../components/calendar/calendarStyles.css";
-import { Separator } from "@/components/ui";
+import { Button, Separator } from "@/components/ui";
 import {
   calendarMessages,
   formatosPersonalizadosDayjs,
@@ -17,92 +16,64 @@ import {
   CustomEventComponent,
   eventPropGetter,
 } from "@/components/calendar/CustomEventComponent";
+import { ReservationDialog } from "@/components/ReservationDialog";
+import {
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/";
+import { Dialog, DialogFooter } from "@/components/ui/dialog";
 
 dayjs.locale("es");
 // Localizer
 const localizer = dayjsLocalizer(dayjs);
 
-// interface Event {
-//   id: string;
-//   title: string;
-//   start: Date;
-//   end: Date;
-//   resourceId: number;
-//   profesionalName: string;
-//   frequency: 'eventual' | 'quincenal' | 'semanal';
-// }
-
-// interface SelectedSlot {
-//   start: Date;
-//   end: Date;
-//   resourceId: number;
-// }
-
 export const CalendarSemanal = () => {
-  //   const [events, setEvents] = useState([]);
-  //   //   const [showReservationDialog, setShowReservationDialog] = useState(false);
-  //   const [selectedSlot, setSelectedSlot] = useState(null);
-  //   //   const [profesionalName, setProfesionalName] = useState('');
-  //   //   const [frequency, setFrequency] = useState<'eventual' | 'quincenal' | 'semanal'>('eventual');
-  //   const handleSelectSlot = (slotInfo) => {
-  //     console.log("Selected slot:", slotInfo);
-  //     const newSelectedSlot = {
-  //       start: slotInfo.slots[0],
-  //       end: slotInfo.slots[slotInfo.slots.length - 1],
-  //       resourceId: slotInfo.resourceId,
-  //     };
-  //   if (
-  //     selectedSlot &&
-  //     selectedSlot.start.getTime() === newSelectedSlot.start.getTime() &&
-  //     selectedSlot.end.getTime() === newSelectedSlot.end.getTime() &&
-  //     selectedSlot.resourceId === newSelectedSlot.resourceId
-  //   ) {
-  //     //       setShowReservationDialog(true);
-  //   } else {
-  //     setSelectedSlot(newSelectedSlot);
-  //     //       setShowReservationDialog(false);
-  //   }
-  // };
+  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  //   const handleCreateReservation = () => {
-  //     if (!selectedSlot || !profesionalName) return;
-  //     const newEvent: Event = {
-  //       id: Math.random().toString(),
-  //       title: `Reserva - ${profesionalName}`,
-  //       start: selectedSlot.start,
-  //       end: selectedSlot.end,
-  //       resourceId: selectedSlot.resourceId,
-  //       profesionalName,
-  //       frequency,
-  //     };
-  //     setEvents([...events, newEvent]);
-  //     setShowReservationDialog(false);
-  //     setProfesionalName('');
-  //     setFrequency('eventual');
-  // //     setSelectedSlot(null);
-  // //   };
-  // const components = {
-  //   timeSlotWrapper: ({ children, value, resource }) => {
-  //     const isSelected =
-  //       selectedSlot &&
-  //       selectedSlot.start.getTime() === value.getTime() &&
-  //       selectedSlot.resourceId === resource?.id;
-  //     return (
-  //       <div
-  //         className={`relative h-full ${
-  //           isSelected ? "bg-medical-green/20" : ""
-  //         }`}
-  //       >
-  //         {isSelected && (
-  //           <div className="absolute inset-0 flex items-center justify-center">
-  //             <Plus className="w-6 h-6 text-medical-green" />
-  //           </div>
-  //         )}
-  //         {children}
-  //       </div>
-  //     );
-  //   },
-  // };
+  const handleSelectSlot = (slotInfo) => {
+    const { start, end, resourceId } = slotInfo;
+
+    const fechaClickeada = dayjs(start);
+    const fechaAlmacenda = dayjs(selectedSlot?.start);
+
+    if (
+      selectedSlot &&
+      fechaClickeada.isSame(fechaAlmacenda, "hour") &&
+      resourceId === selectedSlot.resourceId
+    ) {
+      setIsDialogOpen(true);
+    } else {
+      const selectedDate = {
+        start: start,
+        end: end,
+        resourceId: resourceId,
+      };
+      setSelectedSlot(selectedDate); // Guardo la celda clickeada en el estado de selectedSlot
+    }
+  };
+
+  const slotPropGetter = (date, resourceId) => {
+    const fechaSeleccionada = dayjs(selectedSlot?.start);
+    const fechaRecibida = dayjs(date);
+    if (
+      selectedSlot &&
+      fechaRecibida.isSame(fechaSeleccionada, "minute") &&
+      resourceId === selectedSlot.resourceId // Opcional, si usas recursos
+    ) {
+      return {
+        className: "slotSelected",
+      };
+    }
+    return {};
+  };
+
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+  };
 
   return (
     <div className="container mx-auto p-8 space-y-4">
@@ -125,26 +96,24 @@ export const CalendarSemanal = () => {
           resourceTitleAccessor="title"
           selectable
           formats={formatosPersonalizadosDayjs}
-          // onSelectSlot={handleSelectSlot}
           messages={calendarMessages}
           min={dayjs("2024-12-03T07:00:00").toDate()}
           max={dayjs("2024-12-03T23:00:00").toDate()}
           eventPropGetter={eventPropGetter}
           components={{
             event: CustomEventComponent,
+            // timeSlotWrapper: TimeSlotWrapper,
           }}
+          onSelectSlot={handleSelectSlot}
+          slotPropGetter={slotPropGetter}
         />
       </div>
-      {/* <ReservationDialog
-        open={showReservationDialog}
-        onOpenChange={setShowReservationDialog}
+      <ReservationDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
         selectedSlot={selectedSlot}
-        profesionalName={profesionalName}
-        setProfesionalName={setProfesionalName}
-        frequency={frequency}
-        setFrequency={setFrequency}
-        onConfirm={handleCreateReservation}
-      /> */}
+        resources={resources}
+      />
     </div>
   );
 };

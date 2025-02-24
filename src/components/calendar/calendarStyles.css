@@ -41,3 +41,24 @@
 .rbc-event-label {
   display: none; /* Oculta la etiqueta de los eventos */
 }
+
+.rbc-events-container {
+  width: 100%;
+}
+
+.slotSelected {
+  background: #7f7f7f;
+  border-radius: 10px;
+  cursor: pointer;
+  z-index: 10;
+  height: 2px;
+}
+
+.slotSelected:before {
+  content: "AGENDAR 📆"; /* Símbolo '+' */
+  font-size: 13px;
+  text-shadow: 2px 1px 2px black;
+  font-weight: bold;
+  position: relative;
+  color: white; /* Color del símbolo '+' */
+}
