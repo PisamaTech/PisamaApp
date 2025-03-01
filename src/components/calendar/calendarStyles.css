@@ -48,7 +48,7 @@
 
 .slotSelected {
   background: #7f7f7f;
-  border-radius: 10px;
+  border-radius: 4px;
   cursor: pointer;
   z-index: 10;
   height: 2px;

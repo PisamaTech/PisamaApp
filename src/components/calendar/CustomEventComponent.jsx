@@ -34,13 +34,13 @@ export const eventPropGetter = (event) => {
     backgroundColor = "#ffc000"; // Amarillo
   } else {
     switch (event.tipo) {
-      case "fija":
+      case "Fija":
         backgroundColor = "#5b9bd5"; // Azul
         break;
-      case "quincenal":
+      case "Quincenal":
         backgroundColor = ""; // Celeste
         break;
-      case "eventual":
+      case "Eventual":
         backgroundColor = "#92d050"; // Verde
         break;
       default:
@@ -53,7 +53,7 @@ export const eventPropGetter = (event) => {
       backgroundColor,
       borderRadius: "4px",
       color: "white", // Color del texto blanco para buena legibilidad
-      border: "none",
+      border: "1px solid hsl(214.3 31.8% 91.4%)",
     },
   };
 };
