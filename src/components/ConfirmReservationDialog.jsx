@@ -9,6 +9,7 @@ import {
 import { Button, Badge, Separator } from "@/components/ui/"; // Ajusta la ruta según tu proyecto
 import dayjs from "dayjs";
 import "dayjs/locale/es"; // Para usar el idioma español
+import { useUIStore } from "@/stores/uiStore";
 
 dayjs.locale("es"); // Configura Day.js en español
 
@@ -31,6 +32,8 @@ export const ConfirmReservationDialog = ({
 
     return `  ${dayOfWeek} ${date} - ${time} - ${consultorio}${camillaText}`;
   };
+
+  const { loading } = useUIStore();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -59,7 +62,9 @@ export const ConfirmReservationDialog = ({
           <Button variant="outline" onClick={onCancel}>
             Cancelar
           </Button>
-          <Button onClick={onConfirm}>Confirmar</Button>
+          <Button onClick={onConfirm} disabled={loading}>
+            {loading ? "Confirmando..." : "Confirmar"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

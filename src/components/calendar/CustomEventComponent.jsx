@@ -2,7 +2,7 @@ import { Bed } from "lucide-react";
 import dayjs from "dayjs";
 
 export const CustomEventComponent = ({ event }) => {
-  const { title, start, end, usaCamilla } = event;
+  const { titulo, start, end, usaCamilla } = event;
 
   // Formatear las fechas de inicio y fin
   const startTime = dayjs(start).format("HH:mm");
@@ -16,7 +16,7 @@ export const CustomEventComponent = ({ event }) => {
       </div>
       {/* Siguiente línea: ícono a la izquierda y título a la derecha */}
       <div className="flex justify-between items-center overflow-hidden">
-        <span className="text-sm font-bold pt-1">{title}</span>
+        <span className="text-sm font-bold pt-1">{titulo}</span>
         {usaCamilla && <Bed size={16} />}
       </div>
     </div>

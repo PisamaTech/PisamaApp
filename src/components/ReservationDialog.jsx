@@ -22,7 +22,6 @@ import {
 import { BookCheck } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { reservationSchema } from "@/validations/validationSchemas";
 import { useAuthStore } from "@/stores/authStore";
 
@@ -32,6 +31,7 @@ export const ReservationDialog = ({
   selectedSlot,
   resources,
   onConfirm,
+  onCancel,
 }) => {
   // Configuración de React Hook Form con Zod
   const form = useForm({
@@ -88,8 +88,8 @@ export const ReservationDialog = ({
   // Manejar la sumisión del formulario
   const onSubmit = (data) => {
     const reservationData = {
-      userId: id,
-      title: `${firstName} ${getFirstCharacterAndDot(lastName)}`,
+      usuario_id: id,
+      titulo: `${firstName} ${getFirstCharacterAndDot(lastName)}`,
       start: dayjs(`${data.date}T${data.startTime}`).toDate(),
       end: dayjs(`${data.date}T${data.endTime}`).toDate(),
       resourceId: data.resourceId,
@@ -97,6 +97,7 @@ export const ReservationDialog = ({
       usaCamilla: data.usaCamilla === "Sí",
       status: "activa",
     };
+    console.log(reservationData);
     onConfirm(reservationData);
     onOpenChange(false); // Cerrar el diálogo
   };
@@ -281,7 +282,7 @@ export const ReservationDialog = ({
 
           {/* Botones */}
           <div className="mt-4 flex justify-end gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button variant="outline" onClick={onCancel} type="button">
               Cancelar
             </Button>
             <Button type="submit">Confirmar</Button>
