@@ -4,6 +4,7 @@ import {
   isSameSlot,
 } from "@/components/calendar/calendarHelper";
 import { useCalendarEvents } from "./useCalendarEvents";
+import { generateRecurringEvents } from "@/supabase";
 
 export const useCalendarState = () => {
   const [selectedSlot, setSelectedSlot] = useState(null);
@@ -14,13 +15,17 @@ export const useCalendarState = () => {
   const { events, loadEvents } = useCalendarEvents();
 
   // Función para abrir Dialog si se hace click sobre botón de AGENDAR
-  const handleSelectSlot = (slotInfo) => {
+  const handleSelectSlot = (slotInfo, selectedResource) => {
     const { start, end, resourceId } = slotInfo;
 
     if (
       selectedSlot &&
       isSameSlot(start, selectedSlot.start, resourceId, selectedSlot.resourceId)
     ) {
+      // Si está en vista semanal el resource viene "null". Por lo que se establece el resourceId del consultorio seleccionado (selectedResource).
+      if (resourceId === null) {
+        setSelectedSlot({ ...selectedSlot, resourceId: selectedResource });
+      }
       setIsDialogOpen(true);
     } else {
       setSelectedSlot({ start, end, resourceId });
@@ -30,7 +35,15 @@ export const useCalendarState = () => {
   // Función para confirmar la reserva
   const handleConfirmReserve = (reservationData) => {
     const newHourlyEvents = generateHourlyEvents(reservationData); // Creo reservas individuales
-    setHourlyEvents(newHourlyEvents); // Actualizar el estado con los eventos generados
+    // Si la hora en FIJA, genero recurrencias por 6 meses
+    if (newHourlyEvents[0].tipo === "Fija") {
+      const reservaFija = newHourlyEvents.flatMap((baseEvent) => {
+        return generateRecurringEvents(baseEvent);
+      });
+      setHourlyEvents(reservaFija); // Actualizar el estado con los eventos FIJOS generados
+    } else {
+      setHourlyEvents(newHourlyEvents); // Actualizar el estado con los eventos EVENTUALES generados
+    }
     setIsConfirmDialogOpen(true); // Abrir el diálogo después de actualizar el estado
   };
 

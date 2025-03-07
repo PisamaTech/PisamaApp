@@ -39,7 +39,6 @@ export const useCalendarEvents = () => {
 
       if (error) throw error;
 
-      console.log(data);
       const newEvents = data.map(mapReservationToEvent);
       setEvents((prev) => {
         const existingIds = new Set(prev.map((e) => e.id));
@@ -59,5 +58,5 @@ export const useCalendarEvents = () => {
     loadNextMonth(new Date());
   }, []);
 
-  return { events, loadNextMonth, lastLoadedDate };
+  return { events, setEvents, loadNextMonth, lastLoadedDate };
 };

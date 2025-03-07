@@ -5,11 +5,12 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog"; // Ajusta la ruta según tu proyecto
-import { Button, Badge, Separator } from "@/components/ui/"; // Ajusta la ruta según tu proyecto
+} from "@/components/ui/dialog";
+import { Button, Separator } from "@/components/ui/";
 import dayjs from "dayjs";
 import "dayjs/locale/es"; // Para usar el idioma español
 import { useUIStore } from "@/stores/uiStore";
+import { DisplayEventos } from "./DisplayEventos";
 
 dayjs.locale("es"); // Configura Day.js en español
 
@@ -20,19 +21,6 @@ export const ConfirmReservationDialog = ({
   onConfirm,
   onCancel,
 }) => {
-  // Función para formatear cada evento en el formato solicitado
-  const formatEvent = (event) => {
-    const dayOfWeek = dayjs(event.start).format("dddd").toUpperCase(); // Ej: "LUNES"
-    const date = dayjs(event.start).format("D/M"); // Ej: "25/2"
-    const time = dayjs(event.start).format("HH[h]"); // Ej: "19h"
-    const consultorio = event.resourceId
-      ? `Consultorio ${event.resourceId}`
-      : "Sin consultorio";
-    const camillaText = event.usaCamilla ? " - con Camilla" : ""; // Omite si usaCamilla es false
-
-    return `  ${dayOfWeek} ${date} - ${time} - ${consultorio}${camillaText}`;
-  };
-
   const { loading } = useUIStore();
 
   return (
@@ -43,20 +31,8 @@ export const ConfirmReservationDialog = ({
           <Separator />
           <DialogDescription>
             Vas a reservar las siguientes horas:
-            <ul className="mt-3">
-              {hourlyEvents.map((event, index) => (
-                <li key={index} className="text-sm font-bold">
-                  <Badge
-                    variant={event.tipo.toLowerCase()}
-                    className="mr-1 mt-1"
-                  >
-                    <span>{event.tipo.toUpperCase()}</span>
-                  </Badge>
-                  {formatEvent(event)}
-                </li>
-              ))}
-            </ul>
           </DialogDescription>
+          <DisplayEventos hourlyEvents={hourlyEvents} />
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={onCancel}>

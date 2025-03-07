@@ -36,6 +36,8 @@
 
 .rbc-toolbar-label {
   text-transform: capitalize; /* Convierte el texto en mayúsculas */
+  font-size: 16px;
+  font-weight: bold;
 }
 
 .rbc-event-label {
@@ -47,7 +49,7 @@
 }
 
 .slotSelected {
-  background: #7f7f7f;
+  background: #b0b0b0;
   border-radius: 4px;
   cursor: pointer;
   z-index: 10;
@@ -55,7 +57,7 @@
 }
 
 .slotSelected:before {
-  content: "AGENDAR 📆"; /* Símbolo '+' */
+  content: "AGENDAR 📆";
   font-size: 13px;
   text-shadow: 2px 1px 2px black;
   font-weight: bold;

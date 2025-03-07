@@ -1,5 +1,6 @@
 import { Bed } from "lucide-react";
 import dayjs from "dayjs";
+import camillaIcon from "../../assets/massage-table-50.png";
 
 export const CustomEventComponent = ({ event }) => {
   const { titulo, start, end, usaCamilla } = event;
@@ -17,7 +18,10 @@ export const CustomEventComponent = ({ event }) => {
       {/* Siguiente línea: ícono a la izquierda y título a la derecha */}
       <div className="flex justify-between items-center overflow-hidden">
         <span className="text-sm font-bold pt-1">{titulo}</span>
-        {usaCamilla && <Bed size={16} />}
+        {/* {usaCamilla && <Bed size={16} />} */}
+        {usaCamilla && (
+          <img src={camillaIcon} alt="Icono de Camilla" className="w-6 h-7" />
+        )}
       </div>
     </div>
   );

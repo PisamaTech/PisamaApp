@@ -10,12 +10,12 @@ import {
 export const menuItems = [
   {
     title: "Agenda Diaria",
-    url: "/calendario_diario",
+    url: "/calendario_semanal",
     icon: Calendar1,
   },
   {
     title: "Agenda Semanal",
-    url: "/calendario_semanal",
+    url: "/calendario_diario",
     icon: CalendarDays,
   },
   {

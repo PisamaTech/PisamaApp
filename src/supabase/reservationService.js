@@ -1,7 +1,9 @@
-import { ReservationStatus } from "@/utils/constants";
+import { ReservationStatus, ReservationType } from "@/utils/constants";
 import { supabase } from "./index";
 import dayjs from "dayjs";
+import { v4 as uuidv4 } from "uuid";
 
+// Función para insertar reservas en Supabase
 export const createReservations = async (reservations) => {
   const { data, error } = await supabase
     .from("reservas")
@@ -12,6 +14,7 @@ export const createReservations = async (reservations) => {
   return data;
 };
 
+// Formatea los eventos del calendario para guardarlos en la base de datos.
 export const mapEventsToReservations = (hourlyEvents) => {
   return hourlyEvents.map((event) => ({
     consultorio_id: event.resourceId,
@@ -22,10 +25,14 @@ export const mapEventsToReservations = (hourlyEvents) => {
     end_time: dayjs(event.end).toISOString(),
     estado: event.status || ReservationStatus.ACTIVE,
     usaCamilla: event.usaCamilla,
+    recurrence_id: event.recurrence_id || null,
+    recurrence_end_date: event.recurrence_end_date || null,
   }));
 };
 
+// Verificiación de disponibilidad
 export const checkForExistingReservations = async (hourlyEvents) => {
+  // Verificación por consultorio
   const consultoriosIds = [...new Set(hourlyEvents.map((e) => e.resourceId))];
 
   const queries = consultoriosIds.map((consultorioId) => {
@@ -40,13 +47,68 @@ export const checkForExistingReservations = async (hourlyEvents) => {
       .or(
         eventTimes
           .map(
-            ([start, end]) => `and(start_time.lte.${end},end_time.gte.${start})`
+            ([start, end]) => `and(start_time.lt.${end},end_time.gt.${start})`
           )
           .join(",")
       )
       .throwOnError();
   });
 
-  const results = await Promise.all(queries);
+  // Verificación de camilla
+  const eventosConCamilla = hourlyEvents.filter((e) => e.usaCamilla);
+  let camillaQuery = null;
+
+  if (eventosConCamilla.length > 0) {
+    const camillaTimeSlots = eventosConCamilla.map((e) => [
+      dayjs(e.start).toISOString(),
+      dayjs(e.end).toISOString(),
+    ]);
+
+    camillaQuery = supabase
+      .from("reservas")
+      .select()
+      .eq("usaCamilla", true)
+      .or(
+        camillaTimeSlots
+          .map(
+            ([start, end]) => `and(start_time.lt.${end},end_time.gt.${start})`
+          )
+          .join(",")
+      )
+      .throwOnError();
+  }
+
+  // Ejecutar todas las consultas
+  const allQueries = camillaQuery ? [...queries, camillaQuery] : queries;
+  const results = await Promise.all(allQueries);
+
+  // Filtrar y combinar resultados
   return results.flatMap((r) => r.data);
+};
+
+// Generar serie de reservas FIJAS
+export const generateRecurringEvents = (baseEvent) => {
+  const events = [];
+  const startDate = dayjs(baseEvent.start);
+  const endDate = dayjs(baseEvent.end);
+  const recurrenceEnd = startDate.add(4, "months");
+
+  let currentStart = startDate;
+  let currentEnd = endDate;
+  const recurrenceId = uuidv4();
+
+  while (currentStart.isBefore(recurrenceEnd)) {
+    events.push({
+      ...baseEvent,
+      start: currentStart.toDate(),
+      end: currentEnd.toDate(),
+      tipo: ReservationType.FIJA,
+      recurrence_end_date: recurrenceEnd.toDate(),
+      recurrence_id: recurrenceId,
+    });
+
+    currentStart = currentStart.add(1, "week");
+    currentEnd = currentEnd.add(1, "week");
+  }
+  return events;
 };

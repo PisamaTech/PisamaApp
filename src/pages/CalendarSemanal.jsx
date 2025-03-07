@@ -10,7 +10,6 @@ import {
   formatosPersonalizadosDayjs,
   resources,
 } from "@/components/calendar/personalizacionCalendario";
-import eventosDeEjemplo from "@/components/calendar/events";
 import {
   CustomEventComponent,
   eventPropGetter,
@@ -26,6 +25,7 @@ import { useUIStore } from "@/stores/uiStore";
 import { isSameSlot } from "@/components/calendar/calendarHelper";
 import { useCalendarState } from "@/hooks/useCalendarState";
 import { useCalendarEvents } from "@/hooks/useCalendarEvents";
+import CustomToolbar from "@/components/calendar/CustomToolbar";
 
 // Localizer
 dayjs.locale("es");
@@ -48,7 +48,8 @@ export const CalendarSemanal = () => {
   const { startLoading, stopLoading, setError, showToast, clearError } =
     useUIStore();
 
-  const { events, loadNextMonth, lastLoadedDate } = useCalendarEvents();
+  const { events, setEvents, loadNextMonth, lastLoadedDate } =
+    useCalendarEvents();
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const handleRangeChange = (range) => {
@@ -78,7 +79,7 @@ export const CalendarSemanal = () => {
       : "",
   });
 
-  // Función para subir reserva a Supabase
+  // Función para agregar reservas a Supabase
   const confirmarReserva = async () => {
     clearError();
     startLoading();
@@ -87,18 +88,57 @@ export const CalendarSemanal = () => {
       const existingReservations = await checkForExistingReservations(
         hourlyEvents
       );
-      if (existingReservations.length > 0) {
-        const conflictos = existingReservations
-          .map(
-            (r) =>
-              `Consultorio ${r.consultorio_id}: ${dayjs(r.start_time).format(
-                "HH:mm"
-              )} - ${dayjs(r.end_time).format("HH:mm")}`
-          )
-          .join("\n");
 
-        throw new Error(`Horarios ocupados detectados:\n
+      if (existingReservations.length > 0) {
+        // Reviso si hay conflicto de camilla
+        const conflictosCamilla = existingReservations.filter(
+          (r) =>
+            r.usaCamilla &&
+            hourlyEvents.some(
+              (e) =>
+                e.usaCamilla &&
+                dayjs(e.start).isBefore(r.end_time) &&
+                dayjs(e.end).isAfter(r.start_time)
+            )
+        );
+        // Reviso si hay conflsicto de consultorio.
+        const conflictosConsultorio = existingReservations.filter(
+          (r) =>
+            !conflictosCamilla.includes(r) &&
+            hourlyEvents.some(
+              (e) =>
+                e.resourceId === r.consultorio_id &&
+                dayjs(e.start).isBefore(r.end_time) &&
+                dayjs(e.end).isAfter(r.start_time)
+            )
+        );
+
+        if (conflictosCamilla.length > 0) {
+          throw new Error(
+            `La camilla está ocupada: ${conflictosCamilla
+              .map(
+                (r) =>
+                  `${dayjs(r.start_time).format(
+                    "D[/]M[/]YYYY - HH:mm"
+                  )}-${dayjs(r.end_time).format("HH:mm")}`
+              )
+              .join(", ")}`
+          );
+        }
+        // Mensaje de error si ya está ocupado el consultorio a esa hora.
+        if (conflictosConsultorio.length > 0) {
+          const conflictos = existingReservations
+            .map(
+              (r) =>
+                `Consultorio ${r.consultorio_id} - ${dayjs(r.start_time).format(
+                  "D[/]M[/]YYYY - HH:mm"
+                )} - ${dayjs(r.end_time).format("HH:mm")}`
+            )
+            .join("\n");
+
+          throw new Error(`Horarios ocupados detectados:\n
           ${conflictos}`);
+        }
       }
 
       const reservasParaInsertar = mapEventsToReservations(hourlyEvents); // Mapear los eventos a la estructura de la tabla "reservas"
@@ -110,9 +150,7 @@ export const CalendarSemanal = () => {
         message: "Las reservas se han guardado correctamente.",
       });
 
-      loadEvents((prev) => [...prev, ...hourlyEvents]);
-      console.log(hourlyEvents);
-      console.log(events);
+      setEvents((prev) => [...prev, ...hourlyEvents]);
     } catch (error) {
       setError(error);
       showToast({
@@ -141,7 +179,6 @@ export const CalendarSemanal = () => {
           step={60}
           timeslots={1}
           onRangeChange={handleRangeChange}
-          // views={["day"]}
           defaultView={"day"}
           startAccessor="start"
           endAccessor="end"
@@ -156,26 +193,31 @@ export const CalendarSemanal = () => {
           eventPropGetter={eventPropGetter}
           components={{
             event: CustomEventComponent,
+            toolbar: CustomToolbar,
           }}
           onSelectSlot={handleSelectSlot}
           slotPropGetter={slotPropGetter}
         />
       </div>
-      <ReservationDialog
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        selectedSlot={selectedSlot}
-        resources={resources}
-        onConfirm={handleConfirmReserve}
-        onCancel={cancelarReserveDialog}
-      />
-      <ConfirmReservationDialog
-        open={isConfirmDialogOpen}
-        onOpenChange={setIsConfirmDialogOpen}
-        hourlyEvents={hourlyEvents}
-        onConfirm={confirmarReserva}
-        onCancel={resetReservationState}
-      />
+      {isDialogOpen && (
+        <ReservationDialog
+          open={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
+          selectedSlot={selectedSlot}
+          resources={resources}
+          onConfirm={handleConfirmReserve}
+          onCancel={cancelarReserveDialog}
+        />
+      )}
+      {isConfirmDialogOpen && (
+        <ConfirmReservationDialog
+          open={isConfirmDialogOpen}
+          onOpenChange={setIsConfirmDialogOpen}
+          hourlyEvents={hourlyEvents}
+          onConfirm={confirmarReserva}
+          onCancel={resetReservationState}
+        />
+      )}
     </div>
   );
 };

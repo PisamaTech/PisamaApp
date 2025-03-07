@@ -24,6 +24,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { reservationSchema } from "@/validations/validationSchemas";
 import { useAuthStore } from "@/stores/authStore";
+import { ReservationStatus, ReservationType } from "@/utils/constants";
 
 export const ReservationDialog = ({
   open,
@@ -50,8 +51,11 @@ export const ReservationDialog = ({
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = form;
+
+  const tipoReserva = form.watch("tipo");
 
   // Inicializar valores del formulario cuando selectedSlot cambia
   useEffect(() => {
@@ -95,9 +99,8 @@ export const ReservationDialog = ({
       resourceId: data.resourceId,
       tipo: data.tipo,
       usaCamilla: data.usaCamilla === "Sí",
-      status: "activa",
+      status: ReservationStatus.ACTIVA,
     };
-    console.log(reservationData);
     onConfirm(reservationData);
     onOpenChange(false); // Cerrar el diálogo
   };
@@ -113,6 +116,7 @@ export const ReservationDialog = ({
           </DialogTitle>
           <Separator />
           <div className="h-1"></div>
+          {/* // Información sobre la reserva seleccionada // */}
           <DialogDescription>
             La hora seleccionada para la reserva fue el día:
             <br />
@@ -167,45 +171,47 @@ export const ReservationDialog = ({
               <option value="22:00">22:00</option>
               <option value="23:00">23:00</option>
             </datalist>
+            <div className="flex justify-between gap-4">
+              {/* Hora de inicio */}
+              <div className="space-y-2 w-full">
+                <Label htmlFor="startTime">Hora de inicio</Label>
+                <Input
+                  id="startTime"
+                  type="time"
+                  step="3600"
+                  min="07:00"
+                  max="22:00"
+                  list="horasSugeridas"
+                  {...register("startTime")}
+                  required
+                />
+                {errors.startTime && (
+                  <p className="text-sm text-red-500">
+                    {errors.startTime.message}
+                  </p>
+                )}
+              </div>
 
-            {/* Hora de inicio */}
-            <div className="space-y-2">
-              <Label htmlFor="startTime">Hora de inicio</Label>
-              <Input
-                id="startTime"
-                type="time"
-                step="3600"
-                min="07:00"
-                max="22:00"
-                list="horasSugeridas"
-                {...register("startTime")}
-                required
-              />
-              {errors.startTime && (
-                <p className="text-sm text-red-500">
-                  {errors.startTime.message}
-                </p>
-              )}
+              {/* Hora de fin */}
+              <div className="space-y-2 w-full">
+                <Label htmlFor="endTime">Hora de finalización</Label>
+                <Input
+                  id="endTime"
+                  type="time"
+                  step="3600"
+                  min="08:00"
+                  max="23:00"
+                  list="horasSugeridas"
+                  {...register("endTime")}
+                  required
+                />
+                {errors.endTime && (
+                  <p className="text-sm text-red-500">
+                    {errors.endTime.message}
+                  </p>
+                )}
+              </div>
             </div>
-
-            {/* Hora de fin */}
-            <div className="space-y-2">
-              <Label htmlFor="endTime">Hora de finalización</Label>
-              <Input
-                id="endTime"
-                type="time"
-                step="3600"
-                min="08:00"
-                max="23:00"
-                list="horasSugeridas"
-                {...register("endTime")}
-                required
-              />
-              {errors.endTime && (
-                <p className="text-sm text-red-500">{errors.endTime.message}</p>
-              )}
-            </div>
-
             {/* Consultorio */}
             <div className="space-y-2">
               <Label htmlFor="resourceId">Consultorio</Label>
@@ -236,24 +242,37 @@ export const ReservationDialog = ({
               <Label htmlFor="tipo">Tipo de reserva</Label>
               <Select
                 onValueChange={(value) => setValue("tipo", value)}
-                defaultValue="Eventual"
+                defaultValue={ReservationType.EVENTUAL}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecciona un tipo de reserva" />
                 </SelectTrigger>
                 <SelectContent>
-                  {["Eventual", "Fija"].map((tipo) => (
-                    <SelectItem key={tipo} value={tipo}>
-                      {tipo}
-                    </SelectItem>
-                  ))}
+                  {[ReservationType.EVENTUAL, ReservationType.FIJA].map(
+                    (tipo) => (
+                      <SelectItem key={tipo} value={tipo}>
+                        {tipo}
+                      </SelectItem>
+                    )
+                  )}
                 </SelectContent>
               </Select>
               {errors.tipo && (
                 <p className="text-sm text-red-500">{errors.tipo.message}</p>
               )}
+              {/* Mensaje condicional para reservas fijas */}
+              {tipoReserva === ReservationType.FIJA && (
+                <div className="text-sm text-blue-600 mt-2">
+                  Las reservas fijas se agendan por un plazo de 6 meses.
+                  <br />
+                  Se le enviará un mensaje un mes antes del vencimiento para
+                  recordarle.
+                  <br />
+                  En caso de necesitarlo, podrá volver a renovarla por otros 6
+                  meses.
+                </div>
+              )}
             </div>
-
             {/* Uso de camilla */}
             <div className="space-y-2">
               <Label htmlFor="usaCamilla">¿Utilizarás la camilla?</Label>
