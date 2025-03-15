@@ -107,7 +107,11 @@ export const ReservationDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent ref={dialogRef} tabIndex={-1}>
+      <DialogContent
+        ref={dialogRef}
+        tabIndex={-1}
+        className="max-h-full overflow-y-auto "
+      >
         <DialogHeader>
           <DialogTitle className="mb-3">
             <div className="flex gap-3">

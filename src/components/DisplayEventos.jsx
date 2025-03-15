@@ -20,7 +20,10 @@ export const DisplayEventos = ({ hourlyEvents }) => {
       <ul className="my-2">
         {hourlyEvents.map((event, index) => (
           <li key={index} className="text-sm text-gray-500 font-bold">
-            <Badge variant={event.tipo.toLowerCase()} className="mr-1 mt-1.5">
+            <Badge
+              variant={event.tipo.toLowerCase()}
+              className="mr-1 mt-1.5 text-gray-800"
+            >
               <span>{event.tipo.toUpperCase()}</span>
             </Badge>
             {formatEvent(event)}

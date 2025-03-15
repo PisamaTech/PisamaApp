@@ -2,7 +2,7 @@ import { Calendar, dayjsLocalizer } from "react-big-calendar";
 import dayjs from "dayjs";
 import "dayjs/locale/es";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "../components/calendar/calendarStyles.css";
 import { Separator } from "@/components/ui";
 import {
@@ -26,6 +26,7 @@ import { isSameSlot } from "@/components/calendar/calendarHelper";
 import { useCalendarState } from "@/hooks/useCalendarState";
 import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 import CustomToolbar from "@/components/calendar/CustomToolbar";
+import { EventDialog } from "@/components/EventDialog";
 
 // Localizer
 dayjs.locale("es");
@@ -34,14 +35,18 @@ const localizer = dayjsLocalizer(dayjs);
 export const CalendarSemanal = () => {
   const {
     selectedSlot,
+    selectedEvent,
     isDialogOpen,
     isConfirmDialogOpen,
+    isEventDialogOpen,
     hourlyEvents,
     handleSelectSlot,
+    handleSelectEvent,
     handleConfirmReserve,
     resetReservationState,
     setIsDialogOpen,
     setIsConfirmDialogOpen,
+    setIsEventDialogOpen,
     cancelarReserveDialog,
   } = useCalendarState();
 
@@ -51,6 +56,11 @@ export const CalendarSemanal = () => {
   const { events, setEvents, loadNextMonth, lastLoadedDate } =
     useCalendarEvents();
   const [currentDate, setCurrentDate] = useState(new Date());
+
+  // Cargar el mes inicial al montar
+  useEffect(() => {
+    loadNextMonth(new Date());
+  }, []);
 
   const handleRangeChange = (range) => {
     const viewEnd = Array.isArray(range)
@@ -196,6 +206,7 @@ export const CalendarSemanal = () => {
             toolbar: CustomToolbar,
           }}
           onSelectSlot={handleSelectSlot}
+          onSelectEvent={handleSelectEvent}
           slotPropGetter={slotPropGetter}
         />
       </div>
@@ -216,6 +227,14 @@ export const CalendarSemanal = () => {
           hourlyEvents={hourlyEvents}
           onConfirm={confirmarReserva}
           onCancel={resetReservationState}
+        />
+      )}
+      {isEventDialogOpen && (
+        <EventDialog
+          open={isEventDialogOpen}
+          onOpenChange={setIsEventDialogOpen}
+          selectedEvent={selectedEvent}
+          // onConfirm={handleConfirmReserve}
         />
       )}
     </div>

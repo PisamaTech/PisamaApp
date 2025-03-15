@@ -91,7 +91,7 @@ export const generateRecurringEvents = (baseEvent) => {
   const events = [];
   const startDate = dayjs(baseEvent.start);
   const endDate = dayjs(baseEvent.end);
-  const recurrenceEnd = startDate.add(4, "months");
+  const recurrenceEnd = startDate.add(2, "months");
 
   let currentStart = startDate;
   let currentEnd = endDate;
@@ -111,4 +111,29 @@ export const generateRecurringEvents = (baseEvent) => {
     currentEnd = currentEnd.add(1, "week");
   }
   return events;
+};
+
+// Cancelar una reserva unica
+export const cancelSingleReservation = async (reservationId) => {
+  console.log(reservationId);
+  const { data, error } = await supabase
+    .from("reservas")
+    .update({ estado: "cancelada" })
+    .eq("id", reservationId)
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+// Cancelar una serie de reserva fijas
+export const cancelRecurringSeries = async (recurrenceId) => {
+  const { data, error } = await supabase
+    .from("reservas")
+    .update({ estado: "cancelada" })
+    .eq("recurrence_id", recurrenceId)
+    .gte("start_time", new Date().toISOString());
+
+  if (error) throw error;
+  return data;
 };

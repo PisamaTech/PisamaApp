@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+
 export const calendarMessages = {
   date: "Fecha",
   time: "Hora",
@@ -51,6 +53,14 @@ const miFormatoEncabezadoDiaDayjs = (date, culture, localizer) => {
   return `${diaSemanaCapitalizado}, ${restoFechaCapitalizado}`; // Reconstruir la cadena final: "Lunes, 20 de Febrero"
 };
 
+// Función para formatear el encabezado del día
+const customDayFormat = (date) => {
+  const dia = capitalizeFirstLetter(dayjs(date).format("dddd"));
+  const resto = dayjs(date).format(" D");
+  return dia + resto;
+}; // "Lunes 10"
+
 export const formatosPersonalizadosDayjs = {
   dayHeaderFormat: miFormatoEncabezadoDiaDayjs,
+  dayFormat: customDayFormat,
 };

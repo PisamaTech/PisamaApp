@@ -40,6 +40,7 @@ export const CalendarDiario = () => {
     isConfirmDialogOpen,
     hourlyEvents,
     handleSelectSlot,
+    handleSelectEvent,
     handleConfirmReserve,
     resetReservationState,
     setIsDialogOpen,
@@ -47,8 +48,7 @@ export const CalendarDiario = () => {
     cancelarReserveDialog,
   } = useCalendarState();
 
-  const { events, setEvents, loadNextMonth, lastLoadedDate } =
-    useCalendarEvents();
+  const { events } = useCalendarEvents();
 
   // Estado para el consultorio seleccionado
   const [selectedConsultorio, setSelectedConsultorio] = useState(
@@ -126,6 +126,7 @@ export const CalendarDiario = () => {
           onSelectSlot={(slotInfo) =>
             handleSelectSlot(slotInfo, selectedConsultorio)
           }
+          onSelectEvent={handleSelectEvent}
           slotPropGetter={slotPropGetter}
         />
       </div>

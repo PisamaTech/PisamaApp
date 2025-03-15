@@ -8,7 +8,9 @@ import { generateRecurringEvents } from "@/supabase";
 
 export const useCalendarState = () => {
   const [selectedSlot, setSelectedSlot] = useState(null);
+  const [selectedEvent, setSelectedEvent] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [hourlyEvents, setHourlyEvents] = useState([]);
 
@@ -32,6 +34,21 @@ export const useCalendarState = () => {
     }
   };
 
+  // Función para manejar la selección de eventos
+  const handleSelectEvent = (slotEvent) => {
+    console.log(slotEvent);
+    const { id } = slotEvent;
+    setSelectedSlot(null); // Elimino si hay una celda seleccionada para agendar.
+
+    if (selectedEvent?.id === id) {
+      console.log(isEventDialogOpen);
+      setIsEventDialogOpen(true);
+      console.log(isEventDialogOpen);
+    } else {
+      setSelectedEvent(slotEvent);
+    }
+  };
+
   // Función para confirmar la reserva
   const handleConfirmReserve = (reservationData) => {
     const newHourlyEvents = generateHourlyEvents(reservationData); // Creo reservas individuales
@@ -47,11 +64,14 @@ export const useCalendarState = () => {
     setIsConfirmDialogOpen(true); // Abrir el diálogo después de actualizar el estado
   };
 
+  // Función que resetea los datos de la reservas
   const resetReservationState = () => {
     setSelectedSlot(null);
     setHourlyEvents([]);
     setIsConfirmDialogOpen(false);
   };
+
+  const handleCancelarEventual = (selectedEvent) => {};
 
   // Función para cancelar la reserva
   const cancelarReserveDialog = () => {
@@ -72,14 +92,19 @@ export const useCalendarState = () => {
 
   return {
     selectedSlot,
+    selectedEvent,
     isDialogOpen,
     isConfirmDialogOpen,
+    isEventDialogOpen,
     hourlyEvents,
     handleSelectSlot,
+    handleSelectEvent,
     handleConfirmReserve,
+    handleCancelarEventual,
     resetReservationState,
     setIsDialogOpen,
     setIsConfirmDialogOpen,
+    setIsEventDialogOpen,
     cancelarReserveDialog,
   };
 };
