@@ -28,7 +28,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
   const [cancelType, setCancelType] = useState(null);
   const [futureEventsCount, setFutureEventsCount] = useState(0);
 
-  const { setEvents } = useCalendarEvents();
+  // const { setEvents } = useCalendarEvents();
   const { showToast } = useUIStore();
 
   // Mover el foco al DialogContent

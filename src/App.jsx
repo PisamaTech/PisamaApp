@@ -1,21 +1,23 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import { AuthPage } from "./pages/AuthPage";
+import {
+  AuthPage,
+  CalendarDiario,
+  CalendarSemanal,
+  Reservas,
+  Facturas,
+  Admin,
+  Perfil,
+  ResetPassword,
+  RecoverPassword,
+  ConfirmationPage,
+  Error404,
+} from "./pages";
 import { useAuthStore } from "./stores/authStore";
-import Layout from "./components/Layout";
-import { Reservas } from "./pages/Reservas";
-import { CalendarDiario } from "./pages/CalendarDiario";
-import { Facturas } from "./pages/Facturas";
-import { Admin } from "./pages/Admin";
-import { Perfil } from "./pages/Perfil";
 import LoadingOverlay from "./components/LoadingOverlay";
-import ErrorToast from "./components/ErrorToast";
 import { useEffect } from "react";
-import { ResetPassword } from "./pages/ResetPassword";
-import { RecoverPassword } from "./pages/RecoverPassword";
 import { useUIStore } from "@/stores/uiStore";
-import { ConfirmationPage } from "./pages/ConfirmationPage";
-import { Error404 } from "./pages/Error404";
-import { CalendarSemanal } from "./pages/CalendarSemanal";
+import ErrorToast from "./components/ErrorToast";
+import Layout from "./components/Layout";
 
 function App() {
   const { user, checkSession } = useAuthStore();

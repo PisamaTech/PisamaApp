@@ -14,6 +14,22 @@ export const createReservations = async (reservations) => {
   return data;
 };
 
+export const fetchEventsFromDatabase = async (startDate, endDate) => {
+  try {
+    const { data, error } = await supabase
+      .from("reservas")
+      .select("*")
+      .gte("start_time", startDate.toISOString())
+      .lte("start_time", endDate.toISOString());
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Error loading reservations:", error);
+    return error;
+  }
+};
+
 // Formatea los eventos del calendario para guardarlos en la base de datos.
 export const mapEventsToReservations = (hourlyEvents) => {
   return hourlyEvents.map((event) => ({

@@ -1,44 +1,42 @@
-import { Calendar, dayjsLocalizer } from "react-big-calendar";
 import dayjs from "dayjs";
-import "dayjs/locale/es";
+import { Calendar, dayjsLocalizer } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import "dayjs/locale/es";
 import { useEffect, useState } from "react";
-import "../components/calendar/calendarStyles.css";
-import { Separator } from "@/components/ui";
 import {
   calendarMessages,
   formatosPersonalizadosDayjs,
   resources,
 } from "@/components/calendar/personalizacionCalendario";
+import { Separator } from "@/components/ui";
 import {
   CustomEventComponent,
   eventPropGetter,
 } from "@/components/calendar/CustomEventComponent";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import CustomToolbar from "@/components/calendar/CustomToolbar";
+import { useCalendarState } from "@/hooks/useCalendarState";
+import { isSameSlot } from "@/components/calendar/calendarHelper";
 import { ReservationDialog } from "@/components/ReservationDialog";
 import { ConfirmReservationDialog } from "@/components/ConfirmReservationDialog";
-import {
-  checkForExistingReservations,
-  createReservations,
-  mapEventsToReservations,
-} from "@/supabase";
-import { useUIStore } from "@/stores/uiStore";
-import { isSameSlot } from "@/components/calendar/calendarHelper";
-import { useCalendarState } from "@/hooks/useCalendarState";
-import { useCalendarEvents } from "@/hooks/useCalendarEvents";
-import CustomToolbar from "@/components/calendar/CustomToolbar";
-import { EventDialog } from "@/components/EventDialog";
+import { useEventStore } from "@/stores/calendarStore";
 
 // Localizer
-dayjs.locale("es");
 const localizer = dayjsLocalizer(dayjs);
+dayjs.locale("es");
 
-export const CalendarSemanal = () => {
+export const CalendarDiario = () => {
   const {
     selectedSlot,
-    selectedEvent,
     isDialogOpen,
     isConfirmDialogOpen,
-    isEventDialogOpen,
     hourlyEvents,
     handleSelectSlot,
     handleSelectEvent,
@@ -46,35 +44,30 @@ export const CalendarSemanal = () => {
     resetReservationState,
     setIsDialogOpen,
     setIsConfirmDialogOpen,
-    setIsEventDialogOpen,
     cancelarReserveDialog,
   } = useCalendarState();
 
-  const { startLoading, stopLoading, setError, showToast, clearError } =
-    useUIStore();
+  const { events, fetchEventsByWeek } = useEventStore(); // Usa el store de Zustand
 
-  const { events, setEvents, loadNextMonth, lastLoadedDate } =
-    useCalendarEvents();
+  // Estado para el consultorio seleccionado
+  const [selectedConsultorio, setSelectedConsultorio] = useState(
+    resources[0].resourceId
+  );
+
   const [currentDate, setCurrentDate] = useState(new Date());
 
-  // Cargar el mes inicial al montar
+  // Cargar eventos iniciales al montar el componente
   useEffect(() => {
-    loadNextMonth(new Date());
-  }, []);
-
-  const handleRangeChange = (range) => {
-    const viewEnd = Array.isArray(range)
-      ? dayjs(range[range.length - 1])
-      : dayjs(range.end);
-
-    // Si el final de la vista está dentro de los últimos 7 días del mes cargado
-    if (viewEnd.add(7, "days").isAfter(lastLoadedDate)) {
-      loadNextMonth(viewEnd.toDate());
+    if (useEventStore.getState().events.length === 0) {
+      useEventStore.getState().loadInitialEvents(); // Llama a loadInitialEvents del store al montar
     }
-  };
+  }, []);
 
   const handleNavigate = (newDate) => {
     setCurrentDate(newDate);
+    const weekOfYearToLoad = dayjs(newDate).week();
+    const yearToLoad = dayjs(newDate).year();
+    fetchEventsByWeek(weekOfYearToLoad, yearToLoad); // Carga eventos de esa semana
   };
 
   // Función para ponerle a la celda seleccionada la clase "slotSelected"
@@ -89,123 +82,67 @@ export const CalendarSemanal = () => {
       : "",
   });
 
-  // Función para agregar reservas a Supabase
-  const confirmarReserva = async () => {
-    clearError();
-    startLoading();
-
-    try {
-      const existingReservations = await checkForExistingReservations(
-        hourlyEvents
-      );
-
-      if (existingReservations.length > 0) {
-        // Reviso si hay conflicto de camilla
-        const conflictosCamilla = existingReservations.filter(
-          (r) =>
-            r.usaCamilla &&
-            hourlyEvents.some(
-              (e) =>
-                e.usaCamilla &&
-                dayjs(e.start).isBefore(r.end_time) &&
-                dayjs(e.end).isAfter(r.start_time)
-            )
-        );
-        // Reviso si hay conflsicto de consultorio.
-        const conflictosConsultorio = existingReservations.filter(
-          (r) =>
-            !conflictosCamilla.includes(r) &&
-            hourlyEvents.some(
-              (e) =>
-                e.resourceId === r.consultorio_id &&
-                dayjs(e.start).isBefore(r.end_time) &&
-                dayjs(e.end).isAfter(r.start_time)
-            )
-        );
-
-        if (conflictosCamilla.length > 0) {
-          throw new Error(
-            `La camilla está ocupada: ${conflictosCamilla
-              .map(
-                (r) =>
-                  `${dayjs(r.start_time).format(
-                    "D[/]M[/]YYYY - HH:mm"
-                  )}-${dayjs(r.end_time).format("HH:mm")}`
-              )
-              .join(", ")}`
-          );
-        }
-        // Mensaje de error si ya está ocupado el consultorio a esa hora.
-        if (conflictosConsultorio.length > 0) {
-          const conflictos = existingReservations
-            .map(
-              (r) =>
-                `Consultorio ${r.consultorio_id} - ${dayjs(r.start_time).format(
-                  "D[/]M[/]YYYY - HH:mm"
-                )} - ${dayjs(r.end_time).format("HH:mm")}`
-            )
-            .join("\n");
-
-          throw new Error(`Horarios ocupados detectados:\n
-          ${conflictos}`);
-        }
-      }
-
-      const reservasParaInsertar = mapEventsToReservations(hourlyEvents); // Mapear los eventos a la estructura de la tabla "reservas"
-      const data = await createReservations(reservasParaInsertar);
-
-      showToast({
-        type: "success",
-        title: "Confirmado",
-        message: "Las reservas se han guardado correctamente.",
-      });
-
-      setEvents((prev) => [...prev, ...hourlyEvents]);
-    } catch (error) {
-      setError(error);
-      showToast({
-        type: "error",
-        title: "Error en la reserva",
-        message: error.message,
-      });
-    } finally {
-      stopLoading();
-      resetReservationState();
-    }
+  // Manejar el cambio de consultorio
+  const handleConsultorioChange = (e) => {
+    setSelectedConsultorio(Number(e));
   };
+
+  // Filtrar eventos por `resourceId` seleccionado
+  const filteredEvents = events.filter(
+    (event) => event.resourceId === selectedConsultorio
+  );
 
   return (
     <div className="container mx-auto p-8 space-y-4">
       <h1 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-        Disponibilidad Diaria
+        Disponibilidad Semanal
       </h1>
       <Separator />
+      <div className="flex justify-center items-center">
+        <Label htmlFor="consultorio" className="mr-3">
+          Selecciona un consultorio:
+        </Label>
+        <Select onValueChange={handleConsultorioChange}>
+          <SelectTrigger className="w-[220px]">
+            <SelectValue placeholder="Selecciona un consultorio" />
+          </SelectTrigger>
+          <SelectContent>
+            {resources.map((resource) => (
+              <SelectItem key={resource.id} value={String(resource.id)}>
+                {resource.title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <Separator className="mb-4" />
+      <div className="h-2"></div>
+
       <div className="h-[800px] bg-white rounded-lg shadow-lg">
+        {/* Calendario */}
         <Calendar
           localizer={localizer}
-          events={events}
+          events={filteredEvents} // Mostrar solo eventos filtrados
           date={currentDate}
           onNavigate={handleNavigate}
           step={60}
           timeslots={1}
-          onRangeChange={handleRangeChange}
-          defaultView={"day"}
+          defaultView="week" // Vista semanal
           startAccessor="start"
           endAccessor="end"
-          resources={resources}
-          resourceIdAccessor="id"
-          resourceTitleAccessor="title"
-          selectable
-          formats={formatosPersonalizadosDayjs}
           messages={calendarMessages}
           min={dayjs("2024-12-03T07:00:00").toDate()}
           max={dayjs("2024-12-03T23:00:00").toDate()}
+          formats={formatosPersonalizadosDayjs}
           eventPropGetter={eventPropGetter}
           components={{
             event: CustomEventComponent,
             toolbar: CustomToolbar,
           }}
-          onSelectSlot={handleSelectSlot}
+          selectable={true}
+          onSelectSlot={(slotInfo) =>
+            handleSelectSlot(slotInfo, selectedConsultorio)
+          }
           onSelectEvent={handleSelectEvent}
           slotPropGetter={slotPropGetter}
         />
@@ -225,16 +162,8 @@ export const CalendarSemanal = () => {
           open={isConfirmDialogOpen}
           onOpenChange={setIsConfirmDialogOpen}
           hourlyEvents={hourlyEvents}
-          onConfirm={confirmarReserva}
+          // onConfirm={confirmarReserva}
           onCancel={resetReservationState}
-        />
-      )}
-      {isEventDialogOpen && (
-        <EventDialog
-          open={isEventDialogOpen}
-          onOpenChange={setIsEventDialogOpen}
-          selectedEvent={selectedEvent}
-          // onConfirm={handleConfirmReserve}
         />
       )}
     </div>

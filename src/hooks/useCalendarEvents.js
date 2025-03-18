@@ -32,7 +32,7 @@ export const useCalendarEvents = () => {
 
     startLoading();
     try {
-      console.log("Estmoas pidiendo reservas");
+      console.log("Estamos pidiendo reservas");
       const { data, error } = await supabase
         .from("reservas")
         .select("*")
