@@ -11,6 +11,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/es"; // Para usar el idioma español
 import { useUIStore } from "@/stores/uiStore";
 import { DisplayEventos } from "./DisplayEventos";
+import { useState } from "react";
 
 dayjs.locale("es"); // Configura Day.js en español
 
@@ -22,6 +23,17 @@ export const ConfirmReservationDialog = ({
   onCancel,
 }) => {
   const { loading } = useUIStore();
+  const [isProcessing, setIsProcessing] = useState(false); // Estado local para bloqueo
+
+  const handleConfirm = async () => {
+    try {
+      setIsProcessing(true);
+      await onConfirm(hourlyEvents); // Esperar a que complete la operación
+      onOpenChange(false); // Cerrar el diálogo explícitamente
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -35,11 +47,11 @@ export const ConfirmReservationDialog = ({
           <DisplayEventos hourlyEvents={hourlyEvents} />
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={onCancel}>
+          <Button variant="outline" onClick={onCancel} disabled={isProcessing}>
             Cancelar
           </Button>
-          <Button onClick={onConfirm} disabled={loading}>
-            {loading ? "Confirmando..." : "Confirmar"}
+          <Button onClick={handleConfirm} disabled={isProcessing}>
+            {isProcessing ? "Confirmando..." : "Confirmar"}
           </Button>
         </DialogFooter>
       </DialogContent>

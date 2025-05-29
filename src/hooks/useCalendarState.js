@@ -1,10 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   generateHourlyEvents,
   isSameSlot,
 } from "@/components/calendar/calendarHelper";
-import { useCalendarEvents } from "./useCalendarEvents";
-import { generateRecurringEvents } from "@/supabase";
+import { generateRecurringEvents } from "@/utils/calendarUtils";
 
 export const useCalendarState = () => {
   const [selectedSlot, setSelectedSlot] = useState(null);
@@ -13,8 +12,6 @@ export const useCalendarState = () => {
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [hourlyEvents, setHourlyEvents] = useState([]);
-
-  const { events, loadEvents } = useCalendarEvents();
 
   // Función para abrir Dialog si se hace click sobre botón de AGENDAR
   const handleSelectSlot = (slotInfo, selectedResource) => {
@@ -41,9 +38,7 @@ export const useCalendarState = () => {
     setSelectedSlot(null); // Elimino si hay una celda seleccionada para agendar.
 
     if (selectedEvent?.id === id) {
-      console.log(isEventDialogOpen);
       setIsEventDialogOpen(true);
-      console.log(isEventDialogOpen);
     } else {
       setSelectedEvent(slotEvent);
     }
@@ -57,8 +52,10 @@ export const useCalendarState = () => {
       const reservaFija = newHourlyEvents.flatMap((baseEvent) => {
         return generateRecurringEvents(baseEvent);
       });
+      console.log(reservaFija);
       setHourlyEvents(reservaFija); // Actualizar el estado con los eventos FIJOS generados
     } else {
+      console.log(newHourlyEvents);
       setHourlyEvents(newHourlyEvents); // Actualizar el estado con los eventos EVENTUALES generados
     }
     setIsConfirmDialogOpen(true); // Abrir el diálogo después de actualizar el estado
@@ -77,18 +74,6 @@ export const useCalendarState = () => {
   const cancelarReserveDialog = () => {
     setIsDialogOpen(false);
   };
-
-  // Función para ponerle a la celda seleccionada la clase "slotSelected"
-  const slotPropGetter = (date, resourceId) => ({
-    className: isSameSlot(
-      date,
-      selectedSlot?.start,
-      resourceId,
-      selectedSlot?.resourceId
-    )
-      ? "slotSelected"
-      : "",
-  });
 
   return {
     selectedSlot,

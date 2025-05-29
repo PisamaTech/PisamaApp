@@ -32,7 +32,6 @@
   justify-content: center; /* Centra horizontalmente el contenido (texto) */
   align-items: center; /* Centra verticalmente el contenido (texto) */
   font-size: 0.9rem; /* Ajusta el tamaño de fuente */
-  /* Opcional: Puedes ajustar otros estilos aquí si lo deseas, como el tamaño de fuente, etc. */
 }
 
 .rbc-toolbar-label {
@@ -55,6 +54,7 @@
   cursor: pointer;
   z-index: 10;
   height: 2px;
+  text-align: center;
 }
 
 .slotSelected:before {
@@ -63,5 +63,18 @@
   text-shadow: 2px 1px 2px black;
   font-weight: bold;
   position: relative;
-  color: white; /* Color del símbolo '+' */
+  color: white;
+}
+
+.rbc-time-view-resources .rbc-day-slot {
+  min-width: 78px;
+}
+.rbc-time-view-resources .rbc-header,
+.rbc-time-view-resources .rbc-day-bg {
+  width: 78px;
+  -webkit-box-flex: 1;
+  -ms-flex: 1 1 0px;
+  flex: 1 1 0;
+  -ms-flex-preferred-size: 0 px;
+  flex-basis: 0 px;
 }

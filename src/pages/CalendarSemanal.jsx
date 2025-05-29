@@ -27,6 +27,9 @@ import { isSameSlot } from "@/components/calendar/calendarHelper";
 import { ReservationDialog } from "@/components/ReservationDialog";
 import { ConfirmReservationDialog } from "@/components/ConfirmReservationDialog";
 import { useEventStore } from "@/stores/calendarStore";
+import { handleNavigate } from "@/utils/calendarUtils";
+import { EventDialog } from "@/components";
+import { useReservationHandler } from "@/hooks/useReservationHandler";
 
 // Localizer
 const localizer = dayjsLocalizer(dayjs);
@@ -35,8 +38,10 @@ dayjs.locale("es");
 export const CalendarDiario = () => {
   const {
     selectedSlot,
+    selectedEvent,
     isDialogOpen,
     isConfirmDialogOpen,
+    isEventDialogOpen,
     hourlyEvents,
     handleSelectSlot,
     handleSelectEvent,
@@ -44,16 +49,17 @@ export const CalendarDiario = () => {
     resetReservationState,
     setIsDialogOpen,
     setIsConfirmDialogOpen,
+    setIsEventDialogOpen,
     cancelarReserveDialog,
   } = useCalendarState();
 
-  const { events, fetchEventsByWeek } = useEventStore(); // Usa el store de Zustand
+  const { events } = useEventStore(); // Usa el store de Zustand
+  const { handleReservation } = useReservationHandler(resetReservationState);
 
   // Estado para el consultorio seleccionado
   const [selectedConsultorio, setSelectedConsultorio] = useState(
     resources[0].resourceId
   );
-
   const [currentDate, setCurrentDate] = useState(new Date());
 
   // Cargar eventos iniciales al montar el componente
@@ -62,13 +68,6 @@ export const CalendarDiario = () => {
       useEventStore.getState().loadInitialEvents(); // Llama a loadInitialEvents del store al montar
     }
   }, []);
-
-  const handleNavigate = (newDate) => {
-    setCurrentDate(newDate);
-    const weekOfYearToLoad = dayjs(newDate).week();
-    const yearToLoad = dayjs(newDate).year();
-    fetchEventsByWeek(weekOfYearToLoad, yearToLoad); // Carga eventos de esa semana
-  };
 
   // Función para ponerle a la celda seleccionada la clase "slotSelected"
   const slotPropGetter = (date, resourceId) => ({
@@ -89,11 +88,13 @@ export const CalendarDiario = () => {
 
   // Filtrar eventos por `resourceId` seleccionado
   const filteredEvents = events.filter(
-    (event) => event.resourceId === selectedConsultorio
+    (event) =>
+      event.resourceId === selectedConsultorio &&
+      (event.estado === "activa" || event.estado === "utilizada")
   );
 
   return (
-    <div className="container mx-auto p-8 space-y-4">
+    <div className="mx-auto p-4 space-y-4 w-full">
       <h1 className="text-2xl font-bold text-gray-800 mb-6 text-center">
         Disponibilidad Semanal
       </h1>
@@ -124,7 +125,7 @@ export const CalendarDiario = () => {
           localizer={localizer}
           events={filteredEvents} // Mostrar solo eventos filtrados
           date={currentDate}
-          onNavigate={handleNavigate}
+          onNavigate={(newDate) => handleNavigate(newDate, setCurrentDate)}
           step={60}
           timeslots={1}
           defaultView="week" // Vista semanal
@@ -162,8 +163,16 @@ export const CalendarDiario = () => {
           open={isConfirmDialogOpen}
           onOpenChange={setIsConfirmDialogOpen}
           hourlyEvents={hourlyEvents}
-          // onConfirm={confirmarReserva}
+          onConfirm={handleReservation}
           onCancel={resetReservationState}
+        />
+      )}
+      {isEventDialogOpen && (
+        <EventDialog
+          open={isEventDialogOpen}
+          onOpenChange={setIsEventDialogOpen}
+          selectedEvent={selectedEvent}
+          // onConfirm={handleConfirmReserve}
         />
       )}
     </div>
