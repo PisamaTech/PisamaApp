@@ -18,6 +18,7 @@ import { ConfirmCancelDialog } from "./ConfirmEventDialog";
 import { cancelBooking, cancelRecurringSeries, supabase } from "@/supabase";
 import { useUIStore } from "@/stores/uiStore";
 import { useEventStore } from "@/stores/calendarStore";
+import { mapReservationToEvent } from "@/utils/calendarUtils";
 
 export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
@@ -26,11 +27,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
 
   const { showToast, startLoading, stopLoading, setError, clearError } =
     useUIStore(); // Obtén funciones de UI
-  const {
-    updateEvent,
-    fetchEventsByWeek,
-    updateMultipleEventsStatusToCancelled,
-  } = useEventStore(); // Obtén updateEvent y fetchEventsByWeek
+  const { updateEvent } = useEventStore(); // Obtén updateEvent y fetchEventsByWeek
 
   // Mover el foco al DialogContent
   const dialogRef = useRef(null);
@@ -144,53 +141,63 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
 
       if (cancelActionType === "single") {
         result = await cancelBooking(selectedEvent.id, profileId);
-        showToast({
-          type: "success",
-          title: "Reserva Cancelada",
-          message: `La reserva ha sido ${
-            result.estado === ReservationStatus.PENALIZADA
-              ? `cancelada con menos de 24hs de antelación y deberás pagar por la hora.\n Pero puede ser reagendada en un plazo de 6 días posterior a la reserva original sin costo extra`
-              : "cancelada con más de 24hs de antelación y no deberás pagar por la hora."
-          }.`,
-        });
-        updateEvent(result); // Actualiza el evento individual en el store
       } else if (cancelActionType === "series") {
-        const currentDateForCancellation = dayjs().toDate(); // Fecha actual para la solicitud
-        const rpcResult = await cancelRecurringSeries(
+        // const currentDateForCancellation = dayjs().toDate(); // Fecha actual para la solicitud
+        result = await cancelRecurringSeries(
           selectedEvent.recurrence_id,
           profileId,
           selectedEvent.start_time
         );
-        if (rpcResult.status === "success") {
-          if (rpcResult.penalty_applied) {
-            showToast({
-              type: "success",
-              title: "Serie de Reservas Cancelada",
-              message: `Serie cancelada correctamente. Pero se te cobrará la primera consulta de la serie, ya que cancelaste con menos de 24hs de anticipación. Podrás reagendarla hasta el ${dayjs(
-                rpcResult.reschedule_until
-              ).format("dddd[, ]")}${dayjs(rpcResult.reschedule_until).format(
-                "DD/MM/YYYY"
-              )}, sin costo extra.`,
-            });
-          } else if (!rpcResult.penalty_applied) {
-            showToast({
-              type: "success",
-              title: "Serie de Reservas Cancelada",
-              message: rpcResult.message || "Serie cancelada correctamente.",
-            });
-          }
-          // Si cancelRecurringSeries devuelve un array de eventos actualizados:
-          if (
-            rpcResult &&
-            rpcResult.modified_ids &&
-            Array.isArray(rpcResult.modified_ids)
-          ) {
-            updateMultipleEventsStatusToCancelled(
-              rpcResult.modified_ids,
-              currentDateForCancellation
-            ); // Actualiza los eventos en el store
-          }
+      }
+
+      if (result && result.updatedBookings) {
+        // 1. Actualiza el store
+        result.updatedBookings.forEach((booking) => {
+          const formattedEvent = mapReservationToEvent(booking);
+          updateEvent(formattedEvent);
+        });
+
+        // 2. Muestra el toast específico
+        let toastTitle = "Acción Completada";
+        let toastMessage = "La operación se realizó con éxito.";
+
+        switch (result.actionType) {
+          case "PENALIZED":
+            toastTitle = "Reserva Penalizada";
+            toastMessage =
+              "Cancelaste con menos de 24hs. La reserva fue PENALIZADA, por lo que deberás pagarla. Pero puedes reagendarla por un plazo de 6 días a partir de la fecha de la reserva original, sin costo adicional.";
+            break;
+          case "CANCELLED":
+            toastTitle = "Reserva Cancelada";
+            toastMessage =
+              "La reserva ha sido cancelada correctamente sin penalización.";
+            break;
+          case "RESCHEDULE_REVERTED":
+            toastTitle = "Reagendamiento Cancelado";
+            toastMessage =
+              "Se canceló la reserva reagendada. La reserva original que fue PENALIZADA ha sido reactivada, por lo que puedes volver a reagendarla por un plazo de 6 días a partir de la fecha de la reserva original, sin costo adicional.";
+            break;
+          case "SERIES_CANCELLED_WITH_PENALTY":
+            toastTitle = "Serie Cancelada con Penalización";
+            toastMessage =
+              "La serie fue cancelada. La primera reserva fue PENALIZADA, por haberla cancelado con menos de 24 horas de anticipación. El resto de las reservas fueron CANCELADAS sin costo.";
+            break;
+          case "SERIES_CANCELLED":
+            toastTitle = "Serie Cancelada";
+            toastMessage =
+              "Toda la serie de reservas ha sido cancelada correctamente.";
+            break;
+          case "NO_FUTURE_BOOKINGS":
+            toastTitle = "Información";
+            toastMessage =
+              "No se encontraron reservas futuras activas en esta serie para cancelar.";
+            break;
         }
+        showToast({
+          type: "success",
+          title: toastTitle,
+          message: toastMessage,
+        });
       }
 
       // Cerrar diálogos

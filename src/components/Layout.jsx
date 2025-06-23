@@ -28,7 +28,7 @@ export default function Layout() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-12 shrink-0 items-center gap-2">
+        <header className="flex h-12 shrink-0 items-center gap-2 sticky top-0 bg-background z-10 shadow-sm">
           <div className="flex items-center gap-2 px-2">
             <SidebarTrigger />
             <Separator orientation="vertical" className="mr-2 h-4" />

@@ -32,6 +32,8 @@ export const ReservationDialog = ({
   resources,
   onConfirm,
   onCancel,
+  isReagendamiento = false, // Valor por defecto
+  penalizedBooking = null, // Valor por defecto
 }) => {
   // Configuración de React Hook Form con Zod
   const form = useForm({
@@ -98,6 +100,8 @@ export const ReservationDialog = ({
       tipo: data.tipo,
       usaCamilla: data.usaCamilla === "Sí",
       status: ReservationStatus.ACTIVA,
+      // --- Clave: Añade el ID de la reserva original si es un reagendamiento ---
+      reagendamiento_de_id: isReagendamiento ? penalizedBooking.id : null,
     };
     onConfirm(reservationData);
     onOpenChange(false); // Cerrar el diálogo
@@ -113,11 +117,29 @@ export const ReservationDialog = ({
         <DialogHeader>
           <DialogTitle className="mb-3">
             <div className="flex gap-3">
-              <BookCheck size={20} /> Confirmar Reserva
+              <BookCheck size={20} />
+              {isReagendamiento
+                ? "Confirmar Reagendamiento"
+                : "Confirmar Reserva"}
             </div>
           </DialogTitle>
           <Separator />
           <div className="h-1"></div>
+
+          {/* Información adicional si es reagendamiento */}
+          {isReagendamiento && penalizedBooking && (
+            <div className="mb-4 p-3 border border-orange-400 bg-orange-50 rounded-md text-sm text-orange-700">
+              Estás reagendando la reserva original del{" "}
+              <b>
+                {dayjs(penalizedBooking.start_time).format(
+                  "DD/MM/YYYY [- ]HH:mm[hs]"
+                )}
+              </b>
+              . Esta nueva reserva reemplazará a la anterior y no generará un
+              costo adicional.
+            </div>
+          )}
+
           {/* // Información sobre la reserva seleccionada // */}
           <DialogDescription>
             La hora seleccionada para la reserva fue el día:

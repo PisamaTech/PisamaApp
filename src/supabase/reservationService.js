@@ -123,19 +123,19 @@ export const cancelRecurringSeries = async (
     `Llamando a RPC para cancelar serie recurrenceId: ${recurrenceId}, usuario: ${userId}`
   );
 
-  // Asegúrate de que cancellationRequestDate es un objeto Date y luego conviértelo a ISO string
+  // Corroboramos que cancellationRequestDate es un objeto Date y luego lo convertimos a ISO string
   const cancellationDateISO =
     cancellationRequestDate instanceof Date
       ? cancellationRequestDate.toISOString()
       : new Date(cancellationRequestDate).toISOString();
 
   try {
-    const { data, error } = await supabase.rpc(
+    const { data: modifiedBookings, error } = await supabase.rpc(
       "cancel_recurring_series_with_penalty",
       {
         p_recurrence_id: recurrenceId,
         p_user_id: userId,
-        p_cancellation_request_date: cancellationDateISO, // Pasa la fecha como ISO string
+        p_cancellation_request_date: cancellationDateISO,
       }
     );
 
@@ -144,15 +144,37 @@ export const cancelRecurringSeries = async (
         "Error al llamar a la RPC cancel_recurring_series_with_penalty:",
         error
       );
-      throw error; // Relanza el error para que el llamador lo maneje
+      throw error;
     }
 
-    console.log("Resultado de la RPC para cancelación de serie:", data);
-    // 'data' contendrá lo que retorna tu función RPC (el JSONB)
-    // Puedes necesitar procesar 'data.modified_ids' para obtener las reservas completas
-    // y actualizar el eventStore.
-    // Por ahora, simplemente devolvemos el resultado directo de la RPC.
-    return data;
+    console.log(
+      "Resultado de la RPC (reservas modificadas):",
+      modifiedBookings
+    );
+    // Si no se modificó nada, retorna un tipo de acción específico
+    if (!modifiedBookings || modifiedBookings.length === 0) {
+      return {
+        actionType: "NO_FUTURE_BOOKINGS",
+        updatedBookings: [],
+      };
+    }
+
+    // Determina el tipo de acción basado en el estado de la primera reserva devuelta.
+    // La RPC devuelve las reservas en el orden en que se actualizan,
+    // así que la primera debería ser la 'next_booking'.
+    const firstUpdatedBooking = modifiedBookings[0];
+    let actionType;
+
+    if (firstUpdatedBooking.estado === ReservationStatus.PENALIZADA) {
+      actionType = "SERIES_CANCELLED_WITH_PENALTY";
+    } else {
+      actionType = "SERIES_CANCELLED";
+    }
+
+    return {
+      actionType: actionType,
+      updatedBookings: modifiedBookings,
+    };
   } catch (error) {
     console.error(
       `Error en la operación de cancelación de serie ${recurrenceId}:`,
@@ -213,7 +235,7 @@ export const fetchUserReservations = async (
     // Selecciona todas las columnas Y pide el conteo total exacto
     .select("*", { count: "exact" })
     .eq("usuario_id", userId)
-    .order("start_time", { ascending: false }); // Ordena por fecha más reciente primero
+    .order("start_time", { ascending: true }); // Ordena por fecha más antigua primero
 
   // Aplicar filtros adicionales
   if (filters.dateRange?.from) {
@@ -317,94 +339,166 @@ export const cancelBooking = async (bookingId, userId) => {
     `Iniciando cancelación para reserva ID: ${bookingId} por usuario ID: ${userId}`
   );
 
-  // 1. Obtener la reserva a cancelar
-  let bookingToCancel;
-  try {
-    const { data, error } = await supabase
-      .from("reservas")
-      .select("id, start_time, estado, usuario_id, tipo_reserva, recurrence_id") // Selecciona solo los campos necesarios
-      .eq("id", bookingId)
-      .single(); // Espera encontrar exactamente una
+  // 1. Obtener la reserva a cancelar, incluyendo 'reagendamiento_de_id'
+  const { data: bookingToCancel, error: fetchError } = await supabase
+    .from("reservas")
+    .select("id, start_time, estado, usuario_id, reagendamiento_de_id")
+    .eq("id", bookingId)
+    .single();
 
-    if (error && error.code !== "PGRST116") {
-      // Ignora error 'PGRST116' (0 rows) por ahora
-      throw error; // Lanza otros errores de Supabase
-    }
-    if (!data) {
+  if (fetchError) {
+    console.error("Error al obtener la reserva para cancelar:", fetchError);
+    if (fetchError.code === "PGRST116")
       throw new Error(`Reserva con ID ${bookingId} no encontrada.`);
-    }
-    bookingToCancel = data;
-    console.log("Reserva encontrada:", bookingToCancel);
-  } catch (error) {
-    console.error("Error al obtener la reserva para cancelar:", error);
-    throw new Error(`Error al buscar la reserva: ${error.message}`); // Relanza con mensaje más descriptivo
+    throw new Error(`Error al buscar la reserva: ${fetchError.message}`);
   }
 
-  // 2. Validar Propietario
+  // 2. Validaciones iniciales
   if (bookingToCancel.usuario_id !== userId) {
-    console.warn(
-      `Intento de cancelación no autorizado: Usuario ${userId} intentó cancelar reserva ${bookingId} de usuario ${bookingToCancel.usuario_id}`
-    );
     throw new Error("No tienes permiso para cancelar esta reserva.");
   }
-  console.log("Validación de propietario exitosa.");
-
-  // 3. Validar Estado Actual
   if (bookingToCancel.estado !== ReservationStatus.ACTIVA) {
-    // Usa tu constante
-    console.warn(
-      `Intento de cancelar reserva ${bookingId} con estado no válido: ${bookingToCancel.estado}`
-    );
     throw new Error(
       `La reserva ya se encuentra en estado "${bookingToCancel.estado}" y no puede ser cancelada.`
     );
   }
-  console.log("Validación de estado exitosa.");
 
-  // 4. Calcular Diferencia Horaria y Penalización
-  const now = dayjs();
-  const startTime = dayjs(bookingToCancel.start_time);
-  const hoursDifference = startTime.diff(now, "hour"); // Diferencia en horas
-  const isPenaltyApplicable = hoursDifference <= 24;
+  // --- 3. Lógica Condicional: ¿Es un Reagendamiento? ---
+  if (bookingToCancel.reagendamiento_de_id) {
+    console.log(
+      `La reserva ${bookingId} es un reagendamiento de la reserva ${bookingToCancel.reagendamiento_de_id}. Revirtiendo...`
+    );
+    // Llama a la función de servicio que invoca la RPC para revertir
+    try {
+      const updatedBookings = await revertReagendamiento(
+        bookingId,
+        bookingToCancel.reagendamiento_de_id,
+        userId
+      );
+      console.log("Reagendamiento revertido exitosamente.");
+      return {
+        actionType: "RESCHEDULE_REVERTED",
+        updatedBookings: updatedBookings,
+      };
+    } catch (error) {
+      console.error("Fallo al revertir el reagendamiento:", error);
+      throw new Error(
+        `No se pudo revertir el reagendamiento: ${error.message}`
+      );
+    }
+  } else {
+    // --- 4. Lógica de Cancelación Normal (si NO es un reagendamiento) ---
+    console.log(
+      `La reserva ${bookingId} es una reserva normal. Procediendo con cancelación estándar.`
+    );
+    const now = dayjs();
+    const startTime = dayjs(bookingToCancel.start_time);
+    const hoursDifference = startTime.diff(now, "hour");
+    const isPenaltyApplicable = hoursDifference <= 24;
 
+    let newStatus;
+    let reagendarHastaDate = null;
+    let actionType; // <-- Variable para guardar el tipo de acción
+    const cancellationDate = new Date();
+
+    if (isPenaltyApplicable) {
+      newStatus = ReservationStatus.PENALIZADA;
+      actionType = "PENALIZED"; // <-- Guardamos el tipo de acción
+      reagendarHastaDate = dayjs(startTime)
+        .add(6, "days")
+        .endOf("day")
+        .toDate();
+    } else {
+      newStatus = ReservationStatus.CANCELADA;
+      actionType = "CANCELLED"; // <-- Guardamos el tipo de acción
+    }
+
+    try {
+      // Llama a la función auxiliar para hacer la actualización en la BD
+      const updatedBooking = await _updateBookingStatus(
+        bookingId,
+        newStatus,
+        cancellationDate,
+        reagendarHastaDate
+      );
+      console.log(`Reserva ${bookingId} cancelada/penalizada exitosamente.`);
+      return {
+        actionType: actionType,
+        updatedBookings: [updatedBooking], // Devuelve un array con la reserva
+      };
+    } catch (error) {
+      console.error(
+        `Error al actualizar el estado de la reserva ${bookingId}:`,
+        error
+      );
+      throw new Error(`No se pudo actualizar la reserva: ${error.message}`);
+    }
+  }
+};
+
+export const confirmarReagendamiento = async (
+  newBookingData,
+  penalizedBookingId,
+  requestingUserId
+) => {
   console.log(
-    `Diferencia horaria: ${hoursDifference} horas. Aplica penalización: ${isPenaltyApplicable}`
+    `Llamando a RPC para reagendar reserva ${penalizedBookingId} por usuario ${requestingUserId}`
   );
 
-  // 5. Determinar Nuevo Estado y Fecha Límite de Reagendamiento
-  let newStatus;
-  let reagendarHastaDate = null;
-  const cancellationDate = new Date(); // Fecha/hora actual de cancelación
+  // El objeto newBookingData debe estar listo para ser enviado como JSON.
+  // No necesita conversión aquí si ya tiene el formato correcto desde la UI.
 
-  if (isPenaltyApplicable) {
-    newStatus = ReservationStatus.PENALIZADA; // Usa tu constante
-    reagendarHastaDate = dayjs(startTime).add(6, "days").endOf("day").toDate(); // Calcula fecha límite
-    console.log(
-      `Nuevo estado: ${newStatus}, Permite reagendar hasta: ${reagendarHastaDate}`
-    );
-  } else {
-    newStatus = ReservationStatus.CANCELADA; // Usa tu constante
-    console.log(`Nuevo estado: ${newStatus}`);
-  }
-
-  // 6. Actualizar la reserva en la Base de Datos usando la función auxiliar
   try {
-    // Llama a la función auxiliar para hacer la actualización real en la BD
-    const updatedBooking = await _updateBookingStatus(
-      bookingId,
-      newStatus,
-      cancellationDate,
-      reagendarHastaDate
+    const { data: modifiedBookings, error } = await supabase.rpc(
+      "handle_reagendamiento",
+      {
+        p_new_booking_data: newBookingData,
+        p_penalized_booking_id: penalizedBookingId,
+        p_requesting_user_id: requestingUserId,
+      }
     );
 
-    console.log(`Reserva ${bookingId} cancelada/penalizada exitosamente.`);
-    return updatedBooking; // Devuelve la reserva actualizada
+    if (error) {
+      // Si la RPC de Supabase devuelve un error (ej. por la validación o un problema de BD),
+      // lo capturamos y lo lanzamos para que la UI lo maneje.
+      console.error("Error al llamar a la RPC handle_reagendamiento:", error);
+      throw error;
+    }
+
+    console.log(
+      "Resultado de la RPC de reagendamiento (reservas modificadas):",
+      modifiedBookings
+    );
+
+    // La RPC devuelve un array de objetos de reserva completos, que es exactamente lo que necesitamos.
+    // Asegurémonos de devolver un array, incluso si la RPC no devuelve nada.
+    return modifiedBookings || [];
   } catch (error) {
+    // Captura cualquier otro error (ej. de red) y relánzalo con un mensaje claro.
     console.error(
-      `Error al actualizar el estado de la reserva ${bookingId} en la base de datos:`,
+      `Error en la operación de reagendamiento para reserva ${penalizedBookingId}:`,
       error
     );
-    // Relanza el error para que el componente UI lo maneje (mostrar toast)
-    throw new Error(`No se pudo actualizar la reserva: ${error.message}`);
+    // Es importante relanzar el error para que el componente que llama pueda manejarlo.
+    throw new Error(`No se pudo completar el reagendamiento: ${error.message}`);
   }
+};
+
+// Función para llamar a la RPC de Revertir Reagendamiento.
+export const revertReagendamiento = async (
+  reagendadaBookingId,
+  penalizedBookingId,
+  requestingUserId
+) => {
+  const { data, error } = await supabase.rpc("revert_reagendamiento", {
+    p_reagendada_booking_id: reagendadaBookingId,
+    p_penalized_booking_id: penalizedBookingId,
+    p_requesting_user_id: requestingUserId,
+  });
+
+  if (error) {
+    console.error("Error al llamar a la RPC revert_reagendamiento:", error);
+    throw error;
+  }
+  return data || [];
 };

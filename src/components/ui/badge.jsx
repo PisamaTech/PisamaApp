@@ -18,6 +18,16 @@ const badgeVariants = cva(
         fija: "border-transparent bg-fija text-primary-foreground shadow hover:bg-fija/80",
         eventual:
           "border-transparent bg-eventual text-primary-foreground shadow hover:bg-eventual/80",
+        activa:
+          "border-transparent bg-green-500 text-white shadowhover:bg-green-500/80",
+        penalizada:
+          "border-transparent bg-red-500 text-white hover:bg-red-500/80",
+        cancelada:
+          "border-transparent bg-gray-400 text-white hover:bg-gray-400/80",
+        utilizada:
+          "border-transparent bg-blue-500 text-white hover:bg-blue-500/80",
+        reagendada:
+          "border-transparent bg-orange-500 text-white hover:bg-orange-500/80",
       },
     },
     defaultVariants: {

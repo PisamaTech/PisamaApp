@@ -4,10 +4,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
-import { DialogDescription, Separator } from "./ui";
+import { Separator } from "./ui";
 import { useUIStore } from "@/stores/uiStore";
 
 export const ConfirmCancelDialog = ({

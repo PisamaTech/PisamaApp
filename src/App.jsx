@@ -45,11 +45,11 @@ function App() {
             {/* Si intenta acceder a /auth o /recuperar-password, lo redirigimos */}
             <Route
               path="/auth"
-              element={<Navigate to="/calendario" replace />}
+              element={<Navigate to="/calendario_diario" replace />}
             />
             <Route
               path="/recuperar-password"
-              element={<Navigate to="/calendario" replace />}
+              element={<Navigate to="/calendario_diario" replace />}
             />
 
             {/* Definimos un layout general para las rutas autenticadas */}
@@ -62,7 +62,10 @@ function App() {
               <Route path="perfil" element={<Perfil />} />
               <Route path="reset-password" element={<ResetPassword />} />
               {/* Si no coincide ninguna, redirigimos a calendario */}
-              <Route path="*" element={<Navigate to="/calendario" replace />} />
+              <Route
+                path="*"
+                element={<Navigate to="/calendario_diario" replace />}
+              />
             </Route>
           </>
         ) : (

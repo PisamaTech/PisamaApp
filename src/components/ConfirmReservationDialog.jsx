@@ -22,7 +22,6 @@ export const ConfirmReservationDialog = ({
   onConfirm,
   onCancel,
 }) => {
-  const { loading } = useUIStore();
   const [isProcessing, setIsProcessing] = useState(false); // Estado local para bloqueo
 
   const handleConfirm = async () => {
@@ -35,14 +34,24 @@ export const ConfirmReservationDialog = ({
     }
   };
 
+  // Determina si es un reagendamiento basado en los datos del evento
+  const isReagendamiento = !!hourlyEvents?.[0]?.reagendamiento_de_id;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Confirmar Reserva</DialogTitle>
+          {/* Título Condicional */}
+          <DialogTitle>
+            {isReagendamiento
+              ? "Confirmar Reagendamiento"
+              : "Confirmar Reserva"}
+          </DialogTitle>
           <Separator />
           <DialogDescription>
-            Vas a reservar las siguientes horas:
+            {isReagendamiento
+              ? "Vas a crear la siguiente nueva reserva como reemplazo de tu reserva penalizada:"
+              : "Vas a reservar las siguientes horas:"}
           </DialogDescription>
           <DisplayEventos hourlyEvents={hourlyEvents} />
         </DialogHeader>

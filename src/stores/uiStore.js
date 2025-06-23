@@ -12,6 +12,11 @@ export const useUIStore = create((set) => ({
     message: "",
   },
 
+  // --- Estados para Reagendamiento ---
+  isReagendamientoMode: false, // Indica si estamos en modo reagendamiento
+  penalizedBookingForReagendamiento: null, // Guarda la reserva original a reagendar
+  // --- Fin Estados para Reagendamiento ---
+
   //Manejo de cargas
   startLoading: () => set({ loading: true }),
 
@@ -50,4 +55,18 @@ export const useUIStore = create((set) => ({
 
   setTheme: () =>
     set((state) => ({ theme: state.theme === "light" ? "dark" : "light" })),
+
+  // --- Acciones para Reagendamiento ---
+  startReagendamientoMode: (penalizedBooking) =>
+    set({
+      isReagendamientoMode: true,
+      penalizedBookingForReagendamiento: penalizedBooking,
+    }),
+
+  stopReagendamientoMode: () =>
+    set({
+      isReagendamientoMode: false,
+      penalizedBookingForReagendamiento: null,
+    }),
+  // --- Fin Acciones para Reagendamiento ---
 }));
