@@ -209,13 +209,6 @@ export const Reservas = () => {
     navigate("/calendario-diario");
   };
 
-  // --- Handler for Dialog Open/Close ---
-  const handleModalOpenChange = (open) => {
-    setIsConfirmCancelOpen(open);
-    // Do NOT clear selectedReservationForAction here directly.
-    // Let the useEffect handle it to allow for animations.
-  };
-
   // Mensaje para el modal de confirmación de cancelación
   const getCancelConfirmationMessage = () => {
     if (!selectedReservationForAction) return "";

@@ -11,6 +11,7 @@ import {
   RecoverPassword,
   ConfirmationPage,
   Error404,
+  FacturaDetalle,
 } from "./pages";
 import { useAuthStore } from "./stores/authStore";
 import LoadingOverlay from "./components/LoadingOverlay";
@@ -58,6 +59,7 @@ function App() {
               <Route path="/calendario_semanal" element={<CalendarSemanal />} />
               <Route path="/reservas" element={<Reservas />} />
               <Route path="/facturas" element={<Facturas />} />
+              <Route path="/facturas/:id" element={<FacturaDetalle />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="perfil" element={<Perfil />} />
               <Route path="reset-password" element={<ResetPassword />} />
