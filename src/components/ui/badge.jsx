@@ -25,7 +25,7 @@ const badgeVariants = cva(
         cancelada:
           "border-transparent bg-gray-400 text-white hover:bg-gray-400/80",
         utilizada:
-          "border-transparent bg-blue-500 text-white hover:bg-blue-500/80",
+          "border-transparent bg-cyan-600 text-white hover:bg-cyan-600/80",
         reagendada:
           "border-transparent bg-orange-500 text-white hover:bg-orange-500/80",
         success:

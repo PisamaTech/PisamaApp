@@ -242,6 +242,12 @@ export const useAuthStore = create(
           });
         }
       },
+
+      // Actualizar información del Perfil
+      updateProfileData: (updatedData) =>
+        set((state) => ({
+          profile: { ...state.profile, ...updatedData },
+        })),
     }),
     {
       name: "auth-storage", // Nombre de la clave en localStorage

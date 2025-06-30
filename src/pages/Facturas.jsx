@@ -285,6 +285,12 @@ export const Facturas = () => {
               {/* Resumen de Totales */}
               <div className="space-y-4">
                 <div className="flex justify-between items-center text-base">
+                  <span className="text-muted-foreground">Reservas:</span>
+                  <span className="font-semibold">
+                    {currentPeriodData.calculatedBookings.length}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-base">
                   <span className="text-muted-foreground">
                     Monto Acumulado (sin descuentos):
                   </span>
@@ -322,6 +328,7 @@ export const Facturas = () => {
                         <TableHead>Hora</TableHead>
                         <TableHead>Consultorio</TableHead>
                         <TableHead>Costo</TableHead>
+                        <TableHead>Estado</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -339,8 +346,13 @@ export const Facturas = () => {
                             {dayjs(reserva.start_time).format("HH:mm")}
                           </TableCell>
                           <TableCell>{reserva.consultorio_nombre}</TableCell>
-                          <TableCell className="font-medium">
+                          <TableCell>
                             ${reserva.costo_calculado.toLocaleString("es-UY")}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={reserva.estado.toLowerCase()}>
+                              {reserva.estado}
+                            </Badge>
                           </TableCell>
                         </TableRow>
                       ))}

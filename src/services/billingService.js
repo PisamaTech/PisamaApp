@@ -130,8 +130,6 @@ export const fetchCurrentPeriodPreview = async (userId, userProfile) => {
     periodStart = today.startOf("month").format("YYYY-MM-DD");
     periodEnd = today.endOf("month").format("YYYY-MM-DD");
   }
-  console.log(periodStart);
-  console.log(periodEnd);
 
   try {
     const { data, error } = await supabase.rpc("get_billing_preview_for_user", {
