@@ -7,7 +7,6 @@ import {
 import dayjs from "dayjs";
 import { useEventStore } from "@/stores/calendarStore";
 import { useUIStore } from "@/stores/uiStore";
-import { useCalendarState } from "@/hooks/useCalendarState";
 
 // Función para confirmar reservas
 export const confirmarReserva = async (hourlyEvents) => {

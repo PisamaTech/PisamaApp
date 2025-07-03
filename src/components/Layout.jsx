@@ -36,13 +36,15 @@ export default function Layout() {
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
                   <BreadcrumbLink asChild>
-                    <Link to="/">Inicio</Link>
+                    <Link to="/dashboard">Inicio</Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
                   <BreadcrumbPage>
-                    {getTitleByURL(location.pathname)}
+                    {getTitleByURL(location.pathname) === "Inicio"
+                      ? ""
+                      : getTitleByURL(location.pathname)}
                   </BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>

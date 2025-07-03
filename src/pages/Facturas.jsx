@@ -183,7 +183,7 @@ export const Facturas = () => {
       {/* --- Sección de Historial de Facturas--- */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Historial de Facturas</CardTitle>
+          <CardTitle className="text-xl">Historial de Facturas</CardTitle>
           <Separator />
           <CardDescription className="py-2">
             Aquí puedes ver y descargar tus facturas anteriores.
@@ -253,7 +253,7 @@ export const Facturas = () => {
       {/* --- Sección de Facturación en Curso --- */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Facturación en Curso</CardTitle>
+          <CardTitle className="text-xl">Facturación en Curso</CardTitle>
           <Separator />
           <CardDescription className="py-2">
             Este es un resumen de tu actividad que aún no ha sido facturada.

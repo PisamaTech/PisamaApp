@@ -5,9 +5,15 @@ import {
   UserPlus,
   Settings,
   Calendar1,
+  LayoutDashboard,
 } from "lucide-react";
 
 export const menuItems = [
+  {
+    title: "Inicio",
+    url: "/dashboard",
+    icon: LayoutDashboard,
+  },
   {
     title: "Agenda Diaria",
     url: "/calendario_semanal",

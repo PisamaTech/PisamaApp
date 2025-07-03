@@ -10,6 +10,7 @@ import {
   cancelRecurringSeries, // Renombrar para evitar conflicto
 } from "@/supabase/reservationService";
 import { useEventStore } from "@/stores/calendarStore"; // Para actualizar eventos
+import { EventDialog } from "@/components/EventDialog";
 import {
   ReservationStatus,
   ReservationType,
@@ -93,6 +94,28 @@ export const Reservas = () => {
     useState(null);
   const [cancelActionTypeForModal, setCancelActionTypeForModal] =
     useState(null); // 'single' o 'series'
+
+  // --- Estados para manejar el EventDialog ---
+  const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
+  const [selectedEventForDialog, setSelectedEventForDialog] = useState(null);
+  // --- Función para abrir el diálogo de detalles ---
+  const handleViewDetails = (reserva) => {
+    // La 'reserva' de la tabla ya tiene el formato de la BD.
+    // Necesitamos formatearla al formato que espera EventDialog (y react-big-calendar).
+    // Esta lógica debe ser consistente con la que usas en el Dashboard.
+    setTimeout(() => {
+      const formattedEvent = {
+        ...reserva,
+        start_time: new Date(reserva.start_time),
+        end_time: new Date(reserva.end_time),
+        consultorio_id: reserva.consultorio_id,
+        tipo_reserva: reserva.tipo_reserva,
+      };
+      console.log(formattedEvent);
+      setSelectedEventForDialog(formattedEvent);
+      setIsEventDialogOpen(true);
+    }, 150);
+  };
 
   // --- Funciones Handler para Acciones ---
   const openCancelModal = (reserva, actionType) => {
@@ -370,9 +393,10 @@ export const Reservas = () => {
         {/* Sección de Filtros (sin cambios) */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Filtrar Reservas</CardTitle>
+            <CardTitle className="pb-2 text-xl">Filtrar Reservas</CardTitle>
+            <Separator />
           </CardHeader>
-          <CardContent>
+          <CardContent className="py-2">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* ... Controles de Filtro ... */}
               <div className="flex flex-col space-y-2">
@@ -499,9 +523,10 @@ export const Reservas = () => {
         {/* Sección de Tabla de Reservas */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Lista de Reservas</CardTitle>
+            <CardTitle className="pb-2 text-xl">Lista de Reservas</CardTitle>
           </CardHeader>
-          <CardContent>
+          <Separator />
+          <CardContent className="py-4">
             {loading && <p className="text-center">Cargando reservas...</p>}
             {error && (
               <p className="text-center text-red-500">
@@ -591,6 +616,11 @@ export const Reservas = () => {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => handleViewDetails(reserva)}
+                                >
+                                  Ver Detalles
+                                </DropdownMenuItem>
                                 <span
                                   className={
                                     isCancelSingleDisabled
@@ -705,7 +735,13 @@ export const Reservas = () => {
           </div>
         )}
         {/* --- Fin Controles de Paginación --- */}
-
+        {isEventDialogOpen && (
+          <EventDialog
+            open={isEventDialogOpen}
+            onOpenChange={setIsEventDialogOpen}
+            selectedEvent={selectedEventForDialog}
+          />
+        )}
         {/* Implementación de Modales para Cancelación  */}
       </div>
 

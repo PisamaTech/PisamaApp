@@ -68,8 +68,6 @@ export const useCalendarState = () => {
     setIsConfirmDialogOpen(false);
   };
 
-  const handleCancelarEventual = (selectedEvent) => {};
-
   // Función para cancelar la reserva
   const cancelarReserveDialog = () => {
     setIsDialogOpen(false);
@@ -85,7 +83,6 @@ export const useCalendarState = () => {
     handleSelectSlot,
     handleSelectEvent,
     handleConfirmReserve,
-    handleCancelarEventual,
     resetReservationState,
     setIsDialogOpen,
     setIsConfirmDialogOpen,

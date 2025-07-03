@@ -10,24 +10,22 @@ import {
 } from "@/components/calendar/personalizacionCalendario";
 import { useUIStore } from "@/stores/uiStore";
 import {
-  Separator,
   Alert,
   AlertDescription,
   AlertTitle,
   Button,
-} from "@/components/ui";
-import {
-  CustomEventComponent,
-  eventPropGetter,
-} from "@/components/calendar/CustomEventComponent";
-import {
+  Label,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
+  Separator,
+} from "@/components/ui";
+import {
+  CustomEventComponent,
+  eventPropGetter,
+} from "@/components/calendar/CustomEventComponent";
 import CustomToolbar from "@/components/calendar/CustomToolbar";
 import { useCalendarState } from "@/hooks/useCalendarState";
 import { isSameSlot } from "@/components/calendar/calendarHelper";
@@ -38,6 +36,7 @@ import { handleNavigate } from "@/utils/calendarUtils";
 import { EventDialog } from "@/components";
 import { useReservationHandler } from "@/hooks/useReservationHandler";
 import { XCircle } from "lucide-react";
+import flecha from "../assets/double-right.gif";
 
 // Localizer
 const localizer = dayjsLocalizer(dayjs);
@@ -149,6 +148,11 @@ export const CalendarDiario = () => {
       </h1>
       <Separator />
       <div className="flex justify-center items-center">
+        <img
+          src={flecha}
+          alt="flecha indicadora de selección"
+          className="w-7 h-6 mr-3"
+        />
         <Label htmlFor="consultorio" className="mr-3">
           Selecciona un consultorio:
         </Label>

@@ -32,6 +32,15 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
   // Mover el foco al DialogContent
   const dialogRef = useRef(null);
 
+  // Colores de fondo de estado de reserva
+  const estadoBgColor = {
+    activa: "bg-green-300",
+    penalizada: "bg-red-300",
+    cancelada: "bg-gray-300",
+    utilizada: "bg-cyan-300",
+    reagendada: "bg-orange-300",
+  };
+
   useEffect(() => {
     if (open && dialogRef.current) {
       dialogRef.current.focus();
@@ -49,7 +58,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
     const fetchFutureEvents = async () => {
       if (
         !selectedEvent ||
-        selectedEvent.tipo !== ReservationType.FIJA ||
+        selectedEvent.tipo_reserva !== ReservationType.FIJA ||
         !selectedEvent.recurrence_id
       ) {
         setFutureEventsCount(0); // Resetea si no aplica
@@ -57,7 +66,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
       }
 
       try {
-        const startDate = dayjs(selectedEvent.start);
+        const startDate = dayjs(selectedEvent.start_time);
         if (!startDate.isValid()) {
           console.error("Fecha de inicio inválida para buscar eventos futuros");
           setFutureEventsCount(0);
@@ -95,10 +104,12 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
         <p className="text-sm ">
           ¿Estás seguro de cancelar la reserva del <br />
           <span className="font-bold">
-            {dayjs(selectedEvent.start).format("dddd[ - ]").toLocaleUpperCase()}
-            {dayjs(selectedEvent.start).format("DD/MM/YYYY[ - ]")}
-            {dayjs(selectedEvent.start).format("HH:mm[hs - ]")}
-            {"Consultorio " + selectedEvent.resourceId}?
+            {dayjs(selectedEvent.start_time)
+              .format("dddd[ - ]")
+              .toLocaleUpperCase()}
+            {dayjs(selectedEvent.start_time).format("DD/MM/YYYY[ - ]")}
+            {dayjs(selectedEvent.start_time).format("HH:mm[hs - ]")}
+            {"Consultorio " + selectedEvent.consultorio_id}?
           </span>
           <br />
           <span className="text-xs text-gray-500">
@@ -116,7 +127,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
         <p className="text-sm">
           ¿Estás seguro que querés cancelar las <b>{futureEventsCount}</b>{" "}
           reservas futuras de esta serie fija, comenzando desde el{" "}
-          <b>{dayjs(selectedEvent.start).format("DD/MM/YYYY")}</b>?
+          <b>{dayjs(selectedEvent.start_time).format("DD/MM/YYYY")}</b>?
           <br />
           Esta acción <b>NO</b> se puede deshacer.
           <br />
@@ -226,7 +237,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
         <DialogContent
           ref={dialogRef}
           tabIndex={-1}
-          className="max-h-full overflow-y-auto "
+          className="max-h-full overflow-y-auto"
         >
           <DialogHeader>
             <DialogTitle className="mb-3">
@@ -271,7 +282,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                 <Input
                   id="dia"
                   type="text"
-                  value={dayjs(selectedEvent.start).format("dddd")}
+                  value={dayjs(selectedEvent.start_time).format("dddd")}
                   className="capitalize"
                   disabled
                 />
@@ -282,33 +293,29 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                 <Input
                   id="date"
                   type="date"
-                  value={dayjs(selectedEvent.start).format("YYYY-MM-DD")}
+                  value={dayjs(selectedEvent.start_time).format("YYYY-MM-DD")}
                   disabled
                 />
               </div>
             </div>
-
             <div className="flex justify-between gap-4">
               {/* Hora de inicio */}
               <div className="space-y-2 w-full">
-                <Label htmlFor="startTime">Hora de inicio</Label>
+                <Label htmlFor="startTime">Hora de reserva</Label>
                 <Input
                   id="startTime"
-                  type="time"
-                  value={dayjs(selectedEvent.start).format("HH:mm")}
+                  type="text"
+                  value={`${dayjs(selectedEvent.start_time).format(
+                    "HH:mm"
+                  )} - ${dayjs(selectedEvent.end_time).format("HH:mm")}`}
                   disabled
                 />
               </div>
 
               {/* Hora de fin */}
               <div className="space-y-2 w-full">
-                <Label htmlFor="endTime">Hora de finalización</Label>
-                <Input
-                  id="endTime"
-                  type="time"
-                  value={dayjs(selectedEvent.end).format("HH:mm")}
-                  disabled
-                />
+                <Label htmlFor="id">Identificador de reserva</Label>
+                <Input id="id" type="text" value={selectedEvent.id} disabled />
               </div>
             </div>
             <div className="flex justify-between gap-4">
@@ -319,11 +326,11 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                 <Input
                   id="tipo"
                   type="text"
-                  value={selectedEvent.tipo}
+                  value={selectedEvent.tipo_reserva}
                   disabled
                   className={
-                    selectedEvent.tipo === ReservationType.FIJA
-                      ? "bg-fija" // Asegúrate que estas clases CSS existen y dan el estilo deseado
+                    selectedEvent.tipo_reserva === ReservationType.FIJA
+                      ? "bg-fija"
                       : "bg-eventual"
                   }
                 />
@@ -338,12 +345,97 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                   disabled
                 />
               </div>
+            </div>{" "}
+            <div className="flex justify-between gap-4">
+              {/* Estado de reserva */}
+              <div className="space-y-2 w-full">
+                <Label htmlFor="estado">Estado de reserva</Label>
+                <Input
+                  id="estado"
+                  type="text"
+                  value={selectedEvent.estado}
+                  disabled
+                  className={`capitalize ${
+                    estadoBgColor[selectedEvent.estado] || "bg-white"
+                  }`}
+                />
+              </div>
+              {/* Fecha de creación */}
+              <div className="space-y-2 w-full">
+                <Label htmlFor="fechaCreacion">Fecha de creación</Label>
+                <Input
+                  id="fechaCreacion"
+                  type="text"
+                  value={dayjs(selectedEvent.created_at).format("DD/MM/YYYY")}
+                  disabled
+                />
+              </div>
             </div>
+            {selectedEvent.fecha_cancelacion && (
+              <div className="flex justify-between gap-4">
+                {/* Fecha de cancelación */}
+                <div className="space-y-2 w-full">
+                  <Label htmlFor="fechaCancelacion">Fecha de cancelación</Label>
+                  <Input
+                    id="fechaCancelacion"
+                    type="text"
+                    value={dayjs(selectedEvent.fecha_cancelacion).format(
+                      "DD/MM/YYYY"
+                    )}
+                    disabled
+                  />
+                </div>
+                <div className="space-y-2 w-full">
+                  <Label htmlFor="fueReagendada">¿Fue Reagendada?</Label>
+                  <Input
+                    id="fueReagendada"
+                    type="text"
+                    value={selectedEvent.fue_reagendada ? "Sí" : "No"}
+                    disabled
+                  />
+                </div>
+              </div>
+            )}
+            {selectedEvent.recurrence_end_date && (
+              <div className="space-y-2 w-full">
+                <Label htmlFor="finReservaFija">Fin de reserva fija</Label>
+                <Input
+                  id="finReservaFija"
+                  type="text"
+                  value={dayjs(selectedEvent.recurrence_end_date).format(
+                    "DD/MM/YYYY"
+                  )}
+                  disabled
+                />
+              </div>
+            )}
+            {selectedEvent.estado === "penalizada" && (
+              <div className="space-y-2 w-full">
+                <Label htmlFor="permiteReagendamiento">
+                  Permite reagendar hasta
+                </Label>
+                <Input
+                  id="permiteReagendamiento"
+                  type="text"
+                  value={`${dayjs(selectedEvent.permite_reagendar_hasta).format(
+                    "DD/MM/YYYY"
+                  )}${
+                    dayjs().isAfter(
+                      dayjs(selectedEvent.permite_reagendar_hasta),
+                      "day"
+                    )
+                      ? " - Plazo vencido. Ya no se puede reagendar."
+                      : ""
+                  }`}
+                  disabled
+                />
+              </div>
+            )}
           </div>
           <DialogFooter>
             <div className="mt-4 flex justify-end gap-2">
               {/* Botón para cancelar TODA LA SERIE (solo si es fija) */}
-              {selectedEvent.tipo === ReservationType.FIJA &&
+              {selectedEvent.tipo_reserva === ReservationType.FIJA &&
                 selectedEvent.estado === ReservationStatus.ACTIVA && (
                   <Button
                     onClick={() => {

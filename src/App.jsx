@@ -19,6 +19,7 @@ import { useEffect } from "react";
 import { useUIStore } from "@/stores/uiStore";
 import ErrorToast from "./components/ErrorToast";
 import Layout from "./components/Layout";
+import Dashboard from "./pages/Dashboard";
 
 function App() {
   const { user, checkSession } = useAuthStore();
@@ -46,15 +47,16 @@ function App() {
             {/* Si intenta acceder a /auth o /recuperar-password, lo redirigimos */}
             <Route
               path="/auth"
-              element={<Navigate to="/calendario_diario" replace />}
+              element={<Navigate to="/dashboard" replace />}
             />
             <Route
               path="/recuperar-password"
-              element={<Navigate to="/calendario_diario" replace />}
+              element={<Navigate to="/dashboard" replace />}
             />
 
             {/* Definimos un layout general para las rutas autenticadas */}
             <Route path="/" element={<Layout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/calendario_diario" element={<CalendarDiario />} />
               <Route path="/calendario_semanal" element={<CalendarSemanal />} />
               <Route path="/reservas" element={<Reservas />} />
@@ -64,10 +66,7 @@ function App() {
               <Route path="perfil" element={<Perfil />} />
               <Route path="reset-password" element={<ResetPassword />} />
               {/* Si no coincide ninguna, redirigimos a calendario */}
-              <Route
-                path="*"
-                element={<Navigate to="/calendario_diario" replace />}
-              />
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Route>
           </>
         ) : (

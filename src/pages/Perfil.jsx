@@ -18,8 +18,8 @@ import {
   CardTitle,
   Input,
   Label,
+  Separator,
 } from "@/components/ui";
-import { Separator } from "@/components/ui/separator";
 
 export const Perfil = () => {
   const { profile, updateProfileData } = useAuthStore();
