@@ -3,6 +3,8 @@ import { supabase } from "./index";
 import dayjs from "dayjs";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter"; // Para comparar fechas
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore"; // Para comparar fechas
+import { generateRecurringEventsForRenewal } from "@/utils/calendarUtils";
+import { checkForConflicts } from "../utils/calendarUtils";
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
@@ -191,14 +193,14 @@ export const getOverlappingReservationsForConsultorio = async (
   consultorioId,
   timeSlots
 ) => {
-  const queries = timeSlots.map(([start, end]) =>
+  const queries = timeSlots.map(([start_time, end_time]) =>
     supabase
       .from("reservas")
       .select()
       .eq("consultorio_id", consultorioId)
       .eq("estado", ReservationStatus.ACTIVA)
-      .lt("start_time", end)
-      .gt("end_time", start)
+      .lt("start_time", end_time)
+      .gt("end_time", start_time)
   );
   const results = await Promise.all(queries);
   return results.flatMap((r) => r.data);
@@ -206,14 +208,14 @@ export const getOverlappingReservationsForConsultorio = async (
 
 // Obtener reservas que usan camilla y se superponen con los intervalos dados
 export const getOverlappingCamillaReservations = async (timeSlots) => {
-  const queries = timeSlots.map(([start, end]) =>
+  const queries = timeSlots.map(([start_time, end_time]) =>
     supabase
       .from("reservas")
       .select()
       .eq("usaCamilla", true)
       .eq("estado", ReservationStatus.ACTIVA)
-      .lt("start_time", end)
-      .gt("end_time", start)
+      .lt("start_time", end_time)
+      .gt("end_time", start_time)
   );
   const results = await Promise.all(queries);
   return results.flatMap((r) => r.data);
@@ -501,4 +503,137 @@ export const revertReagendamiento = async (
     throw error;
   }
   return data || [];
+};
+
+/**
+ * Orquesta el proceso completo de renovación de una serie:
+ * 1. Obtiene el patrón de la serie.
+ * 2. Genera las nuevas reservas propuestas.
+ * 3. Valida que no haya conflictos.
+ * 4. Si no hay conflictos, llama a la RPC para extender y crear la serie.
+ *
+ * @param {string} oldRecurrenceId - El ID de la recurrencia que expira.
+ * @param {string} userId - El ID del usuario.
+ * @returns {Promise<object>} El resultado de la RPC si la operación es exitosa.
+ * @throws {Error} Si se encuentran conflictos o si falla la RPC.
+ */
+export const renewAndValidateSeries = async (oldRecurrenceId, userId) => {
+  console.log(
+    `Iniciando validación y renovación para la serie: ${oldRecurrenceId}`
+  );
+
+  // --- 1. Obtener el patrón de la serie antigua ---
+  // Necesitamos una reserva de la serie para saber la hora, duración, consultorio, etc.
+  const { data: baseEventPattern, error: patternError } = await supabase
+    .from("reservas")
+    .select("*")
+    .eq("recurrence_id", oldRecurrenceId)
+    .eq("usuario_id", userId)
+    .order("start_time", { ascending: false })
+    .limit(1)
+    .single();
+
+  if (patternError) {
+    throw new Error(
+      `No se pudo encontrar la serie a renovar: ${patternError.message}`
+    );
+  }
+  console.log("Patrón de reserva obtenido:", baseEventPattern);
+
+  // --- 2. Generar las nuevas reservas propuestas en memoria ---
+  const { newEvents, newRecurrenceEndDate } = generateRecurringEventsForRenewal(
+    baseEventPattern,
+    baseEventPattern.recurrence_end_date,
+    2 // Duración fija en meses
+  );
+
+  if (!newEvents || newEvents.length === 0) {
+    throw new Error(
+      "No se generaron nuevas fechas para la renovación. Es posible que la serie ya esté extendida."
+    );
+  }
+
+  console.log(
+    `Se generaron ${newEvents.length} reservas propuestas para validación.`
+  );
+
+  // --- 3. Chequear conflictos ---
+  console.log("Validando conflictos para las nuevas reservas...");
+  // Aquí usamos la función que ya tenías, que debería devolver un objeto como
+  // { conflictosConsultorio: [], conflictosCamilla: [] }
+  const conflicts = await checkForConflicts(newEvents);
+
+  if (
+    conflicts.conflictosConsultorio.length > 0 ||
+    conflicts.conflictosCamilla.length > 0
+  ) {
+    // Construir un mensaje de error detallado para mostrar al usuario
+    const consultorioMsg =
+      conflicts.conflictosConsultorio.length > 0
+        ? `Consultorios ocupados en fechas: ${conflicts.conflictosConsultorio
+            .map((c) => dayjs(c.start_time).format("DD/MM"))
+            .join(", ")}`
+        : "";
+    const camillaMsg =
+      conflicts.conflictosCamilla.length > 0
+        ? `Camilla no disponible en fechas: ${conflicts.conflictosCamilla
+            .map((c) => dayjs(c.start_time).format("DD/MM"))
+            .join(", ")}`
+        : "";
+
+    const errorMessage =
+      `No se puede renovar. ${consultorioMsg} ${camillaMsg}`.trim();
+    console.error("Conflictos encontrados:", errorMessage, conflicts);
+    throw new Error(errorMessage);
+  }
+
+  console.log(
+    "Validación de conflictos exitosa. Procediendo a crear en la base de datos."
+  );
+
+  // --- 4. Llamar a la RPC de creación y extensión ---
+  // Si no hubo conflictos, procedemos a llamar a la función que invoca la RPC.
+  // Es importante pasarle el 'oldRecurrenceId' que es el que se mantiene.
+  const result = await extendAndCreateSeries(
+    oldRecurrenceId,
+    newRecurrenceEndDate,
+    newEvents,
+    userId
+  );
+
+  return result; // Devuelve el resultado de la RPC (ej. { status: 'success', ... })
+};
+
+// Asegúrate de tener esta función puente a la RPC en el mismo archivo
+// o importarla correctamente.
+/**
+ * Llama a la RPC para extender una serie y crear nuevas reservas.
+ * @param {string} recurrenceId
+ * @param {Date} newRecurrenceEndDate
+ * @param {Array<object>} newBookings - Array de las nuevas reservas a crear.
+ * @param {string} userId
+ */
+export const extendAndCreateSeries = async (
+  recurrenceId,
+  newRecurrenceEndDate,
+  newBookings,
+  userId
+) => {
+  try {
+    const { data, error } = await supabase.rpc("extend_and_create_series", {
+      p_recurrence_id: recurrenceId,
+      p_new_recurrence_end_date:
+        dayjs(newRecurrenceEndDate).format("YYYY-MM-DD"),
+      p_new_bookings: newBookings,
+      p_user_id: userId,
+    });
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Error al llamar a la RPC extend_and_create_series:", error);
+    throw new Error(
+      `No se pudo extender la serie en la base de datos: ${error.message}`
+    );
+  }
 };

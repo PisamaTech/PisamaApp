@@ -182,8 +182,8 @@ export const CalendarDiario = () => {
           step={60}
           timeslots={1}
           defaultView="week" // Vista semanal
-          startAccessor="start"
-          endAccessor="end"
+          startAccessor="start_time"
+          endAccessor="end_time"
           messages={calendarMessages}
           min={dayjs("2024-12-03T07:00:00").toDate()}
           max={dayjs("2024-12-03T23:00:00").toDate()}

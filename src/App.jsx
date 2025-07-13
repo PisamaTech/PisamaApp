@@ -20,6 +20,7 @@ import { useUIStore } from "@/stores/uiStore";
 import ErrorToast from "./components/ErrorToast";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
+import AdminRouteGuard from "./components/AdminRouteGuard";
 
 function App() {
   const { user, checkSession } = useAuthStore();
@@ -67,6 +68,15 @@ function App() {
               <Route path="reset-password" element={<ResetPassword />} />
               {/* Si no coincide ninguna, redirigimos a calendario */}
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
+
+              <Route
+                path="admin"
+                element={
+                  <AdminRouteGuard>
+                    <Admin />
+                  </AdminRouteGuard>
+                }
+              />
             </Route>
           </>
         ) : (

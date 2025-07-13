@@ -1,13 +1,12 @@
-import { Bed } from "lucide-react";
 import dayjs from "dayjs";
 import camillaIcon from "../../assets/massage-table-50.png";
 
 export const CustomEventComponent = ({ event }) => {
-  const { titulo, start, end, usaCamilla } = event;
+  const { titulo, start_time, end_time, usaCamilla } = event;
 
   // Formatear las fechas de inicio y fin
-  const startTime = dayjs(start).format("HH:mm");
-  const endTime = dayjs(end).format("HH:mm");
+  const startTime = dayjs(start_time).format("HH:mm");
+  const endTime = dayjs(end_time).format("HH:mm");
 
   return (
     <div className="flex flex-col h-full text-primary">
@@ -18,7 +17,6 @@ export const CustomEventComponent = ({ event }) => {
       {/* Siguiente línea: ícono a la izquierda y título a la derecha */}
       <div className="flex justify-between items-center overflow-hidden">
         <span className="text-sm font-bold pt-1">{titulo}</span>
-        {/* {usaCamilla && <Bed size={16} />} */}
         {usaCamilla && (
           <img src={camillaIcon} alt="Icono de Camilla" className="w-6 h-7" />
         )}
@@ -33,11 +31,11 @@ export const eventPropGetter = (event) => {
   // Lógica de color según tipo y estado
   if (
     event.estado === "cancelada" &&
-    (event.tipo === "fija" || event.tipo === "quincenal")
+    (event.tipo_reserva === "fija" || event.tipo_reserva === "quincenal")
   ) {
     backgroundColor = "#ffc000"; // Amarillo
   } else {
-    switch (event.tipo) {
+    switch (event.tipo_reserva) {
       case "Fija":
         backgroundColor = "#5b9bd5"; // Azul
         break;

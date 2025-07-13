@@ -41,14 +41,16 @@ export const useCalendarState = () => {
       setIsEventDialogOpen(true);
     } else {
       setSelectedEvent(slotEvent);
+      console.log(slotEvent);
     }
   };
 
   // Función para confirmar la reserva
   const handleConfirmReserve = (reservationData) => {
+    console.log(reservationData);
     const newHourlyEvents = generateHourlyEvents(reservationData); // Creo reservas individuales
     // Si la hora en FIJA, genero recurrencias por 6 meses
-    if (newHourlyEvents[0].tipo === "Fija") {
+    if (newHourlyEvents[0].tipo_reserva === "Fija") {
       const reservaFija = newHourlyEvents.flatMap((baseEvent) => {
         return generateRecurringEvents(baseEvent);
       });

@@ -1,33 +1,50 @@
 import {
+  Button,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+  Input,
+  Label,
+  Separator,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui";
 import dayjs from "dayjs";
 import { useState, useEffect, useRef } from "react";
-import { Input, Label, Separator } from "./ui";
-import { CalendarClock } from "lucide-react";
+import { CalendarClock, RefreshCw } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import { ReservationStatus, ReservationType } from "@/utils/constants"; // Asegúrate de importar ReservationStatus
 import { ConfirmCancelDialog } from "./ConfirmEventDialog";
 // Importa tu nueva función de servicio y mantén la de series si aún la necesitas por separado
-import { cancelBooking, cancelRecurringSeries, supabase } from "@/supabase";
+import {
+  cancelBooking,
+  cancelRecurringSeries,
+  renewAndValidateSeries,
+  supabase,
+} from "@/supabase";
 import { useUIStore } from "@/stores/uiStore";
 import { useEventStore } from "@/stores/calendarStore";
 import { mapReservationToEvent } from "@/utils/calendarUtils";
 
 export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
-  const [cancelActionType, setCancelActionType] = useState(null); // 'single' o 'series'
+  const [actionToConfirm, setActionToConfirm] = useState(null); // 'single' o 'series'
   const [futureEventsCount, setFutureEventsCount] = useState(0);
 
   const { showToast, startLoading, stopLoading, setError, clearError } =
     useUIStore(); // Obtén funciones de UI
-  const { updateEvent } = useEventStore(); // Obtén updateEvent y fetchEventsByWeek
+  const {
+    updateEvent,
+    updateMultipleEventsStatusToCancelled,
+    fetchEventsByWeek,
+    loadInitialEvents: reloadCalendarEvents,
+    clearEvents,
+  } = useEventStore(); // Obtén updateEvent y fetchEventsByWeek
 
   // Mover el foco al DialogContent
   const dialogRef = useRef(null);
@@ -98,47 +115,87 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
   const getConfirmationMessage = () => {
     if (!selectedEvent) return ""; // Si no hay evento, no mostrar mensaje
 
-    if (cancelActionType === "single") {
+    if (actionToConfirm === "single") {
       // Si la acción es cancelar solo esta
-      return (
-        <p className="text-sm ">
-          ¿Estás seguro de cancelar la reserva del <br />
-          <span className="font-bold">
-            {dayjs(selectedEvent.start_time)
-              .format("dddd[ - ]")
-              .toLocaleUpperCase()}
-            {dayjs(selectedEvent.start_time).format("DD/MM/YYYY[ - ]")}
-            {dayjs(selectedEvent.start_time).format("HH:mm[hs - ]")}
-            {"Consultorio " + selectedEvent.consultorio_id}?
-          </span>
-          <br />
-          <span className="text-xs text-gray-500">
-            (Si cancelas con menos de 24hs de antelación, deberás pagar por la
-            reserva, pero podrás reagendarla por un plazo de 6 días, a partir de
-            la reserva original)
-          </span>
-        </p>
-      );
+      return {
+        action: "single",
+        message: (
+          <p className="text-sm ">
+            ¿Estás seguro de cancelar la reserva del <br />
+            <span className="font-bold">
+              {dayjs(selectedEvent.start_time)
+                .format("dddd[ - ]")
+                .toLocaleUpperCase()}
+              {dayjs(selectedEvent.start_time).format("DD/MM/YYYY[ - ]")}
+              {dayjs(selectedEvent.start_time).format("HH:mm[hs - ]")}
+              {"Consultorio " + selectedEvent.consultorio_id}?
+            </span>
+            <br />
+            <span className="text-xs text-gray-500">
+              (Si cancelas con menos de 24hs de antelación, deberás pagar por la
+              reserva, pero podrás reagendarla por un plazo de 6 días, a partir
+              de la reserva original)
+            </span>
+          </p>
+        ),
+      };
     }
 
-    if (cancelActionType === "series") {
+    if (actionToConfirm === "series") {
       // Si la acción es cancelar la serie
-      return (
-        <p className="text-sm">
-          ¿Estás seguro que querés cancelar las <b>{futureEventsCount}</b>{" "}
-          reservas futuras de esta serie fija, comenzando desde el{" "}
-          <b>{dayjs(selectedEvent.start_time).format("DD/MM/YYYY")}</b>?
-          <br />
-          Esta acción <b>NO</b> se puede deshacer.
-          <br />
-          <span className="text-xs text-gray-500">
-            (La primera reserva de la serie podrías tener que abonarla, si su
-            cancelación es con menos de 24hs de antelación)
-          </span>
-        </p>
-      );
+      return {
+        action: "series",
+        message: (
+          <p className="text-sm">
+            ¿Estás seguro que querés cancelar las <b>{futureEventsCount}</b>{" "}
+            reservas futuras de esta serie FIJA, comenzando desde el{" "}
+            <b>{dayjs(selectedEvent.start_time).format("DD/MM/YYYY")}</b>?
+            <br />
+            Esta acción <b>NO</b> se puede deshacer.
+            <br />
+            <span className="text-xs text-gray-500">
+              (La primera reserva de la serie podrías tener que abonarla, si su
+              cancelación es con menos de 24hs de antelación)
+            </span>
+          </p>
+        ),
+      };
+    }
+
+    if (actionToConfirm === "renew") {
+      // Si la acción es renovar
+      return {
+        action: "renew",
+        message: (
+          <p className="text-sm">
+            ¿Estás seguro que deseas renovar la reserva FIJA de los <br />
+            <span className="font-bold">
+              {dayjs(selectedEvent.start_time)
+                .format("dddd[ - ]")
+                .toLocaleUpperCase()}
+              {dayjs(selectedEvent.start_time).format("HH:mm[hs - ]")}
+              {"Consultorio " + selectedEvent.consultorio_id}
+            </span>{" "}
+            por 6 meses más?
+            <br />
+            <span className="text-sm text-muted-foreground">
+              Se crearán y validarán nuevas reservas para el próximo período.
+            </span>
+          </p>
+        ),
+      };
     }
     return ""; // Mensaje por defecto si no hay tipo de acción
+  };
+
+  // --- Función Final de Confirmación ---
+  const handleConfirmAction = () => {
+    if (actionToConfirm === "single" || actionToConfirm === "series") {
+      handleConfirmCancelAction();
+    } else if (actionToConfirm === "renew") {
+      handleRenewSeries();
+    }
+    setIsConfirmDialogOpen(false); // Cierra el modal de confirmación
   };
 
   const handleConfirmCancelAction = async () => {
@@ -150,9 +207,9 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
     try {
       let result; // Puede ser una o varias reservas actualizadas
 
-      if (cancelActionType === "single") {
+      if (actionToConfirm === "single") {
         result = await cancelBooking(selectedEvent.id, profileId);
-      } else if (cancelActionType === "series") {
+      } else if (actionToConfirm === "series") {
         // const currentDateForCancellation = dayjs().toDate(); // Fecha actual para la solicitud
         result = await cancelRecurringSeries(
           selectedEvent.recurrence_id,
@@ -160,7 +217,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
           selectedEvent.start_time
         );
       }
-
+      console.log(result);
       if (result && result.updatedBookings) {
         // 1. Actualiza el store
         result.updatedBookings.forEach((booking) => {
@@ -226,6 +283,43 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
     }
   };
 
+  // --- Lógica de Renovación ---
+  const handleRenewSeries = async () => {
+    if (!profile || !selectedEvent?.recurrence_id) return;
+
+    startLoading();
+    clearError();
+    try {
+      const result = await renewAndValidateSeries(
+        selectedEvent.recurrence_id,
+        profile.id
+      );
+
+      showToast({
+        type: "success",
+        title: "¡Serie Renovada!",
+        message: `Se crearon ${
+          result.newly_created_count || 0
+        } nuevas reservas.`,
+      });
+
+      // Recargar todos los eventos para reflejar los cambios masivos
+      clearEvents();
+      reloadCalendarEvents();
+      console.log(result);
+      onOpenChange(false); // Cierra el diálogo de detalles
+    } catch (err) {
+      setError(err);
+      showToast({
+        type: "error",
+        title: "No se Pudo Renovar la Serie",
+        message: `Conflicto detectado: ${err.message}`,
+      });
+    } finally {
+      stopLoading();
+    }
+  };
+
   // Si no hay evento seleccionado, no renderizar el diálogo
   if (!selectedEvent) {
     return null;
@@ -270,7 +364,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                 <Input
                   id="resourceId"
                   type="text"
-                  value={selectedEvent.resourceId || "N/A"}
+                  value={selectedEvent.consultorio_id || "N/A"}
                   disabled
                 />
               </div>
@@ -397,16 +491,70 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
               </div>
             )}
             {selectedEvent.recurrence_end_date && (
-              <div className="space-y-2 w-full">
-                <Label htmlFor="finReservaFija">Fin de reserva fija</Label>
-                <Input
-                  id="finReservaFija"
-                  type="text"
-                  value={dayjs(selectedEvent.recurrence_end_date).format(
-                    "DD/MM/YYYY"
-                  )}
-                  disabled
-                />
+              <div className="flex justify-between gap-4">
+                {/* Fecha de cancelación */}
+                <div className="space-y-2 w-full">
+                  <Label htmlFor="finReservaFija">Fin de reserva fija</Label>
+                  <Input
+                    id="finReservaFija"
+                    type="text"
+                    value={dayjs(selectedEvent.recurrence_end_date).format(
+                      "DD/MM/YYYY"
+                    )}
+                    disabled
+                  />
+                </div>
+                <div className="space-y-2 w-full">
+                  <Label htmlFor="extenderFinReservaFija">
+                    Extender fin de reserva fija
+                  </Label>
+                  <div className="flex items-center gap-1">
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="inline-block">
+                            <Button
+                              onClick={() => {
+                                setActionToConfirm("renew"); // Define que la acción es renovar la serie fija
+                                setIsConfirmDialogOpen(true);
+                              }}
+                              variant="destructive" //
+                              className="bg-orange-400 hover:bg-orange-600/50"
+                              disabled={
+                                !mismoUsuario ||
+                                (selectedEvent.recurrence_end_date &&
+                                  dayjs(selectedEvent.recurrence_end_date).diff(
+                                    dayjs(),
+                                    "day"
+                                  ) > 45)
+                              }
+                            >
+                              Extender por 6 meses
+                            </Button>
+                          </span>
+                        </TooltipTrigger>
+                        {(!mismoUsuario ||
+                          (selectedEvent.recurrence_end_date &&
+                            dayjs(selectedEvent.recurrence_end_date).diff(
+                              dayjs(),
+                              "day"
+                            ) > 45)) && (
+                          <TooltipContent>
+                            <p>
+                              El botón está desactivado porque no es el usuario
+                              que realizó la reserva <br />O la fecha de
+                              finalización de la reserva FIJA es mayor a 45
+                              días. <br />
+                              Recién 45 días antes de la fecha de finalización,
+                              podrá extender por 6 meses.
+                            </p>
+                          </TooltipContent>
+                        )}
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                </div>
               </div>
             )}
             {selectedEvent.estado === "penalizada" && (
@@ -439,7 +587,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                 selectedEvent.estado === ReservationStatus.ACTIVA && (
                   <Button
                     onClick={() => {
-                      setCancelActionType("series"); // Define que la acción es cancelar la serie
+                      setActionToConfirm("series"); // Define que la acción es cancelar la serie
                       setIsConfirmDialogOpen(true);
                     }}
                     variant="destructive" // O un color diferente para series
@@ -453,7 +601,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
               {selectedEvent.estado === ReservationStatus.ACTIVA && (
                 <Button
                   onClick={() => {
-                    setCancelActionType("single"); // Define que la acción es cancelar solo esta
+                    setActionToConfirm("single"); // Define que la acción es cancelar solo esta
                     setIsConfirmDialogOpen(true);
                   }}
                   variant="destructive" // O un color que indique acción de cancelar
@@ -472,7 +620,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
           open={isConfirmDialogOpen}
           onOpenChange={setIsConfirmDialogOpen}
           message={getConfirmationMessage()}
-          onConfirm={handleConfirmCancelAction}
+          onConfirm={handleConfirmAction}
         />
       )}
     </>

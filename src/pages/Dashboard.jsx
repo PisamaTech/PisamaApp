@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { useAuthStore } from "@/stores/authStore";
 import { useUIStore } from "@/stores/uiStore";
 import { fetchDashboardData } from "@/services/dashboardService"; // Importa la función agregadora
+import { renewAndValidateSeries } from "@/supabase";
+import { useEventStore } from "@/stores/calendarStore";
+import { ConfirmCancelDialog } from "@/components";
 
 import { EventDialog } from "@/components/EventDialog";
 import { useNavigate } from "react-router-dom"; // Para el botón de agendar
@@ -30,12 +33,25 @@ import { ArrowRight, BellRing } from "lucide-react";
 
 const Dashboard = () => {
   const { profile } = useAuthStore();
-  const { loading, error, startLoading, stopLoading, setError, clearError } =
-    useUIStore();
+  const {
+    showToast,
+    loading,
+    error,
+    startLoading,
+    stopLoading,
+    setError,
+    clearError,
+  } = useUIStore();
+  const { loadInitialEvents: reloadCalendarEvents } = useEventStore(); // Renombramos para mayor claridad de su función
   const navigate = useNavigate(); // Hook para navegar
   const startReagendamientoMode = useUIStore(
     (state) => state.startReagendamientoMode
   );
+
+  // --- Estados para ConfirmEventDialog ---
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [actionToConfirm, setActionToConfirm] = useState(null); // 'renewSeries' u otras
+  const [selectedSerieForAction, setSelectedSerieForAction] = useState(null);
 
   // --- Estados para el EventDialog ---
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
@@ -72,7 +88,92 @@ const Dashboard = () => {
     navigate("/calendario_semanal");
   };
 
-  // --- Función para abrir el diálogo ---
+  // --- 3. Reemplaza tu función handleRenewSeries por esta ---
+  const handleRenewSeries = async () => {
+    if (!profile || !selectedSerieForAction) return;
+
+    startLoading();
+    clearError();
+    try {
+      // Llama a la función orquestadora que valida y luego crea/extiende
+      const result = await renewAndValidateSeries(
+        selectedSerieForAction.recurrence_id,
+        profile.id
+      );
+
+      showToast({
+        type: "success",
+        title: "¡Serie Renovada con Éxito!",
+        message: `Se crearon ${
+          result.newly_created_count || 0
+        } nuevas reservas para tu serie.`,
+      });
+
+      // --- Recargar Datos para Reflejar los Cambios ---
+      // 1. Recargar los datos del dashboard. La serie renovada desaparecerá de esta lista.
+      const data = await fetchDashboardData(profile.id, profile);
+      console.log(result);
+      setDashboardData(data);
+      // 2. Recargar los eventos del calendario para que las nuevas reservas aparezcan allí.
+      reloadCalendarEvents();
+    } catch (err) {
+      // El error ahora contendrá los detalles de los conflictos si los hubo
+      setError(err);
+      showToast({
+        type: "error",
+        title: "No se pudo Renovar la Serie",
+        message: err.message, // Muestra el mensaje de error detallado del servicio
+      });
+    } finally {
+      stopLoading();
+      // Resetea los estados de acción al finalizar
+      setSelectedSerieForAction(null);
+      setActionToConfirm(null);
+    }
+  };
+
+  // --- 3. Crea la función que abre el modal ---
+  const openConfirmationModal = (serie, actionType) => {
+    console.log(serie, actionType);
+    setSelectedSerieForAction(serie);
+    setActionToConfirm(actionType);
+    setIsConfirmDialogOpen(true);
+  };
+
+  // --- 4. Crea la función que genera el mensaje dinámico ---
+  const getConfirmationMessage = () => {
+    if (!selectedSerieForAction) return "";
+
+    switch (actionToConfirm) {
+      case "renewSeries":
+        return {
+          action: "renew",
+          message: (
+            <p className="text-sm">
+              ¿Estás seguro de que quieres renovar la reserva FIJA de los{" "}
+              <b className="font-semibold">{selectedSerieForAction.title}</b>{" "}
+              por 6 meses más?
+              <br />
+              <span className="text-sm text-muted-foreground">
+                Se crearán y validarán nuevas reservas para el próximo período.
+              </span>
+            </p>
+          ),
+        };
+      default:
+        return "";
+    }
+  };
+
+  // --- 5. Crea la función orquestadora que el modal llamará ---
+  const handleConfirmAction = () => {
+    if (actionToConfirm === "renewSeries") {
+      handleRenewSeries();
+    }
+    setIsConfirmDialogOpen(false); // Cierra el modal después de decidir qué hacer
+  };
+
+  // --- Función para abrir el diálogo de Eventos ---
   const handleViewDetails = (event) => {
     // Como los datos vienen de la tabla 'reservas', hay que formatearlos al formato que espera EventDialog y react-big-calendar
     const formattedEvent = {
@@ -148,6 +249,7 @@ const Dashboard = () => {
     currentPeriodPreview,
     expiringSeries,
   } = dashboardData;
+  console.log(expiringSeries);
 
   // --- Renderizado del Dashboard con Datos ---
   return (
@@ -193,7 +295,7 @@ const Dashboard = () => {
                   </div>
                   <Button
                     size="sm"
-                    onClick={() => handleRenewSeries(serie.recurrence_id)}
+                    onClick={() => openConfirmationModal(serie, "renewSeries")}
                   >
                     Renovar
                   </Button>
@@ -443,6 +545,15 @@ const Dashboard = () => {
           </CardFooter>
         </Card>
       </div>
+      {selectedSerieForAction && (
+        <ConfirmCancelDialog
+          open={isConfirmDialogOpen}
+          onOpenChange={setIsConfirmDialogOpen}
+          message={getConfirmationMessage()}
+          onConfirm={handleConfirmAction} // Llama al orquestador
+        />
+      )}
+
       {isEventDialogOpen && (
         <EventDialog
           open={isEventDialogOpen}

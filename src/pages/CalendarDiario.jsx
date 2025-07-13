@@ -140,8 +140,8 @@ export const CalendarSemanal = () => {
           step={60}
           timeslots={1}
           defaultView={"day"}
-          startAccessor="start"
-          endAccessor="end"
+          startAccessor="start_time"
+          endAccessor="end_time"
           resources={resources}
           resourceIdAccessor="id"
           resourceTitleAccessor="title"

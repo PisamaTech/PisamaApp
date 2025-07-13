@@ -91,19 +91,24 @@ export const ReservationDialog = ({
 
   // Manejar la sumisión del formulario
   const onSubmit = (data) => {
+    console.log(data);
     const reservationData = {
       usuario_id: id,
       titulo: `${firstName} ${getFirstCharacterAndDot(lastName)}`,
       start: dayjs(`${data.date}T${data.startTime}`).toDate(),
+      start_time: dayjs(`${data.date}T${data.startTime}`).toDate(),
       end: dayjs(`${data.date}T${data.endTime}`).toDate(),
+      end_time: dayjs(`${data.date}T${data.endTime}`).toDate(),
+      consultorio_id: data.resourceId,
       resourceId: data.resourceId,
-      tipo: data.tipo,
+      tipo_reserva: data.tipo,
       usaCamilla: data.usaCamilla === "Sí",
       status: ReservationStatus.ACTIVA,
       // --- Clave: Añade el ID de la reserva original si es un reagendamiento ---
       reagendamiento_de_id: isReagendamiento ? penalizedBooking.id : null,
     };
     onConfirm(reservationData);
+    console.log(reservationData);
     onOpenChange(false); // Cerrar el diálogo
   };
 
@@ -135,7 +140,8 @@ export const ReservationDialog = ({
                   "DD/MM/YYYY [- ]HH:mm[hs]"
                 )}
               </b>
-              . Esta nueva reserva reemplazará a la anterior y no generará un
+              . <br />
+              Esta nueva reserva reemplazará a la anterior y no generará un
               costo adicional.
             </div>
           )}

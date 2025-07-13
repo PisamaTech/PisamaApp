@@ -66,12 +66,13 @@ export const confirmarReserva = async (hourlyEvents) => {
         // Construye el objeto de datos que espera tu RPC, sin el id de reagendamiento
         consultorio_id: eventData.resourceId,
         usuario_id: eventData.usuario_id,
-        tipo_reserva: eventData.tipo,
-        start_time: dayjs(eventData.start).toISOString(),
-        end_time: dayjs(eventData.end).toISOString(),
+        tipo_reserva: eventData.tipo_reserva,
+        start_time: dayjs(eventData.start_time).toISOString(),
+        end_time: dayjs(eventData.end_time).toISOString(),
         titulo: eventData.titulo,
         usaCamilla: eventData.usaCamilla,
       };
+      console.log(newBookingData);
       const penalizedBookingId = eventData.reagendamiento_de_id;
       const requestingUserId = eventData.usuario_id;
 
@@ -105,6 +106,7 @@ export const confirmarReserva = async (hourlyEvents) => {
       // --- Lógica de Reserva Normal ---
       const reservasParaInsertar = mapEventsToReservations(hourlyEvents);
       const createdBookings = await createReservations(reservasParaInsertar);
+      console.log(createdBookings);
 
       // Añade las nuevas reservas al store
       createdBookings.forEach((booking) => {

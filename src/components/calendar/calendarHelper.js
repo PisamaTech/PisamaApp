@@ -18,8 +18,9 @@ export const generateHourlyEvents = (reservationData) => {
     const eventStart = dayjs(start).add(i, "hour");
     return {
       ...rest,
-      start: eventStart.toDate(),
-      end: eventStart.add(1, "hour").toDate(),
+      consultorio_id: reservationData.resourceId,
+      start_time: eventStart.toDate(),
+      end_time: eventStart.add(1, "hour").toDate(),
     };
   });
 };

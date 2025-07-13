@@ -229,7 +229,7 @@ export const Reservas = () => {
     console.log(reservaPenalizada);
     console.log(isReagendamientoMode);
     // 2. Navega a la vista del calendario principal
-    navigate("/calendario-diario");
+    navigate("/calendario_diario");
   };
 
   // Mensaje para el modal de confirmación de cancelación
@@ -237,49 +237,55 @@ export const Reservas = () => {
     if (!selectedReservationForAction) return "";
 
     if (cancelActionTypeForModal === "single") {
-      return (
-        <p className="text-sm">
-          ¿Estás seguro de cancelar la reserva del <br />
-          <span className="font-bold">
-            {dayjs(selectedReservationForAction.start_time)
-              .format("dddd[ - ]")
-              .toLocaleUpperCase()}
-            {dayjs(selectedReservationForAction.start_time).format(
-              "DD/MM/YYYY[ - ]"
-            )}
-            {dayjs(selectedReservationForAction.start_time).format(
-              "HH:mm[hs - ]"
-            )}
-            {"Consultorio " + selectedReservationForAction.consultorio_id}?
-          </span>
-          <br />
-          <span className="text-xs text-gray-500">
-            (Si cancelas con menos de 24hs de antelación, deberás pagar por la
-            reserva, pero podrás reagendarla por un plazo de 6 días, a partir de
-            la reserva original)
-          </span>
-        </p>
-      );
+      return {
+        action: "single",
+        message: (
+          <p className="text-sm">
+            ¿Estás seguro de cancelar la reserva del <br />
+            <span className="font-bold">
+              {dayjs(selectedReservationForAction.start_time)
+                .format("dddd[ - ]")
+                .toLocaleUpperCase()}
+              {dayjs(selectedReservationForAction.start_time).format(
+                "DD/MM/YYYY[ - ]"
+              )}
+              {dayjs(selectedReservationForAction.start_time).format(
+                "HH:mm[hs - ]"
+              )}
+              {"Consultorio " + selectedReservationForAction.consultorio_id}?
+            </span>
+            <br />
+            <span className="text-xs text-gray-500">
+              (Si cancelas con menos de 24hs de antelación, deberás pagar por la
+              reserva, pero podrás reagendarla por un plazo de 6 días, a partir
+              de la reserva original)
+            </span>
+          </p>
+        ),
+      };
     }
     if (cancelActionTypeForModal === "series") {
       // Aquí podrías querer mostrar el conteo de futuras reservas si lo obtienes
-      return (
-        <p className="text-sm">
-          ¿Estás seguro de cancelar TODAS las reservas futuras de esta reserva
-          FIJA, comenzando desde la reserva del{" "}
-          <span className="font-bold">
-            {dayjs(selectedReservationForAction.start_time)
-              .locale("es")
-              .format("dddd DD/MM/YYYY HH:mm")}
-          </span>
-          ?
-          <br />
-          <span className="text-xs text-gray-500 mt-1 block">
-            (La primera reserva de la serie podría ser penalizada si su
-            cancelación es con menos de 24hs de antelación.)
-          </span>
-        </p>
-      );
+      return {
+        action: "series",
+        message: (
+          <p className="text-sm">
+            ¿Estás seguro de cancelar TODAS las reservas futuras de esta reserva
+            FIJA, comenzando desde la reserva del{" "}
+            <span className="font-bold">
+              {dayjs(selectedReservationForAction.start_time)
+                .locale("es")
+                .format("dddd DD/MM/YYYY HH:mm")}
+            </span>
+            ?
+            <br />
+            <span className="text-xs text-gray-500 mt-1 block">
+              (La primera reserva de la serie podría ser penalizada si su
+              cancelación es con menos de 24hs de antelación.)
+            </span>
+          </p>
+        ),
+      };
     }
     return "";
   };

@@ -148,6 +148,7 @@ export const fetchExpiringSeries = async (userId, daysThreshold = 45) => {
       )
       .eq("usuario_id", userId)
       .eq("tipo_reserva", "Fija")
+      .eq("estado", "activa")
       .gte("recurrence_end_date", new Date().toISOString()) // Que no haya expirado ya
       .lte("recurrence_end_date", thresholdDate) // Que expire dentro del umbral
       // La siguiente parte es para obtener una única fila por serie
@@ -168,9 +169,9 @@ export const fetchExpiringSeries = async (userId, daysThreshold = 45) => {
           title: `${dayjs(reserva.start_time)
             .locale("es")
             .format("dddd")
-            .replace(/^\w/, (c) => c.toUpperCase())} - ${dayjs(
-            reserva.start_time
-          ).format("HH:mm")}hs - Consultorio ${reserva.consultorio_id}`,
+            .toUpperCase()} - ${dayjs(reserva.start_time).format(
+            "HH:mm"
+          )}hs - Consultorio ${reserva.consultorio_id}`,
           consultorio_id: reserva.consultorio_id,
         });
       }

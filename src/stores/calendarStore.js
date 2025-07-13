@@ -122,7 +122,6 @@ export const useEventStore = create((set, get) => ({
   clearEvents: () => {
     set({ events: [], loadedWeeksOfYear: [] }); // Limpia estados locales de EventStore
     useUIStore.getState().clearError(); // Limpia error en UIStore
-    useUIStore.getState().stopLoading(); // Detiene loading en UIStore
   },
 
   updateMultipleEventsStatusToCancelled: (eventIds, cancellationDate) =>
