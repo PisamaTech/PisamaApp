@@ -7,12 +7,12 @@ export const useReservationHandler = (resetReservationState) => {
 
   const handleReservation = useCallback(
     async (hourlyEvents) => {
+      resetReservationState();
       try {
         startLoading();
         const result = await confirmarReserva(hourlyEvents);
 
         // // Cerrar diálogo y limpiar estado
-        resetReservationState();
         return result;
       } catch (error) {
         showToast({

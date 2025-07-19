@@ -8,18 +8,18 @@ import dayjs from "dayjs";
 import { useEventStore } from "@/stores/calendarStore";
 import { useUIStore } from "@/stores/uiStore";
 
+const {
+  startLoading,
+  stopLoading,
+  setError,
+  showToast,
+  clearError,
+  stopReagendamientoMode,
+} = useUIStore.getState();
+const { addEvent, updateEvent } = useEventStore.getState();
+
 // Función para confirmar reservas
 export const confirmarReserva = async (hourlyEvents) => {
-  const {
-    startLoading,
-    stopLoading,
-    setError,
-    showToast,
-    clearError,
-    stopReagendamientoMode,
-  } = useUIStore.getState();
-  const { addEvent, updateEvent } = useEventStore.getState();
-
   // Verificar conflictos con reservas existentes
   const { conflictosConsultorio, conflictosCamilla } = await checkForConflicts(
     hourlyEvents
@@ -56,7 +56,7 @@ export const confirmarReserva = async (hourlyEvents) => {
   if (!eventData) return;
 
   clearError();
-  startLoading();
+
   try {
     const isReagendamiento = !!eventData.reagendamiento_de_id;
 
@@ -132,9 +132,3 @@ export const confirmarReserva = async (hourlyEvents) => {
     stopLoading();
   }
 };
-
-// -> VERSION ANTERIOR
-// Mapear los eventos a reservas e insertarlas en la base de datos
-// const reservasParaInsertar = mapEventsToReservations(hourlyEvents);
-// const data = await createReservations(reservasParaInsertar);
-// return data; // Devolver los datos insertados para uso en el componente;

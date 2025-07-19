@@ -63,20 +63,18 @@ function App() {
               <Route path="/reservas" element={<Reservas />} />
               <Route path="/facturas" element={<Facturas />} />
               <Route path="/facturas/:id" element={<FacturaDetalle />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="perfil" element={<Perfil />} />
-              <Route path="reset-password" element={<ResetPassword />} />
-              {/* Si no coincide ninguna, redirigimos a calendario */}
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
-
               <Route
-                path="admin"
+                path="/admin"
                 element={
                   <AdminRouteGuard>
                     <Admin />
                   </AdminRouteGuard>
                 }
               />
+              <Route path="perfil" element={<Perfil />} />
+              <Route path="reset-password" element={<ResetPassword />} />
+              {/* Si no coincide ninguna, redirigimos a calendario */}
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Route>
           </>
         ) : (

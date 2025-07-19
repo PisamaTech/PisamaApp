@@ -36,18 +36,24 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
   const [actionToConfirm, setActionToConfirm] = useState(null); // 'single' o 'series'
   const [futureEventsCount, setFutureEventsCount] = useState(0);
 
-  const { showToast, startLoading, stopLoading, setError, clearError } =
-    useUIStore(); // Obtén funciones de UI
+  const {
+    loading,
+    showToast,
+    startLoading,
+    stopLoading,
+    setError,
+    clearError,
+  } = useUIStore(); // Obtén funciones de UI
   const {
     updateEvent,
-    updateMultipleEventsStatusToCancelled,
-    fetchEventsByWeek,
     loadInitialEvents: reloadCalendarEvents,
     clearEvents,
   } = useEventStore(); // Obtén updateEvent y fetchEventsByWeek
 
   // Mover el foco al DialogContent
   const dialogRef = useRef(null);
+  console.log("Event Loading:" + loading);
+  console.log("Event open:" + open);
 
   // Colores de fondo de estado de reserva
   const estadoBgColor = {
@@ -190,17 +196,21 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
 
   // --- Función Final de Confirmación ---
   const handleConfirmAction = () => {
+    setIsConfirmDialogOpen(false); // Cierra el modal de confirmación
+    console.log("Event Loading:" + loading);
+    console.log("Event open:" + open);
+
     if (actionToConfirm === "single" || actionToConfirm === "series") {
       handleConfirmCancelAction();
     } else if (actionToConfirm === "renew") {
       handleRenewSeries();
     }
-    setIsConfirmDialogOpen(false); // Cierra el modal de confirmación
   };
 
   const handleConfirmCancelAction = async () => {
     if (!selectedEvent || !profileId) return;
 
+    setIsConfirmDialogOpen(false);
     clearError();
     startLoading();
 
@@ -269,8 +279,6 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
       }
 
       // Cerrar diálogos
-      setIsConfirmDialogOpen(false);
-      onOpenChange(false);
     } catch (error) {
       setError(error); // Usa el setError global
       showToast({
@@ -527,7 +535,8 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                                   dayjs(selectedEvent.recurrence_end_date).diff(
                                     dayjs(),
                                     "day"
-                                  ) > 45)
+                                  ) > 45) ||
+                                selectedEvent.estado !== "activa"
                               }
                             >
                               Extender por 6 meses

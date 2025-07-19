@@ -132,10 +132,10 @@ export const Reservas = () => {
 
     clearError();
     startLoading();
+    setIsConfirmCancelOpen(false);
 
     try {
       let result; // Puede ser una o varias reservas actualizadas
-
       if (cancelActionTypeForModal === "single") {
         result = await cancelBookingService(
           selectedReservationForAction.id,
@@ -218,7 +218,7 @@ export const Reservas = () => {
       stopLoading();
       setSelectedReservationForAction(null);
       setCancelActionTypeForModal(null);
-      setIsConfirmCancelOpen(false); // Signal dialog to close. Cleanup will be handled by handleModalOpenChange.
+      // Signal dialog to close. Cleanup will be handled by handleModalOpenChange.
     }
   };
 
@@ -413,7 +413,7 @@ export const Reservas = () => {
                       id="date"
                       variant={"outline"}
                       className={cn(
-                        "w-full justify-start text-left font-normal",
+                        "w-full justify-start text-left font-normal whitespace-break-spaces",
                         !filters.dateRange?.from && "text-muted-foreground"
                       )}
                     >

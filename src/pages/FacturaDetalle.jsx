@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
 import "dayjs/locale/es";
@@ -36,7 +36,7 @@ export const FacturaDetalle = () => {
   const { id } = useParams();
   const { profile } = useAuthStore();
   const userId = profile?.id;
-
+  const navigate = useNavigate();
   const { loading, error, startLoading, stopLoading, setError, clearError } =
     useUIStore();
   const [invoiceData, setInvoiceData] = useState(null);
@@ -46,6 +46,10 @@ export const FacturaDetalle = () => {
   let useFirstColor = true; // Booleano para alternar el color
   const color1 = "bg-emerald-100";
   const color2 = "bg-orange-100";
+
+  const handleGoBack = () => {
+    navigate(-1); // Vuelve a la página anterior
+  };
 
   useEffect(() => {
     if (!userId || !id) return;
@@ -124,11 +128,14 @@ export const FacturaDetalle = () => {
 
   return (
     <div className="container mx-auto p-4 md:p-8 space-y-6">
-      <Button asChild variant="outline" size="sm" className="mb-4">
-        <Link to="/facturas">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Volver al Historial
-        </Link>
+      <Button
+        variant="outline"
+        size="sm"
+        className="mb-4"
+        onClick={handleGoBack}
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Volver al Historial
       </Button>
 
       <Card className="w-full">

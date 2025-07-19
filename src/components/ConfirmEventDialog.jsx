@@ -18,6 +18,8 @@ export const ConfirmCancelDialog = ({
   onConfirm,
 }) => {
   const { loading } = useUIStore();
+  console.log("Event Loading:" + loading);
+  console.log("Event open:" + open);
 
   const isCancelAction =
     message.action === "single" || message.action === "series";

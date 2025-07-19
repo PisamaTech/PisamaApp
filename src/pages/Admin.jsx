@@ -1,3 +1,7 @@
+import BillingManagementTab from "@/components/admin/BillingManagementTab";
+import PricingManagementTab from "@/components/admin/PricingManagementTab";
+import ReservationsManagementTab from "@/components/admin/ReservationsManagementTab";
+import UserManagementTab from "@/components/admin/UserManagementTab";
 import {
   Card,
   CardContent,
@@ -62,9 +66,7 @@ export const Admin = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              <p className="text-center text-muted-foreground p-10">
-                [WIP: Aquí irá la tabla de búsqueda y gestión de usuarios]
-              </p>
+              <UserManagementTab />
             </CardContent>
           </Card>
         </TabsContent>
@@ -78,11 +80,8 @@ export const Admin = () => {
                 Encuentra cualquier reserva en el sistema con filtros avanzados.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-2">
-              <p className="text-center text-muted-foreground p-10">
-                [WIP: Aquí irá el formulario de búsqueda y la tabla de
-                resultados]
-              </p>
+            <CardContent>
+              <ReservationsManagementTab />
             </CardContent>
           </Card>
         </TabsContent>
@@ -97,10 +96,7 @@ export const Admin = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              <p className="text-center text-muted-foreground p-10">
-                [WIP: Aquí irá la tabla de facturas y la acción de "Marcar como
-                Pagada"]
-              </p>
+              <BillingManagementTab />
             </CardContent>
           </Card>
         </TabsContent>
@@ -114,11 +110,8 @@ export const Admin = () => {
                 Define y actualiza los precios por hora de los consultorios.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-2">
-              <p className="text-center text-muted-foreground p-10">
-                [WIP: Aquí irá la tabla de precios y las acciones para
-                modificarlos]
-              </p>
+            <CardContent>
+              <PricingManagementTab />
             </CardContent>
           </Card>
         </TabsContent>

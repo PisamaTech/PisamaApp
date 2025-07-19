@@ -249,7 +249,6 @@ const Dashboard = () => {
     currentPeriodPreview,
     expiringSeries,
   } = dashboardData;
-  console.log(expiringSeries);
 
   // --- Renderizado del Dashboard con Datos ---
   return (
