@@ -34,6 +34,7 @@ export const ReservationDialog = ({
   onCancel,
   isReagendamiento = false, // Valor por defecto
   penalizedBooking = null, // Valor por defecto
+  selectedConsultorio = null,
 }) => {
   // Configuración de React Hook Form con Zod
   const form = useForm({
@@ -67,7 +68,7 @@ export const ReservationDialog = ({
       setValue("tipo", "Eventual");
       setValue("usaCamilla", "No");
     }
-  }, [selectedSlot, setValue]);
+  }, [selectedSlot, selectedConsultorio, setValue]);
 
   // Mover el foco al DialogContent
   const dialogRef = useRef(null);
@@ -159,8 +160,11 @@ export const ReservationDialog = ({
                   )} - ${dayjs(selectedSlot.start).format("HH:mm")}hs a ${dayjs(
                     selectedSlot.end
                   ).format("HH:mm")}hs - ${
-                    resources.find((r) => r.id === selectedSlot.resourceId)
-                      ?.title || "Sin recurso"
+                    resources.find(
+                      (r) =>
+                        r.id ===
+                        (selectedSlot.resourceId || selectedConsultorio)
+                    )?.title || "Sin recurso"
                   }.`
                 : "No hay slot seleccionado"}
             </b>
@@ -247,7 +251,9 @@ export const ReservationDialog = ({
               <Label htmlFor="resourceId">Consultorio</Label>
               <Select
                 onValueChange={(value) => setValue("resourceId", Number(value))}
-                defaultValue={String(selectedSlot?.resourceId || "")}
+                defaultValue={String(
+                  selectedSlot?.resourceId || selectedConsultorio
+                )}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecciona un consultorio" />

@@ -30,7 +30,7 @@ import { EventDialog } from "../components/EventDialog";
 import { useEventStore } from "../stores/calendarStore";
 import { handleNavigate } from "@/utils/calendarUtils";
 import { useReservationHandler } from "@/hooks/useReservationHandler";
-import { XCircle } from "lucide-react";
+import { Plus, XCircle } from "lucide-react";
 
 // Localizer
 dayjs.locale("es");
@@ -54,6 +54,10 @@ export const CalendarSemanal = () => {
     cancelarReserveDialog,
   } = useCalendarState();
 
+  const handleNewReservationClick = () => {
+    setIsDialogOpen(true);
+  };
+
   const isReagendamientoMode = useUIStore(
     (state) => state.isReagendamientoMode
   );
@@ -65,7 +69,7 @@ export const CalendarSemanal = () => {
   );
 
   const { handleReservation } = useReservationHandler(resetReservationState);
-
+  console.log(selectedSlot);
   const { events } = useEventStore(); // Usa el store de Zustand
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -94,7 +98,7 @@ export const CalendarSemanal = () => {
   });
 
   return (
-    <div className="mx-auto p-4 space-y-4 max-h-screen w-full">
+    <div className="mx-auto p-4 space-y-4 w-full">
       {/* --- Indicador Visual de Reagendamiento --- */}
       {isReagendamientoMode && penalizedBookingForReagendamiento && (
         <Alert
@@ -189,6 +193,16 @@ export const CalendarSemanal = () => {
           // onConfirm={handleConfirmReserve}
         />
       )}
+
+      {/* Botón Flotante para Nueva Reserva */}
+      <Button
+        onClick={handleNewReservationClick}
+        className="fixed bottom-8 right-8 z-50 h-16 w-16 rounded-full shadow-lg"
+        size="icon"
+        aria-label="Agendar nueva reserva"
+      >
+        <Plus className="h-8 w-8" />
+      </Button>
     </div>
   );
 };

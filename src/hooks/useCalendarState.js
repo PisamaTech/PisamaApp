@@ -16,19 +16,23 @@ export const useCalendarState = () => {
   // Función para abrir Dialog si se hace click sobre botón de AGENDAR
   const handleSelectSlot = (slotInfo, selectedResource) => {
     const { start, end, resourceId } = slotInfo;
+    console.log(selectedSlot);
+    console.log(slotInfo);
+    console.log(selectedResource);
 
+    // Si está en vista semanal el resource viene "null". Por lo que se establece el resourceId del consultorio seleccionado (selectedResource).
+    if (!resourceId) {
+      setSelectedSlot({ start, end, resourceId: selectedResource });
+    }
     if (
       selectedSlot &&
       isSameSlot(start, selectedSlot.start, resourceId, selectedSlot.resourceId)
     ) {
-      // Si está en vista semanal el resource viene "null". Por lo que se establece el resourceId del consultorio seleccionado (selectedResource).
-      if (resourceId === null) {
-        setSelectedSlot({ ...selectedSlot, resourceId: selectedResource });
-      }
       setIsDialogOpen(true);
     } else {
       setSelectedSlot({ start, end, resourceId });
     }
+    console.log(selectedSlot);
   };
 
   // Función para manejar la selección de eventos

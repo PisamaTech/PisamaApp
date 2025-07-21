@@ -35,7 +35,7 @@ import { useEventStore } from "@/stores/calendarStore";
 import { handleNavigate } from "@/utils/calendarUtils";
 import { EventDialog } from "@/components";
 import { useReservationHandler } from "@/hooks/useReservationHandler";
-import { XCircle } from "lucide-react";
+import { Plus, XCircle } from "lucide-react";
 import flecha from "../assets/double-right.gif";
 
 // Localizer
@@ -59,6 +59,11 @@ export const CalendarDiario = () => {
     setIsEventDialogOpen,
     cancelarReserveDialog,
   } = useCalendarState();
+
+  const handleNewReservationClick = () => {
+    setIsDialogOpen(true);
+    console.log(selectedSlot);
+  };
 
   const isReagendamientoMode = useUIStore(
     (state) => state.isReagendamientoMode
@@ -211,6 +216,7 @@ export const CalendarDiario = () => {
           onCancel={cancelarReserveDialog}
           isReagendamiento={isReagendamientoMode}
           penalizedBooking={penalizedBookingForReagendamiento}
+          selectedConsultorio={selectedConsultorio}
         />
       )}
       {isConfirmDialogOpen && (
@@ -230,6 +236,16 @@ export const CalendarDiario = () => {
           // onConfirm={handleConfirmReserve}
         />
       )}
+
+      {/* Botón Flotante para Nueva Reserva */}
+      <Button
+        onClick={handleNewReservationClick}
+        className="fixed bottom-8 right-8 z-50 h-16 w-16 rounded-full shadow-lg"
+        size="icon"
+        aria-label="Agendar nueva reserva"
+      >
+        <Plus className="h-8 w-8" />
+      </Button>
     </div>
   );
 };
