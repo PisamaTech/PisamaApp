@@ -2,15 +2,18 @@ import { Calendar, dayjsLocalizer } from "react-big-calendar";
 import dayjs from "dayjs";
 import "dayjs/locale/es";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import "../components/calendar/calendarStyles.css";
 import { useUIStore } from "@/stores/uiStore";
+import { useAuthStore } from "@/stores/authStore";
 import {
   Separator,
   Alert,
   AlertDescription,
   AlertTitle,
   Button,
+  Label,
+  Switch,
 } from "@/components/ui";
 import {
   calendarMessages,
@@ -36,7 +39,7 @@ import { Plus, XCircle } from "lucide-react";
 dayjs.locale("es");
 const localizer = dayjsLocalizer(dayjs);
 
-export const CalendarSemanal = () => {
+export const CalendarDiario = () => {
   const {
     selectedSlot,
     selectedEvent,
@@ -68,10 +71,14 @@ export const CalendarSemanal = () => {
     (state) => state.stopReagendamientoMode
   );
 
+  const { profile } = useAuthStore();
+  const userId = profile?.id;
+
   const { handleReservation } = useReservationHandler(resetReservationState);
   console.log(selectedSlot);
   const { events } = useEventStore(); // Usa el store de Zustand
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [showOnlyMyReservations, setShowOnlyMyReservations] = useState(false);
 
   // Cargar eventos iniciales al montar el componente
   useEffect(() => {
@@ -80,10 +87,19 @@ export const CalendarSemanal = () => {
     }
   }, []);
 
-  // Filtrar eventos por `resourceId` seleccionado
-  const filteredEvents = events.filter(
-    (event) => event.estado === "activa" || event.estado === "utilizada"
-  );
+  // Filtrar eventos
+  const filteredEvents = useMemo(() => {
+    return events.filter((event) => {
+      const isActiveOrUsed =
+        event.estado === "activa" || event.estado === "utilizada";
+      if (!isActiveOrUsed) return false;
+
+      if (showOnlyMyReservations) {
+        return event.usuario_id === userId;
+      }
+      return true; // Muestra los eventos de todos los usuarios si el filtro está desactivado
+    });
+  }, [events, showOnlyMyReservations, userId]);
 
   // Función para ponerle a la celda seleccionada la clase "slotSelected"
   const slotPropGetter = (date, resourceId) => ({
@@ -135,6 +151,16 @@ export const CalendarSemanal = () => {
         Disponibilidad Diaria
       </h1>
       <Separator />
+      <div className="flex items-center justify-center space-x-2 my-4">
+        <Switch
+          id="my-reservations"
+          checked={showOnlyMyReservations}
+          onCheckedChange={setShowOnlyMyReservations}
+        />
+        <Label htmlFor="my-reservations" className="cursor-pointer italic">
+          Mostrar solo mis reservas
+        </Label>
+      </div>
       <div className="h-[800px] bg-white rounded-lg shadow-lg">
         <Calendar
           localizer={localizer}

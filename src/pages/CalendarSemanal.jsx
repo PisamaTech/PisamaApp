@@ -2,18 +2,20 @@ import dayjs from "dayjs";
 import { Calendar, dayjsLocalizer } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "dayjs/locale/es";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   calendarMessages,
   formatosPersonalizadosDayjs,
   resources,
 } from "@/components/calendar/personalizacionCalendario";
 import { useUIStore } from "@/stores/uiStore";
+import { useAuthStore } from "@/stores/authStore";
 import {
   Alert,
   AlertDescription,
   AlertTitle,
   Button,
+  Switch,
   Label,
   Select,
   SelectContent,
@@ -42,7 +44,7 @@ import flecha from "../assets/double-right.gif";
 const localizer = dayjsLocalizer(dayjs);
 dayjs.locale("es");
 
-export const CalendarDiario = () => {
+export const CalendarSemanal = () => {
   const {
     selectedSlot,
     selectedEvent,
@@ -75,6 +77,9 @@ export const CalendarDiario = () => {
     (state) => state.stopReagendamientoMode
   );
 
+  const { profile } = useAuthStore();
+  const userId = profile?.id;
+
   const { events } = useEventStore(); // Usa el store de Zustand
   const { handleReservation } = useReservationHandler(resetReservationState);
 
@@ -83,6 +88,7 @@ export const CalendarDiario = () => {
     resources[0].resourceId
   );
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [showOnlyMyReservations, setShowOnlyMyReservations] = useState(false);
 
   // Cargar eventos iniciales al montar el componente
   useEffect(() => {
@@ -108,12 +114,21 @@ export const CalendarDiario = () => {
     setSelectedConsultorio(Number(e));
   };
 
-  // Filtrar eventos por `resourceId` seleccionado
-  const filteredEvents = events.filter(
-    (event) =>
-      event.resourceId === selectedConsultorio &&
-      (event.estado === "activa" || event.estado === "utilizada")
-  );
+  // Filtrar eventos
+  const filteredEvents = useMemo(() => {
+    return events.filter((event) => {
+      const isActiveOrUsed =
+        event.estado === "activa" || event.estado === "utilizada";
+      const isCorrectConsultorio = event.resourceId === selectedConsultorio;
+
+      if (!isActiveOrUsed || !isCorrectConsultorio) return false;
+
+      if (showOnlyMyReservations) {
+        return event.usuario_id === userId;
+      }
+      return true; // Muestra los eventos de todos si el filtro está desactivado
+    });
+  }, [events, selectedConsultorio, showOnlyMyReservations, userId]);
 
   return (
     <div className="mx-auto p-4 space-y-4 w-full">
@@ -173,6 +188,19 @@ export const CalendarDiario = () => {
             ))}
           </SelectContent>
         </Select>
+      </div>
+      <div className="flex items-center justify-center space-x-2 my-4">
+        <Switch
+          id="my-reservations-semanal"
+          checked={showOnlyMyReservations}
+          onCheckedChange={setShowOnlyMyReservations}
+        />
+        <Label
+          htmlFor="my-reservations-semanal"
+          className="cursor-pointer italic"
+        >
+          Mostrar solo mis reservas
+        </Label>
       </div>
       <Separator className="mb-4" />
       <div className="h-2"></div>

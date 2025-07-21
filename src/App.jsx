@@ -58,8 +58,8 @@ function App() {
             {/* Definimos un layout general para las rutas autenticadas */}
             <Route path="/" element={<Layout />}>
               <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/calendario_diario" element={<CalendarDiario />} />
               <Route path="/calendario_semanal" element={<CalendarSemanal />} />
+              <Route path="/calendario_diario" element={<CalendarDiario />} />
               <Route path="/reservas" element={<Reservas />} />
               <Route path="/facturas" element={<Facturas />} />
               <Route path="/facturas/:id" element={<FacturaDetalle />} />
