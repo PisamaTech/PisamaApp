@@ -22,45 +22,46 @@ import { CalendarIcon, MoreHorizontal } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { Calendar } from "@/components/ui/calendar";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-// --- Fin de importaciones para Date Range Picker ---
-
-// --- Importaciones para Paginación ---
-import {
+  Badge,
+  Button,
+  Calendar,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Pagination,
   PaginationContent,
   PaginationItem,
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination";
-// --- Fin de importaciones para Paginación ---
-
-import { Separator } from "@/components/ui/separator";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Separator,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+} from "@/components/ui";
+import {} from "@/components/ui/button";
+import {} from "@/components/ui/label";
+import {} from "@/components/ui/card";
+import {} from "@/components/ui/table";
+import {} from "@/components/ui/badge";
 import camillaIcon from "../assets/massage-table-50.png";
 import {
   DropdownMenu,
@@ -70,6 +71,7 @@ import {
 } from "@/components/ui";
 import { ConfirmCancelDialog } from "@/components/ConfirmEventDialog";
 import { mapReservationToEvent } from "@/utils/calendarUtils";
+import ReservaRow from "@/components/ReservaRow";
 
 export const Reservas = () => {
   const { profile } = useAuthStore();
@@ -560,130 +562,18 @@ export const Reservas = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {reservas.map((reserva) => {
-                      // Definimos la lógica de habilitación/deshabilitación de los botones
-
-                      const isCancelSingleDisabled =
-                        reserva.estado !== ReservationStatus.ACTIVA;
-
-                      const isCancelSeriesDisabled = !(
-                        reserva.tipo_reserva === ReservationType.FIJA &&
-                        reserva.estado === ReservationStatus.ACTIVA
-                      );
-
-                      const isRescheduleDisabled = !(
-                        reserva.estado === ReservationStatus.PENALIZADA &&
-                        !reserva.fue_reagendada &&
-                        dayjs().isBefore(dayjs(reserva.permite_reagendar_hasta))
-                      );
-                      return (
-                        <TableRow key={reserva.id}>
-                          <TableCell>
-                            {dayjs(reserva.start_time)
-                              .locale("es")
-                              .format("dddd")
-                              .replace(/^\w/, (c) => c.toUpperCase())}
-                          </TableCell>
-                          <TableCell>
-                            {dayjs(reserva.start_time).format("DD/MM/YYYY")}
-                          </TableCell>
-                          <TableCell>{`${dayjs(reserva.start_time).format(
-                            "HH:mm"
-                          )}`}</TableCell>
-                          <TableCell>
-                            Consultorio {reserva.consultorio_id}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={reserva.tipo_reserva.toLowerCase()}>
-                              {reserva.tipo_reserva}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={reserva.estado.toLowerCase()}>
-                              {reserva.estado}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {reserva.usaCamilla && (
-                              <img
-                                src={camillaIcon}
-                                alt="Icono de Camilla"
-                                className="w-5 h-6"
-                              />
-                            )}
-                          </TableCell>
-                          <TableCell className="text-left">
-                            {/* --- Botones de Acción --- */}
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                  <span className="sr-only">Abrir menú</span>
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  onClick={() => handleViewDetails(reserva)}
-                                >
-                                  Ver Detalles
-                                </DropdownMenuItem>
-                                <span
-                                  className={
-                                    isCancelSingleDisabled
-                                      ? "cursor-not-allowed"
-                                      : ""
-                                  }
-                                >
-                                  <DropdownMenuItem
-                                    disabled={isCancelSingleDisabled}
-                                    onClick={() =>
-                                      openCancelModal(reserva, "single")
-                                    }
-                                    className="text-red-600 focus:text-red-600 focus:bg-red-50"
-                                  >
-                                    Cancelar Esta Reserva
-                                  </DropdownMenuItem>
-                                </span>
-                                <span
-                                  className={
-                                    isCancelSeriesDisabled
-                                      ? "cursor-not-allowed"
-                                      : ""
-                                  }
-                                >
-                                  <DropdownMenuItem
-                                    disabled={isCancelSeriesDisabled}
-                                    onClick={() =>
-                                      openCancelModal(reserva, "series")
-                                    }
-                                    className="text-red-600 focus:text-red-600 focus:bg-red-50"
-                                  >
-                                    Cancelar Serie Completa
-                                  </DropdownMenuItem>
-                                </span>
-                                <span
-                                  className={
-                                    isRescheduleDisabled
-                                      ? "cursor-not-allowed"
-                                      : ""
-                                  }
-                                >
-                                  <DropdownMenuItem
-                                    disabled={isRescheduleDisabled}
-                                    onClick={() =>
-                                      handleReagendarClick(reserva)
-                                    }
-                                    className="text-blue-600 focus:text-blue-600 focus:bg-blue-50 "
-                                  >
-                                    Reagendar
-                                  </DropdownMenuItem>
-                                </span>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                    {reservas.map((reserva) => (
+                      <ReservaRow
+                        key={reserva.id}
+                        reserva={reserva}
+                        camillaIcon={camillaIcon}
+                        handleViewDetails={handleViewDetails}
+                        openCancelModal={openCancelModal}
+                        handleReagendarClick={handleReagendarClick}
+                        ReservationStatus={ReservationStatus}
+                        ReservationType={ReservationType}
+                      />
+                    ))}
                   </TableBody>
                 </Table>
               </div>

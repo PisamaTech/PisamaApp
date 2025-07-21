@@ -64,9 +64,14 @@ export const ReservationDialog = ({
       setValue("date", dayjs(selectedSlot.start).format("YYYY-MM-DD"));
       setValue("startTime", dayjs(selectedSlot.start).format("HH:mm"));
       setValue("endTime", dayjs(selectedSlot.end).format("HH:mm"));
-      setValue("resourceId", selectedSlot.resourceId);
+      setValue("resourceId", selectedSlot.resourceId || selectedConsultorio);
       setValue("tipo", "Eventual");
       setValue("usaCamilla", "No");
+    } else {
+      setValue("date", dayjs().format("YYYY-MM-DD"));
+      setValue("startTime", "");
+      setValue("endTime", "");
+      setValue("resourceId", selectedConsultorio);
     }
   }, [selectedSlot, selectedConsultorio, setValue]);
 

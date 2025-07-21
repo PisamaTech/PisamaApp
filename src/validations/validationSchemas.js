@@ -66,7 +66,12 @@ export const reservationSchema = z
     endTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, {
       message: "Hora de fin inválida",
     }),
-    resourceId: z.number().min(1, { message: "Selecciona un consultorio" }),
+    resourceId: z.union([
+      z.number().min(1, { message: "Selecciona un consultorio" }),
+      z.literal(null).refine(() => false, {
+        message: "Selecciona un consultorio",
+      }),
+    ]),
     tipo: z.enum(["Eventual", "Fija"], {
       message: "Selecciona un tipo de reserva válido",
     }),
