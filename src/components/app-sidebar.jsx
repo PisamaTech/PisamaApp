@@ -13,7 +13,7 @@ import {
 import { NavUser } from "./nav-user";
 import { HeaderMenu } from "./HeaderMenu";
 import { useAuthStore } from "@/stores/authStore";
-import { DarkLightMode } from "./Dark-LightMode";
+// import { DarkLightMode } from "./Dark-LightMode";
 import { menuItems } from "@/utils/menuItems";
 
 export function AppSidebar() {
@@ -65,9 +65,9 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter>
+      {/* <SidebarFooter>
         <DarkLightMode />
-      </SidebarFooter>
+      </SidebarFooter> */}
       <SidebarSeparator className="my-1" />
       <SidebarFooter>
         <NavUser user={data.user} />
