@@ -1,14 +1,14 @@
+import { useState, useEffect, useRef } from "react";
+import dayjs from "dayjs";
+import { UserCombobox } from "@/components/admin/UserCombobox";
+import { fetchAllUsers } from "@/services/adminService"; // El nuevo servicio
 import {
+  Button,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import dayjs from "dayjs";
-import { useEffect, useRef } from "react";
-import {
   Input,
   Label,
   Select,
@@ -35,6 +35,7 @@ export const ReservationDialog = ({
   isReagendamiento = false, // Valor por defecto
   penalizedBooking = null, // Valor por defecto
   selectedConsultorio = null,
+  isAdminBookingMode = false,
 }) => {
   // Configuración de React Hook Form con Zod
   const form = useForm({
@@ -49,14 +50,38 @@ export const ReservationDialog = ({
     },
   });
 
+  // --- Añade estados para la lista de usuarios y el usuario seleccionado ---
+  const [userList, setUserList] = useState([]);
+  const [selectedUserId, setSelectedUserId] = useState(null);
+  console.log(isAdminBookingMode);
+  console.log(userList);
+  // --- Cargar la lista de usuarios si estamos en modo admin ---
+  useEffect(() => {
+    if (isAdminBookingMode && open) {
+      // Carga solo si el modo está activo y el diálogo está abierto
+      const loadUsers = async () => {
+        try {
+          const users = await fetchAllUsers();
+          setUserList(users.data);
+        } catch (error) {
+          console.error("No se pudo cargar la lista de usuarios:", error);
+        }
+      };
+      loadUsers();
+    }
+  }, [isAdminBookingMode, open]);
+
   const {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
+    setError,
+    clearErrors,
   } = form;
 
-  const tipoReserva = form.watch("tipo");
+  const tipoReserva = watch("tipo");
 
   // Inicializar valores del formulario cuando selectedSlot cambia
   useEffect(() => {
@@ -87,6 +112,7 @@ export const ReservationDialog = ({
   // Extraer datos del usuario para la reserva desde el Store
   const { profile } = useAuthStore.getState();
   const { id, firstName, lastName } = profile;
+  console.log(profile);
 
   function getFirstCharacterAndDot(text) {
     if (typeof text !== "string" || text.length === 0) {
@@ -97,10 +123,34 @@ export const ReservationDialog = ({
 
   // Manejar la sumisión del formulario
   const onSubmit = (data) => {
+    // La validación ahora ocurre antes de llamar a onSubmit
+    // Primero, valida el usuario si estamos en modo admin
+    if (isAdminBookingMode && !selectedUserId) {
+      setError("selectedUserId", {
+        // <-- Establece el error manualmente
+        type: "manual",
+        message: "Debes seleccionar un usuario.",
+      });
+      return; // Detiene el envío
+    }
+    // Determina para quién es la reserva
+    const targetUserId = isAdminBookingMode ? selectedUserId : profile.id;
+    const targetUser = isAdminBookingMode
+      ? userList.find((u) => u.id === targetUserId)
+      : profile;
+
+    if (isAdminBookingMode && !targetUserId) {
+      // Muestra un error o un toast si el admin no seleccionó un usuario
+      alert("Por favor, selecciona un usuario para agendar la reserva.");
+      return;
+    }
+
     console.log(data);
     const reservationData = {
-      usuario_id: id,
-      titulo: `${firstName} ${getFirstCharacterAndDot(lastName)}`,
+      usuario_id: targetUserId,
+      titulo: `${targetUser.firstName} ${getFirstCharacterAndDot(
+        targetUser.lastName
+      )}`,
       start: dayjs(`${data.date}T${data.startTime}`).toDate(),
       start_time: dayjs(`${data.date}T${data.startTime}`).toDate(),
       end: dayjs(`${data.date}T${data.endTime}`).toDate(),
@@ -118,8 +168,16 @@ export const ReservationDialog = ({
     onOpenChange(false); // Cerrar el diálogo
   };
 
+  // --- Crea una función para manejar la selección del usuario ---
+  const handleUserSelect = (userId) => {
+    setSelectedUserId(userId); // Actualiza el estado local
+    if (userId) {
+      clearErrors("selectedUserId"); // <-- Limpia el error cuando se selecciona un usuario
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
       <DialogContent
         ref={dialogRef}
         tabIndex={-1}
@@ -181,6 +239,25 @@ export const ReservationDialog = ({
         <Separator />
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-4">
+            {/* --- Añade el selector de usuario condicional --- */}
+            {isAdminBookingMode && (
+              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md space-y-2">
+                <Label className="font-semibold text-yellow-800 ">
+                  Agendando para:
+                </Label>
+                <UserCombobox
+                  users={userList}
+                  selectedUserId={selectedUserId}
+                  onSelect={handleUserSelect}
+                />
+                {/* --- 5. Muestra el error de validación --- */}
+                {errors.selectedUserId && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {errors.selectedUserId.message}
+                  </p>
+                )}
+              </div>
+            )}
             {/* Fecha */}
             <div className="space-y-2">
               <Label htmlFor="date">Fecha de reserva</Label>

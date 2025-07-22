@@ -275,7 +275,8 @@ const Dashboard = () => {
               Renovaciones de horas FIJAS por vencerse
             </CardTitle>
             <CardDescription className="text-blue-700">
-              Las siguientes series de reservas fijas están a punto de expirar.
+              Las siguientes series de reservas fijas vencerán en menos de 45
+              días.
             </CardDescription>
           </CardHeader>
           <CardContent>

@@ -78,7 +78,9 @@ export const CalendarSemanal = () => {
   );
 
   const { profile } = useAuthStore();
+  const isAdmin = profile?.role === "admin";
   const userId = profile?.id;
+  const [isAdminBookingMode, setIsAdminBookingMode] = useState(false);
 
   const { events } = useEventStore(); // Usa el store de Zustand
   const { handleReservation } = useReservationHandler(resetReservationState);
@@ -166,6 +168,22 @@ export const CalendarSemanal = () => {
       <h1 className="text-2xl font-bold text-gray-800 mb-6 text-center">
         Disponibilidad Semanal
       </h1>
+      {/* --- 3. Añadir el Interruptor de Modo Admin --- */}
+      {isAdmin && (
+        <div className="flex items-center space-x-2 bg-yellow-100 border border-yellow-300 p-3 rounded-md">
+          <Switch
+            id="admin-booking-mode"
+            checked={isAdminBookingMode}
+            onCheckedChange={setIsAdminBookingMode}
+          />
+          <Label
+            htmlFor="admin-booking-mode"
+            className="font-semibold text-yellow-800"
+          >
+            Modo Administrador: Agendar para otro usuario
+          </Label>
+        </div>
+      )}
       <Separator />
       <div className="flex justify-center items-center">
         <img
@@ -245,6 +263,7 @@ export const CalendarSemanal = () => {
           isReagendamiento={isReagendamientoMode}
           penalizedBooking={penalizedBookingForReagendamiento}
           selectedConsultorio={selectedConsultorio}
+          isAdminBookingMode={isAdminBookingMode}
         />
       )}
       {isConfirmDialogOpen && (
