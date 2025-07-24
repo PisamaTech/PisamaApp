@@ -52,7 +52,7 @@ export const handleNavigate = (newDate, setCurrentDate) => {
 };
 
 // Generar serie de reservas FIJAS
-export const generateRecurringEvents = (baseEvent, durationInMonths = 2) => {
+export const generateRecurringEvents = (baseEvent, durationInMonths = 4) => {
   const events = [];
   const startDate = dayjs(baseEvent.start_time);
   const endDate = dayjs(baseEvent.end_time);
@@ -131,13 +131,13 @@ export const checkForConflicts = async (hourlyEvents) => {
  * @param {object} baseEventPattern - Un objeto de una reserva existente de la serie para obtener el patrón.
  *   Debe contener: start_time, end_time, consultorio_id, usuario_id, titulo, usaCamilla, recurrence_id.
  * @param {Date|string} oldEndDate - La fecha en que termina el ciclo actual de la serie.
- * @param {number} [durationInMonths=6] - La duración del nuevo ciclo en meses.
+ * @param {number} [durationInMonths=4] - La duración del nuevo ciclo en meses.
  * @returns {{newEvents: Array<object>, newRecurrenceEndDate: Date}} Un objeto con los nuevos eventos y la nueva fecha de fin.
  */
 export const generateRecurringEventsForRenewal = (
   baseEventPattern,
   oldEndDate,
-  durationInMonths = 6
+  durationInMonths = 4
 ) => {
   // 1. Preparación de Variables y Fechas
   const events = []; // Array para almacenar las nuevas reservas

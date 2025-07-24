@@ -6,6 +6,7 @@ import "dayjs/locale/es";
 import { useAuthStore } from "@/stores/authStore";
 import { useUIStore } from "@/stores/uiStore";
 import { fetchInvoiceDetails } from "@/services/billingService";
+import { markInvoiceAsPaid } from "@/services/adminService";
 
 // --- Importaciones de Componentes Shadcn UI ---
 import { Button } from "@/components/ui/button";
@@ -27,7 +28,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, CheckCircle } from "lucide-react";
 
 dayjs.locale("es");
 dayjs.extend(isoWeek);
@@ -36,9 +37,17 @@ export const FacturaDetalle = () => {
   const { id } = useParams();
   const { profile } = useAuthStore();
   const userId = profile?.id;
+  const userRole = profile?.role;
   const navigate = useNavigate();
-  const { loading, error, startLoading, stopLoading, setError, clearError } =
-    useUIStore();
+  const {
+    loading,
+    error,
+    startLoading,
+    stopLoading,
+    setError,
+    clearError,
+    showToast,
+  } = useUIStore();
   const [invoiceData, setInvoiceData] = useState(null);
 
   // --- Lógica para renderizar colores de fondo en la factura ---
@@ -51,6 +60,35 @@ export const FacturaDetalle = () => {
     navigate(-1); // Vuelve a la página anterior
   };
 
+  const handleMarkAsPaid = async () => {
+    if (!id) return;
+
+    clearError();
+    startLoading();
+    try {
+      const updatedInvoice = await markInvoiceAsPaid(id);
+      // Actualiza el estado local para reflejar el cambio instantáneamente
+      setInvoiceData((prevData) => ({
+        ...prevData,
+        factura: updatedInvoice,
+      }));
+      showToast({
+        type: "success",
+        title: "Factura Actualizada",
+        message: `La factura #${id} ha sido marcada como pagada.`,
+      });
+    } catch (err) {
+      setError(err);
+      showToast({
+        type: "error",
+        title: "Error al Actualizar",
+        message: err.message || "No se pudo actualizar la factura.",
+      });
+    } finally {
+      stopLoading();
+    }
+  };
+
   useEffect(() => {
     if (!userId || !id) return;
 
@@ -58,7 +96,7 @@ export const FacturaDetalle = () => {
       clearError();
       startLoading();
       try {
-        const data = await fetchInvoiceDetails(id, userId);
+        const data = await fetchInvoiceDetails(id, userId, userRole);
         setInvoiceData(data);
       } catch (err) {
         setError(err);
@@ -70,7 +108,7 @@ export const FacturaDetalle = () => {
 
     loadDetails();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, id]);
+  }, [userId, id, userRole]);
 
   const getStatusVariant = (status) => {
     switch (status) {
@@ -140,7 +178,7 @@ export const FacturaDetalle = () => {
 
       <Card className="w-full">
         <CardHeader>
-          <div className="flex justify-between items-start">
+          <div className="flex flex-wrap justify-between items-start gap-4">
             <div>
               <CardTitle className="text-2xl">
                 Detalle de Factura #{factura.id}
@@ -153,12 +191,28 @@ export const FacturaDetalle = () => {
                 )} - {dayjs(factura.periodo_fin).format("DD/MM/YYYY")}.
               </CardDescription>
             </div>
-            <Badge
-              variant={getStatusVariant(factura.estado)}
-              className="text-lg"
-            >
-              {factura.estado.charAt(0).toUpperCase() + factura.estado.slice(1)}
-            </Badge>
+            <div className="flex flex-col items-end gap-2">
+              <Badge
+                variant={getStatusVariant(factura.estado)}
+                className="text-lg"
+              >
+                {factura.estado.charAt(0).toUpperCase() +
+                  factura.estado.slice(1)}
+              </Badge>
+              {userRole === "admin" && (
+                <Button
+                  size="sm"
+                  onClick={handleMarkAsPaid}
+                  disabled={factura.estado === "pagada" || loading}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  {factura.estado === "pagada"
+                    ? "Pagada"
+                    : "Marcar como Pagada"}
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">

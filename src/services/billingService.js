@@ -41,19 +41,21 @@ export const fetchUserInvoices = async (
  * Obtiene los detalles completos de una factura específica, incluyendo las reservas asociadas.
  *
  * @param {number|string} invoiceId - El ID de la factura a consultar.
- * @param {string} userId - El ID del usuario (para validación de seguridad).
+ * @param {string} userId - El ID del usuario que realiza la consulta.
+ * @param {string} [userRole] - El rol del usuario. Si es 'admin', se omite la validación de `userId`.
  * @returns {Promise<{factura: object, detalles: Array<object>}>} Un objeto con los datos de la factura y un array con sus detalles.
  */
-export const fetchInvoiceDetails = async (invoiceId, userId) => {
+export const fetchInvoiceDetails = async (invoiceId, userId, userRole) => {
   try {
     // 1. Obtener los datos de la factura principal y validar propiedad
-    const { data: factura, error: facturaError } = await supabase
-      .from("facturas")
-      .select("*")
-      .eq("id", invoiceId)
-      .eq("usuario_id", userId) // RLS hace esto, pero una validación explícita es más segura
-      .single();
+    let query = supabase.from("facturas").select("*").eq("id", invoiceId);
 
+    // Si el usuario no es 'admin', se asegura que solo pueda ver sus propias facturas.
+    if (userRole !== "admin") {
+      query = query.eq("usuario_id", userId);
+    }
+
+    const { data: factura, error: facturaError } = await query.single();
     if (facturaError) throw facturaError;
     if (!factura)
       throw new Error("Factura no encontrada o no tienes permiso para verla.");

@@ -182,7 +182,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
               {dayjs(selectedEvent.start_time).format("HH:mm[hs - ]")}
               {"Consultorio " + selectedEvent.consultorio_id}
             </span>{" "}
-            por 6 meses más?
+            por 4 meses más?
             <br />
             <span className="text-sm text-muted-foreground">
               Se crearán y validarán nuevas reservas para el próximo período.
@@ -539,7 +539,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                                 selectedEvent.estado !== "activa"
                               }
                             >
-                              Extender por 6 meses
+                              Extender por 4 meses
                             </Button>
                           </span>
                         </TooltipTrigger>
@@ -556,7 +556,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                               finalización de la reserva FIJA es mayor a 45
                               días. <br />
                               Recién 45 días antes de la fecha de finalización,
-                              podrá extender por 6 meses.
+                              podrá extender por 4 meses.
                             </p>
                           </TooltipContent>
                         )}
