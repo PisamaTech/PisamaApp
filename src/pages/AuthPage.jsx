@@ -54,7 +54,8 @@ export const AuthPage = () => {
 
   // Manejador de envío del formulario de inicio de sesión
   const onLoginSubmit = async ({ email, password }) => {
-    await signIn(email, password);
+    // Limpiamos los espacios en blanco del email antes de enviarlo
+    await signIn(email.trim(), password);
     reset();
   };
 
@@ -66,7 +67,23 @@ export const AuthPage = () => {
     lastName,
     phone,
   }) => {
-    await signUp(email, password, firstName, lastName, phone);
+    // Limpiamos los espacios en blanco de los campos de texto
+    const trimmedData = {
+      email: email.trim(),
+      // La contraseña no se suele 'trimmear' por si el usuario usa espacios intencionadamente
+      password: password,
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      phone: phone.trim(),
+    };
+
+    await signUp(
+      trimmedData.email,
+      trimmedData.password,
+      trimmedData.firstName,
+      trimmedData.lastName,
+      trimmedData.phone
+    );
     reset();
   };
 

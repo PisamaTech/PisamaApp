@@ -53,9 +53,9 @@ export const Perfil = () => {
     startLoading();
     try {
       const profileDataToUpdate = {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        phone: data.phone,
+        firstName: data.firstName.trim(),
+        lastName: data.lastName.trim(),
+        phone: data.phone.trim(),
       };
       const updatedProfile = await updateUserProfile(
         profile.id,
