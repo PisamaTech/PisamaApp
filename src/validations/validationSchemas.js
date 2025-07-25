@@ -20,15 +20,9 @@ export const registerSchema = z
     }),
     phone: z
       .string()
-      .min(7, {
-        message: "Por favor, introduce un teléfono válido.",
-      })
-      .max(15, {
-        message: "El teléfono no puede tener más de 15 caracteres.",
-      })
-      .refine((phone) => !isNaN(phone), {
-        message:
-          "Debes ingresar sólo números, sin puntos, ni espacios en blanco.",
+      .transform((val) => val.replace(/\D/g, "")) // Elimina todo lo que no sea dígito
+      .refine((val) => val.length >= 9 && val.length <= 15, {
+        message: "El teléfono debe tener entre 9 y 15 dígitos.",
       }),
     email: z.string().email({
       message: "Por favor, introduce un email válido.",
@@ -107,11 +101,11 @@ export const profileSchema = z.object({
   lastName: z.string().min(2, "El apellido debe tener al menos 2 caracteres."),
   phone: z
     .string()
-    .min(7, "Por favor, introduce un teléfono válido.")
+    .min(9, "Por favor, introduce un teléfono válido.")
     .max(15, "El teléfono no puede tener más de 15 números.")
-    .refine((phone) => !isNaN(phone), {
-      message:
-        "Debes ingresar sólo números, sin puntos, ni espacios en blanco.",
+    .transform((val) => val.replace(/\D/g, "")) // Elimina todo lo que no sea dígito
+    .refine((val) => val.length >= 9 && val.length <= 15, {
+      message: "El teléfono debe tener entre 9 y 15 dígitos.",
     }),
 });
 
