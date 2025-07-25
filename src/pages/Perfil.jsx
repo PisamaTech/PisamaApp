@@ -68,7 +68,6 @@ export const Perfil = () => {
         message: "Tu perfil ha sido actualizado.",
       });
     } catch (error) {
-      console.log(error);
       showToast({
         type: "error",
         title: "Error",
@@ -90,7 +89,6 @@ export const Perfil = () => {
       });
       resetPasswordForm(); // Limpia los campos de contraseña
     } catch (error) {
-      console.log(error);
       showToast({
         type: "error",
         title: "Error",

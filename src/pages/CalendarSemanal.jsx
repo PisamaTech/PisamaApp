@@ -64,7 +64,6 @@ export const CalendarSemanal = () => {
 
   const handleNewReservationClick = () => {
     setIsDialogOpen(true);
-    console.log(selectedSlot);
   };
 
   const isReagendamientoMode = useUIStore(

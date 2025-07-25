@@ -112,7 +112,6 @@ const Dashboard = () => {
       // --- Recargar Datos para Reflejar los Cambios ---
       // 1. Recargar los datos del dashboard. La serie renovada desaparecerá de esta lista.
       const data = await fetchDashboardData(profile.id, profile);
-      console.log(result);
       setDashboardData(data);
       // 2. Recargar los eventos del calendario para que las nuevas reservas aparezcan allí.
       reloadCalendarEvents();
@@ -134,7 +133,6 @@ const Dashboard = () => {
 
   // --- 3. Crea la función que abre el modal ---
   const openConfirmationModal = (serie, actionType) => {
-    console.log(serie, actionType);
     setSelectedSerieForAction(serie);
     setActionToConfirm(actionType);
     setIsConfirmDialogOpen(true);

@@ -16,9 +16,6 @@ export const useCalendarState = () => {
   // Función para abrir Dialog si se hace click sobre botón de AGENDAR
   const handleSelectSlot = (slotInfo, selectedResource) => {
     const { start, end, resourceId } = slotInfo;
-    console.log(selectedSlot);
-    console.log(slotInfo);
-    console.log(selectedResource);
 
     // Si está en vista semanal el resource viene "null". Por lo que se establece el resourceId del consultorio seleccionado (selectedResource).
     if (!resourceId) {
@@ -32,12 +29,10 @@ export const useCalendarState = () => {
     } else {
       setSelectedSlot({ start, end, resourceId });
     }
-    console.log(selectedSlot);
   };
 
   // Función para manejar la selección de eventos
   const handleSelectEvent = (slotEvent) => {
-    console.log(slotEvent);
     const { id } = slotEvent;
     setSelectedSlot(null); // Elimino si hay una celda seleccionada para agendar.
 
@@ -45,23 +40,19 @@ export const useCalendarState = () => {
       setIsEventDialogOpen(true);
     } else {
       setSelectedEvent(slotEvent);
-      console.log(slotEvent);
     }
   };
 
   // Función para confirmar la reserva
   const handleConfirmReserve = (reservationData) => {
-    console.log(reservationData);
     const newHourlyEvents = generateHourlyEvents(reservationData); // Creo reservas individuales
     // Si la hora en FIJA, genero recurrencias por 6 meses
     if (newHourlyEvents[0].tipo_reserva === "Fija") {
       const reservaFija = newHourlyEvents.flatMap((baseEvent) => {
         return generateRecurringEvents(baseEvent);
       });
-      console.log(reservaFija);
       setHourlyEvents(reservaFija); // Actualizar el estado con los eventos FIJOS generados
     } else {
-      console.log(newHourlyEvents);
       setHourlyEvents(newHourlyEvents); // Actualizar el estado con los eventos EVENTUALES generados
     }
     setIsConfirmDialogOpen(true); // Abrir el diálogo después de actualizar el estado

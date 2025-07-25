@@ -75,18 +75,16 @@ export const generateRecurringEvents = (baseEvent, durationInMonths = 4) => {
     currentStart = currentStart.add(1, "week");
     currentEnd = currentEnd.add(1, "week");
   }
-  console.log(events);
+
   return events;
 };
 
 // Verificar conflictos de consultorio y camilla
 export const checkForConflicts = async (hourlyEvents) => {
-  console.log(hourlyEvents);
   // Obtener reservas superpuestas para consultorios
   const consultoriosIds = [
     ...new Set(hourlyEvents.map((e) => e.consultorio_id)),
   ];
-  console.log(consultoriosIds);
   const consultorioConflicts = await Promise.all(
     consultoriosIds.map(async (consultorioId) => {
       const timeSlots = hourlyEvents
@@ -196,10 +194,6 @@ export const generateRecurringEventsForRenewal = (
     currentStart = currentStart.add(1, "week");
     currentEnd = currentEnd.add(1, "week");
   }
-
-  console.log(`Se generaron ${events.length} nuevas reservas propuestas.`);
-  console.log(events);
-  console.log(newRecurrenceEndDate);
 
   // 6. Retorno de Resultados
   // Devolvemos un objeto que contiene tanto el array de nuevos eventos

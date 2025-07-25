@@ -121,10 +121,6 @@ export const cancelRecurringSeries = async (
   userId,
   cancellationRequestDate
 ) => {
-  console.log(
-    `Llamando a RPC para cancelar serie recurrenceId: ${recurrenceId}, usuario: ${userId}`
-  );
-
   // Corroboramos que cancellationRequestDate es un objeto Date y luego lo convertimos a ISO string
   const cancellationDateISO =
     cancellationRequestDate instanceof Date
@@ -149,10 +145,6 @@ export const cancelRecurringSeries = async (
       throw error;
     }
 
-    console.log(
-      "Resultado de la RPC (reservas modificadas):",
-      modifiedBookings
-    );
     // Si no se modificó nada, retorna un tipo de acción específico
     if (!modifiedBookings || modifiedBookings.length === 0) {
       return {
@@ -300,11 +292,6 @@ export const _updateBookingStatus = async (
         : null,
   };
 
-  console.log(
-    `Attempting to update booking ${bookingId} with data:`,
-    updateData
-  ); // Log para depuración
-
   try {
     const { data: updatedBooking, error } = await supabase
       .from("reservas")
@@ -325,8 +312,6 @@ export const _updateBookingStatus = async (
         `No se encontró la reserva con ID ${bookingId} para actualizar.`
       );
     }
-
-    console.log(`Booking ${bookingId} status updated successfully.`);
     return updatedBooking; // Devuelve el objeto de la reserva actualizada
   } catch (error) {
     // Captura cualquier otro error (ej. de validación, red) y relánzalo
@@ -337,10 +322,6 @@ export const _updateBookingStatus = async (
 };
 
 export const cancelBooking = async (bookingId, userId) => {
-  console.log(
-    `Iniciando cancelación para reserva ID: ${bookingId} por usuario ID: ${userId}`
-  );
-
   // 1. Obtener la reserva a cancelar, incluyendo 'reagendamiento_de_id'
   const { data: bookingToCancel, error: fetchError } = await supabase
     .from("reservas")
@@ -367,9 +348,6 @@ export const cancelBooking = async (bookingId, userId) => {
 
   // --- 3. Lógica Condicional: ¿Es un Reagendamiento? ---
   if (bookingToCancel.reagendamiento_de_id) {
-    console.log(
-      `La reserva ${bookingId} es un reagendamiento de la reserva ${bookingToCancel.reagendamiento_de_id}. Revirtiendo...`
-    );
     // Llama a la función de servicio que invoca la RPC para revertir
     try {
       const updatedBookings = await revertReagendamiento(
@@ -377,7 +355,6 @@ export const cancelBooking = async (bookingId, userId) => {
         bookingToCancel.reagendamiento_de_id,
         userId
       );
-      console.log("Reagendamiento revertido exitosamente.");
       return {
         actionType: "RESCHEDULE_REVERTED",
         updatedBookings: updatedBookings,
@@ -390,9 +367,7 @@ export const cancelBooking = async (bookingId, userId) => {
     }
   } else {
     // --- 4. Lógica de Cancelación Normal (si NO es un reagendamiento) ---
-    console.log(
-      `La reserva ${bookingId} es una reserva normal. Procediendo con cancelación estándar.`
-    );
+
     const now = dayjs();
     const startTime = dayjs(bookingToCancel.start_time);
     const hoursDifference = startTime.diff(now, "hour");
@@ -423,7 +398,6 @@ export const cancelBooking = async (bookingId, userId) => {
         cancellationDate,
         reagendarHastaDate
       );
-      console.log(`Reserva ${bookingId} cancelada/penalizada exitosamente.`);
       return {
         actionType: actionType,
         updatedBookings: [updatedBooking], // Devuelve un array con la reserva
@@ -443,10 +417,6 @@ export const confirmarReagendamiento = async (
   penalizedBookingId,
   requestingUserId
 ) => {
-  console.log(
-    `Llamando a RPC para reagendar reserva ${penalizedBookingId} por usuario ${requestingUserId}`
-  );
-
   // El objeto newBookingData debe estar listo para ser enviado como JSON.
   // No necesita conversión aquí si ya tiene el formato correcto desde la UI.
 
@@ -466,12 +436,6 @@ export const confirmarReagendamiento = async (
       console.error("Error al llamar a la RPC handle_reagendamiento:", error);
       throw error;
     }
-
-    console.log(
-      "Resultado de la RPC de reagendamiento (reservas modificadas):",
-      modifiedBookings
-    );
-
     // La RPC devuelve un array de objetos de reserva completos, que es exactamente lo que necesitamos.
     // Asegurémonos de devolver un array, incluso si la RPC no devuelve nada.
     return modifiedBookings || [];
@@ -518,10 +482,6 @@ export const revertReagendamiento = async (
  * @throws {Error} Si se encuentran conflictos o si falla la RPC.
  */
 export const renewAndValidateSeries = async (oldRecurrenceId, userId) => {
-  console.log(
-    `Iniciando validación y renovación para la serie: ${oldRecurrenceId}`
-  );
-
   // --- 1. Obtener el patrón de la serie antigua ---
   // Necesitamos una reserva de la serie para saber la hora, duración, consultorio, etc.
   const { data: baseEventPattern, error: patternError } = await supabase
@@ -538,8 +498,6 @@ export const renewAndValidateSeries = async (oldRecurrenceId, userId) => {
       `No se pudo encontrar la serie a renovar: ${patternError.message}`
     );
   }
-  console.log("Patrón de reserva obtenido:", baseEventPattern);
-
   // --- 2. Generar las nuevas reservas propuestas en memoria ---
   const { newEvents, newRecurrenceEndDate } = generateRecurringEventsForRenewal(
     baseEventPattern,
@@ -553,12 +511,7 @@ export const renewAndValidateSeries = async (oldRecurrenceId, userId) => {
     );
   }
 
-  console.log(
-    `Se generaron ${newEvents.length} reservas propuestas para validación.`
-  );
-
   // --- 3. Chequear conflictos ---
-  console.log("Validando conflictos para las nuevas reservas...");
   // Aquí usamos la función que ya tenías, que debería devolver un objeto como
   // { conflictosConsultorio: [], conflictosCamilla: [] }
   const conflicts = await checkForConflicts(newEvents);
@@ -586,10 +539,6 @@ export const renewAndValidateSeries = async (oldRecurrenceId, userId) => {
     console.error("Conflictos encontrados:", errorMessage, conflicts);
     throw new Error(errorMessage);
   }
-
-  console.log(
-    "Validación de conflictos exitosa. Procediendo a crear en la base de datos."
-  );
 
   // --- 4. Llamar a la RPC de creación y extensión ---
   // Si no hubo conflictos, procedemos a llamar a la función que invoca la RPC.

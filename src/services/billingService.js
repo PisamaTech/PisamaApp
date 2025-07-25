@@ -49,7 +49,6 @@ export const fetchInvoiceDetails = async (invoiceId, userId, userRole) => {
   try {
     // 1. Obtener los datos de la factura principal y validar propiedad
     let query = supabase.from("facturas").select("*").eq("id", invoiceId);
-
     // Si el usuario no es 'admin', se asegura que solo pueda ver sus propias facturas.
     if (userRole !== "admin") {
       query = query.eq("usuario_id", userId);
@@ -59,7 +58,6 @@ export const fetchInvoiceDetails = async (invoiceId, userId, userRole) => {
     if (facturaError) throw facturaError;
     if (!factura)
       throw new Error("Factura no encontrada o no tienes permiso para verla.");
-
     // 2. Obtener los detalles de la factura, haciendo JOIN con la información de la reserva
     const { data: detalles, error: detallesError } = await supabase
       .from("detalles_factura")
@@ -92,7 +90,6 @@ export const fetchInvoiceDetails = async (invoiceId, userId, userRole) => {
         : new Date(0);
       return timeA - timeB;
     });
-    console.log(detallesOrdenados);
     return { factura, detalles: detallesOrdenados || [] };
   } catch (error) {
     console.error(
@@ -143,7 +140,6 @@ export const fetchCurrentPeriodPreview = async (userId, userProfile) => {
     if (error) throw error;
 
     // La RPC ya devuelve el objeto con el formato que necesita la UI
-    console.log(data);
     return data;
   } catch (error) {
     console.error(

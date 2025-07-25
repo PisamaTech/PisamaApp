@@ -75,7 +75,6 @@ export const CalendarDiario = () => {
   const userId = profile?.id;
 
   const { handleReservation } = useReservationHandler(resetReservationState);
-  console.log(selectedSlot);
   const { events } = useEventStore(); // Usa el store de Zustand
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showOnlyMyReservations, setShowOnlyMyReservations] = useState(false);

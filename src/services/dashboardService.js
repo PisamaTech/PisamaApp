@@ -11,10 +11,6 @@ import dayjs from "dayjs";
  * @returns {Promise<object>} Un objeto que contiene todos los datos del dashboard.
  */
 export const fetchDashboardData = async (userId, userProfile) => {
-  console.log(
-    "Cargando todos los datos del dashboard para el usuario:",
-    userId
-  );
   try {
     // Promise.all permite que todas las peticiones se ejecuten en paralelo
     const [

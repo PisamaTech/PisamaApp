@@ -72,7 +72,7 @@ export const confirmarReserva = async (hourlyEvents) => {
         titulo: eventData.titulo,
         usaCamilla: eventData.usaCamilla,
       };
-      console.log(newBookingData);
+
       const penalizedBookingId = eventData.reagendamiento_de_id;
       const requestingUserId = eventData.usuario_id;
 
@@ -106,7 +106,6 @@ export const confirmarReserva = async (hourlyEvents) => {
       // --- Lógica de Reserva Normal ---
       const reservasParaInsertar = mapEventsToReservations(hourlyEvents);
       const createdBookings = await createReservations(reservasParaInsertar);
-      console.log(createdBookings);
 
       // Añade las nuevas reservas al store
       createdBookings.forEach((booking) => {

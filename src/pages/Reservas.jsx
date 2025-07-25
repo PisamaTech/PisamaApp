@@ -113,7 +113,6 @@ export const Reservas = () => {
         consultorio_id: reserva.consultorio_id,
         tipo_reserva: reserva.tipo_reserva,
       };
-      console.log(formattedEvent);
       setSelectedEventForDialog(formattedEvent);
       setIsEventDialogOpen(true);
     }, 150);
@@ -226,10 +225,8 @@ export const Reservas = () => {
 
   const handleReagendarClick = (reservaPenalizada) => {
     // 1. Activa el modo reagendamiento en el store global y guarda la reserva
-    console.log(isReagendamientoMode);
     startReagendamientoMode(reservaPenalizada);
-    console.log(reservaPenalizada);
-    console.log(isReagendamientoMode);
+
     // 2. Navega a la vista del calendario principal
     navigate("/calendario_diario");
   };

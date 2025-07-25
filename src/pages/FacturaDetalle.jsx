@@ -1,12 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
 import "dayjs/locale/es";
 import { useAuthStore } from "@/stores/authStore";
 import { useUIStore } from "@/stores/uiStore";
-import { fetchInvoiceDetails } from "@/services/billingService";
 import { markInvoiceAsPaid } from "@/services/adminService";
+import { useInvoiceDetails } from "@/hooks/useInvoiceDetails";
 
 // --- Importaciones de Componentes Shadcn UI ---
 import { Button } from "@/components/ui/button";
@@ -39,16 +39,19 @@ export const FacturaDetalle = () => {
   const userId = profile?.id;
   const userRole = profile?.role;
   const navigate = useNavigate();
+  // El hook gestiona su propio estado de carga/error para los datos iniciales.
+  // Usamos el estado de useUIStore para acciones del usuario como "marcar como pagada".
   const {
-    loading,
-    error,
+    loading: isUpdating,
     startLoading,
     stopLoading,
-    setError,
-    clearError,
     showToast,
   } = useUIStore();
-  const [invoiceData, setInvoiceData] = useState(null);
+  const { invoiceData, loading, error, updateLocalInvoice } = useInvoiceDetails(
+    id,
+    userId,
+    userRole
+  );
 
   // --- Lógica para renderizar colores de fondo en la factura ---
   let lastWeekNumber = null; // Variable para rastrear la última semana procesada
@@ -63,22 +66,19 @@ export const FacturaDetalle = () => {
   const handleMarkAsPaid = async () => {
     if (!id) return;
 
-    clearError();
     startLoading();
     try {
       const updatedInvoice = await markInvoiceAsPaid(id);
-      // Actualiza el estado local para reflejar el cambio instantáneamente
-      setInvoiceData((prevData) => ({
-        ...prevData,
-        factura: updatedInvoice,
-      }));
+      // Usa la función del hook para actualizar el estado local de la factura
+      // y mantener la UI sincronizada sin recargar la página.
+      updateLocalInvoice(updatedInvoice);
+
       showToast({
         type: "success",
         title: "Factura Actualizada",
         message: `La factura #${id} ha sido marcada como pagada.`,
       });
     } catch (err) {
-      setError(err);
       showToast({
         type: "error",
         title: "Error al Actualizar",
@@ -88,27 +88,6 @@ export const FacturaDetalle = () => {
       stopLoading();
     }
   };
-
-  useEffect(() => {
-    if (!userId || !id) return;
-
-    const loadDetails = async () => {
-      clearError();
-      startLoading();
-      try {
-        const data = await fetchInvoiceDetails(id, userId, userRole);
-        setInvoiceData(data);
-      } catch (err) {
-        setError(err);
-        console.error("Error al cargar detalles de la factura:", err);
-      } finally {
-        stopLoading();
-      }
-    };
-
-    loadDetails();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, id, userRole]);
 
   const getStatusVariant = (status) => {
     switch (status) {
@@ -121,6 +100,7 @@ export const FacturaDetalle = () => {
     }
   };
 
+  // El estado de carga del hook se usa para mostrar el esqueleto de la página.
   if (loading) {
     return (
       <div className="container mx-auto p-8 space-y-4">
@@ -146,6 +126,7 @@ export const FacturaDetalle = () => {
     );
   }
 
+  // El estado de error del hook se usa para mostrar el mensaje de error.
   if (error) {
     return (
       <div className="container mx-auto p-8 text-center">
@@ -203,7 +184,7 @@ export const FacturaDetalle = () => {
                 <Button
                   size="sm"
                   onClick={handleMarkAsPaid}
-                  disabled={factura.estado === "pagada" || loading}
+                  disabled={factura.estado === "pagada" || isUpdating}
                   className="bg-green-600 hover:bg-green-700"
                 >
                   <CheckCircle className="mr-2 h-4 w-4" />

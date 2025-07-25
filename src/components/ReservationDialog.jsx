@@ -53,8 +53,7 @@ export const ReservationDialog = ({
   // --- Añade estados para la lista de usuarios y el usuario seleccionado ---
   const [userList, setUserList] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState(null);
-  console.log(isAdminBookingMode);
-  console.log(userList);
+
   // --- Cargar la lista de usuarios si estamos en modo admin ---
   useEffect(() => {
     if (isAdminBookingMode && open) {
@@ -111,8 +110,6 @@ export const ReservationDialog = ({
 
   // Extraer datos del usuario para la reserva desde el Store
   const { profile } = useAuthStore.getState();
-  const { id, firstName, lastName } = profile;
-  console.log(profile);
 
   function getFirstCharacterAndDot(text) {
     if (typeof text !== "string" || text.length === 0) {
@@ -145,7 +142,6 @@ export const ReservationDialog = ({
       return;
     }
 
-    console.log(data);
     const reservationData = {
       usuario_id: targetUserId,
       titulo: `${targetUser.firstName} ${getFirstCharacterAndDot(
@@ -164,7 +160,6 @@ export const ReservationDialog = ({
       reagendamiento_de_id: isReagendamiento ? penalizedBooking.id : null,
     };
     onConfirm(reservationData);
-    console.log(reservationData);
     onOpenChange(false); // Cerrar el diálogo
   };
 

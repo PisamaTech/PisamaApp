@@ -31,7 +31,6 @@ const AppBar = () => {
 
   const handleLogout = () => {
     console.log("Logout");
-    alert("Sesión cerrada");
   };
 
   const navItems = [

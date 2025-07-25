@@ -52,8 +52,6 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
 
   // Mover el foco al DialogContent
   const dialogRef = useRef(null);
-  console.log("Event Loading:" + loading);
-  console.log("Event open:" + open);
 
   // Colores de fondo de estado de reserva
   const estadoBgColor = {
@@ -197,8 +195,6 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
   // --- Función Final de Confirmación ---
   const handleConfirmAction = () => {
     setIsConfirmDialogOpen(false); // Cierra el modal de confirmación
-    console.log("Event Loading:" + loading);
-    console.log("Event open:" + open);
 
     if (actionToConfirm === "single" || actionToConfirm === "series") {
       handleConfirmCancelAction();
@@ -227,7 +223,6 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
           selectedEvent.start_time
         );
       }
-      console.log(result);
       if (result && result.updatedBookings) {
         // 1. Actualiza el store
         result.updatedBookings.forEach((booking) => {
@@ -314,7 +309,6 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
       // Recargar todos los eventos para reflejar los cambios masivos
       clearEvents();
       reloadCalendarEvents();
-      console.log(result);
       onOpenChange(false); // Cierra el diálogo de detalles
     } catch (err) {
       setError(err);
