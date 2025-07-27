@@ -31,7 +31,7 @@ import { useUIStore } from "@/stores/uiStore";
 export const AuthPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { profile, signIn, signUp } = useAuthStore();
+  const { signIn, signUp } = useAuthStore();
   const { loading } = useUIStore();
   // Configuración de React Hook Form para el inicio de sesión
   const {
@@ -77,7 +77,7 @@ export const AuthPage = () => {
       phone: phone.trim(),
     };
 
-    await signUp(
+    const success = await signUp(
       trimmedData.email,
       trimmedData.password,
       trimmedData.firstName,
@@ -85,6 +85,12 @@ export const AuthPage = () => {
       trimmedData.phone
     );
     reset();
+    if (success) {
+      console.log(success);
+      setTimeout(() => {
+        window.location.reload(); // Redirige a la página principal después del mensaje
+      }, 4000); // 5 segundos para que el toast se lea
+    }
   };
 
   return (
@@ -347,15 +353,6 @@ export const AuthPage = () => {
                 </form>
               </TabsContent>
             </Tabs>
-
-            <div className="relative my-1">
-              <div className="relative flex justify-center text-xs uppercase">
-                {/* Esta línea es para confirmar si se registró el usuario */}
-                {profile && <p>{profile.firstName}</p>}
-                {/* Después de probarla hay que borrarla */}
-                <span className="bg-background px-2 text-muted-foreground"></span>
-              </div>
-            </div>
           </CardContent>
         </Card>
       </div>

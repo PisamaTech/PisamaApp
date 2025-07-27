@@ -98,6 +98,9 @@ export const useAuthStore = create(
             await supabase.auth.signUp({
               email,
               password,
+              options: {
+                emailRedirectTo: `https://pisama-app.vercel.app/confirmacion`,
+              },
             });
 
           if (authError) {
@@ -133,10 +136,6 @@ export const useAuthStore = create(
             throw profileError;
           }
 
-          // set({
-          //   user: authData.user,
-          //   profile: { firstName, lastName, email },
-          // });
           stopLoading();
           showToast({
             type: "success",
@@ -144,6 +143,7 @@ export const useAuthStore = create(
             message:
               "Hemos enviado un email a tu correo para verificar tu cuenta. Haz clic en el enlace para activar tu cuenta.",
           });
+          return true; // ✅ señal de éxito
         } catch (error) {
           setError(error);
           showToast({
@@ -151,6 +151,7 @@ export const useAuthStore = create(
             title: "Error",
             message: error.message,
           });
+          return false; // ❌ señal de fallo
         }
       },
 

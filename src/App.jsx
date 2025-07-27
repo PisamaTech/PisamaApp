@@ -57,6 +57,7 @@ function App() {
 
             {/* Definimos un layout general para las rutas autenticadas */}
             <Route path="/" element={<Layout />}>
+              <Route index element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/calendario_semanal" element={<CalendarSemanal />} />
               <Route path="/calendario_diario" element={<CalendarDiario />} />
