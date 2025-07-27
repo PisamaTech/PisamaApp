@@ -23,7 +23,7 @@ export const useEventStore = create((set, get) => ({
       return;
     }
 
-    startLoading(); // Inicia el loading global de UIStore
+    startLoading("Cargando eventos..."); // Inicia el loading global de UIStore
     clearError(); // Limpia cualquier error previo en UIStore
 
     // Calcula el rango de fechas para la semana del año
@@ -90,7 +90,7 @@ export const useEventStore = create((set, get) => ({
       .endOf("week")
       .toDate();
 
-    startLoading(); // Inicia el loading global de UIStore
+    startLoading("Cargando eventos..."); // Inicia el loading global de UIStore
     clearError(); // Limpia cualquier error previo en UIStore
 
     try {

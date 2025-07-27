@@ -318,7 +318,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
 
     // ✅ CRÍTICO: Activar loading ANTES de cerrar diálogos
     clearError();
-    startLoading();
+    startLoading("Renovando reservas fijas...");
 
     // ✅ CRÍTICO: Cerrar diálogo de confirmación pero mantener el principal abierto para mostrar loading
     setIsConfirmDialogOpen(false);

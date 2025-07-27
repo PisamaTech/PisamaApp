@@ -8,14 +8,8 @@ import dayjs from "dayjs";
 import { useEventStore } from "@/stores/calendarStore";
 import { useUIStore } from "@/stores/uiStore";
 
-const {
-  startLoading,
-  stopLoading,
-  setError,
-  showToast,
-  clearError,
-  stopReagendamientoMode,
-} = useUIStore.getState();
+const { stopLoading, setError, showToast, clearError, stopReagendamientoMode } =
+  useUIStore.getState();
 const { addEvent, updateEvent } = useEventStore.getState();
 
 // Función para confirmar reservas

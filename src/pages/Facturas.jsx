@@ -122,7 +122,7 @@ export const Facturas = () => {
 
       // Cargar historial de facturas
       clearError();
-      startLoading();
+      startLoading("Cargando facturas...");
       try {
         const { data, count } = await fetchUserInvoices(
           userId,

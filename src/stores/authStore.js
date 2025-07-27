@@ -90,7 +90,7 @@ export const useAuthStore = create(
         const { startLoading, setError, clearError, showToast, stopLoading } =
           useUIStore.getState();
 
-        startLoading();
+        startLoading("Registrando usuario...");
         clearError();
 
         try {
@@ -160,7 +160,7 @@ export const useAuthStore = create(
         const { startLoading, setError, clearError, showToast, stopLoading } =
           useUIStore.getState();
 
-        startLoading();
+        startLoading("Logueando usuario...");
         clearError();
 
         try {
@@ -215,7 +215,7 @@ export const useAuthStore = create(
         const { startLoading, setError, clearError, showToast, stopLoading } =
           useUIStore.getState();
 
-        startLoading();
+        startLoading("Cerrando sesión...");
         clearError();
 
         try {

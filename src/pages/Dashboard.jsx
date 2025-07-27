@@ -92,7 +92,7 @@ const Dashboard = () => {
   const handleRenewSeries = async () => {
     if (!profile || !selectedSerieForAction) return;
 
-    startLoading();
+    startLoading("Renovando reservas fijas...");
     clearError();
     try {
       // Llama a la función orquestadora que valida y luego crea/extiende

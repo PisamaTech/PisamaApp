@@ -351,7 +351,7 @@ export const Reservas = () => {
       if (!userId) return;
 
       clearError();
-      startLoading();
+      startLoading("Cargando reservas...");
 
       try {
         // Pasa currentPage e itemsPerPage al servicio

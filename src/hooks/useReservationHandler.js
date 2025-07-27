@@ -9,7 +9,7 @@ export const useReservationHandler = (resetReservationState) => {
     async (hourlyEvents) => {
       resetReservationState();
       try {
-        startLoading();
+        startLoading("Confirmando reserva...");
         const result = await confirmarReserva(hourlyEvents);
 
         // // Cerrar diálogo y limpiar estado
