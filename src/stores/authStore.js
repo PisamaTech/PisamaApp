@@ -16,7 +16,7 @@ export const useAuthStore = create(
         const { startLoading, setError, clearError, showToast, stopLoading } =
           useUIStore.getState();
 
-        startLoading();
+        startLoading("Cargando usuario...");
         clearError();
 
         try {
@@ -99,7 +99,7 @@ export const useAuthStore = create(
               email,
               password,
               options: {
-                emailRedirectTo: `https://pisama-app.vercel.app/confirmacion`,
+                emailRedirectTo: `https://pisama-app.vercel.app/confirmacion?auto_login=false`,
               },
             });
 

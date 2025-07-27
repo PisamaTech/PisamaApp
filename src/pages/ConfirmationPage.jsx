@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   Button,
   Card,
@@ -10,9 +11,18 @@ import {
 import { Link } from "react-router-dom";
 import "animate.css";
 import logoPisama from "../assets/EspacioPimasaLogo-300.webp";
-import { ArrowBigDownDash, ChevronsDown, CircleCheck } from "lucide-react";
+import { ChevronsDown, CircleCheck } from "lucide-react";
+import { useAuthStore } from "@/stores/authStore";
 
 export const ConfirmationPage = () => {
+  const signOut = useAuthStore((state) => state.signOut);
+
+  useEffect(() => {
+    // Al llegar a esta página, cerramos cualquier sesión activa.
+    // Esto fuerza al usuario a iniciar sesión con su email ya confirmado.
+    signOut?.();
+  }, [signOut]);
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-orange-300 from-10% via-neutral-400 via-45% to-teal-300 to-90%">
       <div className="w-full max-w-md p-4">
