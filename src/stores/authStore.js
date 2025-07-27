@@ -99,7 +99,7 @@ export const useAuthStore = create(
               email,
               password,
               options: {
-                emailRedirectTo: `https://pisama-app.vercel.app/confirmacion?auto_login=false`,
+                emailRedirectTo: `https://pisama-app.vercel.app/confirmacion`,
               },
             });
 
