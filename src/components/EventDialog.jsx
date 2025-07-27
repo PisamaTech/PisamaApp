@@ -15,12 +15,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui";
 import dayjs from "dayjs";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { CalendarClock, RefreshCw } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
-import { ReservationStatus, ReservationType } from "@/utils/constants"; // Asegúrate de importar ReservationStatus
+import { ReservationStatus, ReservationType } from "@/utils/constants";
 import { ConfirmCancelDialog } from "./ConfirmEventDialog";
-// Importa tu nueva función de servicio y mantén la de series si aún la necesitas por separado
 import {
   cancelBooking,
   cancelRecurringSeries,
@@ -33,7 +32,7 @@ import { mapReservationToEvent } from "@/utils/calendarUtils";
 
 export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
-  const [actionToConfirm, setActionToConfirm] = useState(null); // 'single' o 'series'
+  const [actionToConfirm, setActionToConfirm] = useState(null);
   const [futureEventsCount, setFutureEventsCount] = useState(0);
 
   const {
@@ -43,17 +42,17 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
     stopLoading,
     setError,
     clearError,
-  } = useUIStore(); // Obtén funciones de UI
+  } = useUIStore();
+
   const {
     updateEvent,
     loadInitialEvents: reloadCalendarEvents,
     clearEvents,
-  } = useEventStore(); // Obtén updateEvent y fetchEventsByWeek
+  } = useEventStore();
 
-  // Mover el foco al DialogContent
   const dialogRef = useRef(null);
 
-  // Colores de fondo de estado de reserva
+  // Estados de fondo para las reservas
   const estadoBgColor = {
     activa: "bg-green-300",
     penalizada: "bg-red-300",
@@ -62,19 +61,28 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
     reagendada: "bg-orange-300",
   };
 
+  // ✅ FUNCIÓN CRÍTICA: Cerrar todos los diálogos de forma limpia
+  const closeAllDialogs = useCallback(() => {
+    setIsConfirmDialogOpen(false);
+    setActionToConfirm(null);
+    // Usar un pequeño delay para asegurar que el estado se actualice
+    setTimeout(() => {
+      onOpenChange(false);
+    }, 100);
+  }, [onOpenChange]);
+
   useEffect(() => {
     if (open && dialogRef.current) {
       dialogRef.current.focus();
     }
   }, [open]);
 
-  // Extraer datos del usuario para la reserva desde el Store
+  // Extraer datos del usuario
   const { profile } = useAuthStore.getState();
   const { id: profileId } = profile;
-  // Asegúrate de que selectedEvent no sea null antes de acceder a sus propiedades
   const mismoUsuario = selectedEvent && profileId === selectedEvent.usuario_id;
 
-  // Obtener cantidad de eventos futuros en la serie (solo si es tipo FIJA)
+  // Obtener cantidad de eventos futuros en la serie
   useEffect(() => {
     const fetchFutureEvents = async () => {
       if (
@@ -82,7 +90,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
         selectedEvent.tipo_reserva !== ReservationType.FIJA ||
         !selectedEvent.recurrence_id
       ) {
-        setFutureEventsCount(0); // Resetea si no aplica
+        setFutureEventsCount(0);
         return;
       }
 
@@ -94,12 +102,11 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
           return;
         }
 
-        // Contar solo las reservas activas de la serie a partir de la fecha del evento actual
         const { count, error } = await supabase
           .from("reservas")
           .select("*", { count: "exact" })
           .eq("recurrence_id", selectedEvent.recurrence_id)
-          .eq("estado", ReservationStatus.ACTIVA) // Usa tu constante para 'activa'
+          .eq("estado", ReservationStatus.ACTIVA)
           .gte("start_time", startDate.toISOString());
 
         if (error) throw error;
@@ -111,16 +118,14 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
     };
 
     if (open && selectedEvent) {
-      // Ejecuta solo cuando el diálogo está abierto y hay un evento seleccionado
       fetchFutureEvents();
     }
-  }, [open, selectedEvent]); // Dependencias: open y selectedEvent
+  }, [open, selectedEvent]);
 
   const getConfirmationMessage = () => {
-    if (!selectedEvent) return ""; // Si no hay evento, no mostrar mensaje
+    if (!selectedEvent) return "";
 
     if (actionToConfirm === "single") {
-      // Si la acción es cancelar solo esta
       return {
         action: "single",
         message: (
@@ -146,7 +151,6 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
     }
 
     if (actionToConfirm === "series") {
-      // Si la acción es cancelar la serie
       return {
         action: "series",
         message: (
@@ -167,7 +171,6 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
     }
 
     if (actionToConfirm === "renew") {
-      // Si la acción es renovar
       return {
         action: "renew",
         message: (
@@ -189,48 +192,54 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
         ),
       };
     }
-    return ""; // Mensaje por defecto si no hay tipo de acción
+    return "";
   };
 
-  // --- Función Final de Confirmación ---
-  const handleConfirmAction = () => {
-    setIsConfirmDialogOpen(false); // Cierra el modal de confirmación
+  // ✅ FUNCIÓN CORREGIDA: Manejar confirmación de acciones
+  const handleConfirmAction = useCallback(() => {
+    // Guardar la acción actual antes de que se resetee
+    const currentAction = actionToConfirm;
 
-    if (actionToConfirm === "single" || actionToConfirm === "series") {
+    if (currentAction === "single" || currentAction === "series") {
       handleConfirmCancelAction();
-    } else if (actionToConfirm === "renew") {
+    } else if (currentAction === "renew") {
       handleRenewSeries();
     }
-  };
+  }, [actionToConfirm]);
 
+  // ✅ FUNCIÓN CORREGIDA: Manejar cancelación con cierre apropiado
   const handleConfirmCancelAction = async () => {
     if (!selectedEvent || !profileId) return;
 
-    setIsConfirmDialogOpen(false);
+    // ✅ CRÍTICO: Activar loading ANTES de cerrar diálogos
     clearError();
     startLoading();
 
+    // ✅ CRÍTICO: Cerrar diálogo de confirmación pero mantener el principal abierto para mostrar loading
+    setIsConfirmDialogOpen(false);
+    setActionToConfirm(null);
+
     try {
-      let result; // Puede ser una o varias reservas actualizadas
+      let result;
 
       if (actionToConfirm === "single") {
         result = await cancelBooking(selectedEvent.id, profileId);
       } else if (actionToConfirm === "series") {
-        // const currentDateForCancellation = dayjs().toDate(); // Fecha actual para la solicitud
         result = await cancelRecurringSeries(
           selectedEvent.recurrence_id,
           profileId,
           selectedEvent.start_time
         );
       }
+
       if (result && result.updatedBookings) {
-        // 1. Actualiza el store
+        // Actualizar el store
         result.updatedBookings.forEach((booking) => {
           const formattedEvent = mapReservationToEvent(booking);
           updateEvent(formattedEvent);
         });
 
-        // 2. Muestra el toast específico
+        // Preparar el toast específico
         let toastTitle = "Acción Completada";
         let toastMessage = "La operación se realizó con éxito.";
 
@@ -266,63 +275,96 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
               "No se encontraron reservas futuras activas en esta serie para cancelar.";
             break;
         }
-        showToast({
-          type: "success",
-          title: toastTitle,
-          message: toastMessage,
-        });
-      }
 
-      // Cerrar diálogos
+        // ✅ CRÍTICO: Cerrar diálogo principal DESPUÉS de la operación exitosa
+        onOpenChange(false);
+
+        // Mostrar toast después de cerrar diálogos
+        setTimeout(() => {
+          showToast({
+            type: "success",
+            title: toastTitle,
+            message: toastMessage,
+          });
+        }, 200);
+      }
     } catch (error) {
-      setError(error); // Usa el setError global
-      showToast({
-        type: "error",
-        title: "Error en la Cancelación",
-        message: error.message || "Ocurrió un error al intentar cancelar.",
-      });
+      setError(error);
+      // ✅ También cerrar diálogo principal en caso de error
+      onOpenChange(false);
+
+      setTimeout(() => {
+        showToast({
+          type: "error",
+          title: "Error en la Cancelación",
+          message: error.message || "Ocurrió un error al intentar cancelar.",
+        });
+      }, 200);
     } finally {
       stopLoading();
     }
   };
 
-  // --- Lógica de Renovación ---
+  // ✅ FUNCIÓN CORREGIDA: Manejar renovación con cierre apropiado
   const handleRenewSeries = async () => {
     if (!profile || !selectedEvent?.recurrence_id) return;
 
-    startLoading();
+    // ✅ CRÍTICO: Activar loading ANTES de cerrar diálogos
     clearError();
+    startLoading();
+
+    // ✅ CRÍTICO: Cerrar diálogo de confirmación pero mantener el principal abierto para mostrar loading
+    setIsConfirmDialogOpen(false);
+    setActionToConfirm(null);
+
     try {
       const result = await renewAndValidateSeries(
         selectedEvent.recurrence_id,
         profile.id
       );
 
-      showToast({
-        type: "success",
-        title: "¡Serie Renovada!",
-        message: `Se crearon ${
-          result.newly_created_count || 0
-        } nuevas reservas.`,
-      });
+      // ✅ CRÍTICO: Cerrar diálogo principal DESPUÉS de la operación exitosa
+      onOpenChange(false);
 
-      // Recargar todos los eventos para reflejar los cambios masivos
-      clearEvents();
-      reloadCalendarEvents();
-      onOpenChange(false); // Cierra el diálogo de detalles
+      // Recargar eventos y mostrar toast
+      setTimeout(() => {
+        clearEvents();
+        reloadCalendarEvents();
+
+        showToast({
+          type: "success",
+          title: "¡Serie Renovada!",
+          message: `Se crearon ${
+            result.newly_created_count || 0
+          } nuevas reservas.`,
+        });
+      }, 200);
     } catch (err) {
       setError(err);
-      showToast({
-        type: "error",
-        title: "No se Pudo Renovar la Serie",
-        message: `Conflicto detectado: ${err.message}`,
-      });
+      // ✅ También cerrar diálogo principal en caso de error
+      onOpenChange(false);
+
+      setTimeout(() => {
+        showToast({
+          type: "error",
+          title: "No se Pudo Renovar la Serie",
+          message: `Conflicto detectado: ${err.message}`,
+        });
+      }, 200);
     } finally {
       stopLoading();
     }
   };
 
-  // Si no hay evento seleccionado, no renderizar el diálogo
+  // ✅ FUNCIÓN CORREGIDA: Manejar cierre del diálogo de confirmación
+  const handleConfirmDialogClose = useCallback((isOpen) => {
+    setIsConfirmDialogOpen(isOpen);
+    if (!isOpen) {
+      setActionToConfirm(null);
+    }
+  }, []);
+
+  // Si no hay evento seleccionado, no renderizar
   if (!selectedEvent) {
     return null;
   }
@@ -334,6 +376,17 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
           ref={dialogRef}
           tabIndex={-1}
           className="max-h-full overflow-y-auto"
+          // ✅ CRÍTICO: Prevenir cierre durante loading para mostrar el LoadingOverlay
+          onPointerDownOutside={(e) => {
+            if (loading) {
+              e.preventDefault();
+            }
+          }}
+          onEscapeKeyDown={(e) => {
+            if (loading) {
+              e.preventDefault();
+            }
+          }}
         >
           <DialogHeader>
             <DialogTitle className="mb-3">
@@ -347,10 +400,10 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
             Aquí puede ver los detalles de la reserva seleccionada. <br />
             Si la reserva es tuya y está activa, podrás cancelarla.
           </DialogDescription>
+
           <div className="space-y-2">
-            {/* ... (Inputs deshabilitados para mostrar datos - sin cambios) ... */}
+            {/* Campos del formulario - mantienen el mismo contenido */}
             <div className="flex justify-between gap-4">
-              {/* Titular */}
               <div className="space-y-2 w-full">
                 <Label htmlFor="titular">Titular de la reserva</Label>
                 <Input
@@ -360,7 +413,6 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                   disabled
                 />
               </div>
-              {/* Consultorio */}
               <div className="space-y-2 w-full">
                 <Label htmlFor="resourceId">Consultorio</Label>
                 <Input
@@ -371,8 +423,8 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                 />
               </div>
             </div>
+
             <div className="flex justify-between gap-4">
-              {/* Día */}
               <div className="space-y-2 w-full">
                 <Label htmlFor="dia">Día de reserva</Label>
                 <Input
@@ -383,7 +435,6 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                   disabled
                 />
               </div>
-              {/* Fecha */}
               <div className="space-y-2 w-full">
                 <Label htmlFor="date">Fecha de reserva</Label>
                 <Input
@@ -394,8 +445,8 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                 />
               </div>
             </div>
+
             <div className="flex justify-between gap-4">
-              {/* Hora de inicio */}
               <div className="space-y-2 w-full">
                 <Label htmlFor="startTime">Hora de reserva</Label>
                 <Input
@@ -407,16 +458,13 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                   disabled
                 />
               </div>
-
-              {/* Hora de fin */}
               <div className="space-y-2 w-full">
                 <Label htmlFor="id">Identificador de reserva</Label>
                 <Input id="id" type="text" value={selectedEvent.id} disabled />
               </div>
             </div>
-            <div className="flex justify-between gap-4">
-              {/* Tipo de reserva */}
 
+            <div className="flex justify-between gap-4">
               <div className="space-y-2 w-full">
                 <Label htmlFor="tipo">Tipo de reserva</Label>
                 <Input
@@ -431,7 +479,6 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                   }
                 />
               </div>
-              {/* Uso de camilla */}
               <div className="space-y-2 w-full">
                 <Label htmlFor="usaCamilla">¿Utilizarás la camilla?</Label>
                 <Input
@@ -441,9 +488,9 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                   disabled
                 />
               </div>
-            </div>{" "}
+            </div>
+
             <div className="flex justify-between gap-4">
-              {/* Estado de reserva */}
               <div className="space-y-2 w-full">
                 <Label htmlFor="estado">Estado de reserva</Label>
                 <Input
@@ -456,7 +503,6 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                   }`}
                 />
               </div>
-              {/* Fecha de creación */}
               <div className="space-y-2 w-full">
                 <Label htmlFor="fechaCreacion">Fecha de creación</Label>
                 <Input
@@ -467,9 +513,9 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                 />
               </div>
             </div>
+
             {selectedEvent.fecha_cancelacion && (
               <div className="flex justify-between gap-4">
-                {/* Fecha de cancelación */}
                 <div className="space-y-2 w-full">
                   <Label htmlFor="fechaCancelacion">Fecha de cancelación</Label>
                   <Input
@@ -492,9 +538,9 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                 </div>
               </div>
             )}
+
             {selectedEvent.recurrence_end_date && (
               <div className="flex justify-between gap-4">
-                {/* Fecha de cancelación */}
                 <div className="space-y-2 w-full">
                   <Label htmlFor="finReservaFija">Fin de reserva fija</Label>
                   <Input
@@ -518,13 +564,14 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                           <span className="inline-block">
                             <Button
                               onClick={() => {
-                                setActionToConfirm("renew"); // Define que la acción es renovar la serie fija
+                                setActionToConfirm("renew");
                                 setIsConfirmDialogOpen(true);
                               }}
-                              variant="destructive" //
+                              variant="destructive"
                               className="bg-orange-400 hover:bg-orange-600/50"
                               disabled={
                                 !mismoUsuario ||
+                                loading ||
                                 (selectedEvent.recurrence_end_date &&
                                   dayjs(selectedEvent.recurrence_end_date).diff(
                                     dayjs(),
@@ -560,6 +607,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                 </div>
               </div>
             )}
+
             {selectedEvent.estado === "penalizada" && (
               <div className="space-y-2 w-full">
                 <Label htmlFor="permiteReagendamiento">
@@ -583,33 +631,33 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
               </div>
             )}
           </div>
+
           <DialogFooter>
             <div className="mt-4 flex justify-end gap-2">
-              {/* Botón para cancelar TODA LA SERIE (solo si es fija) */}
               {selectedEvent.tipo_reserva === ReservationType.FIJA &&
                 selectedEvent.estado === ReservationStatus.ACTIVA && (
                   <Button
                     onClick={() => {
-                      setActionToConfirm("series"); // Define que la acción es cancelar la serie
+                      setActionToConfirm("series");
                       setIsConfirmDialogOpen(true);
                     }}
-                    variant="destructive" // O un color diferente para series
+                    variant="destructive"
                     className="ml-2 bg-fija hover:bg-fija/70"
-                    disabled={!mismoUsuario}
+                    disabled={!mismoUsuario || loading}
                   >
                     Cancelar Serie Completa
                   </Button>
                 )}
-              {/* Botón para cancelar SOLO ESTA reserva (eventual o una instancia de fija) */}
+
               {selectedEvent.estado === ReservationStatus.ACTIVA && (
                 <Button
                   onClick={() => {
-                    setActionToConfirm("single"); // Define que la acción es cancelar solo esta
+                    setActionToConfirm("single");
                     setIsConfirmDialogOpen(true);
                   }}
-                  variant="destructive" // O un color que indique acción de cancelar
+                  variant="destructive"
                   className="bg-eventual text-slate-900 hover:bg-eventual/70"
-                  disabled={!mismoUsuario}
+                  disabled={!mismoUsuario || loading}
                 >
                   Cancelar Esta Reserva
                 </Button>
@@ -618,10 +666,11 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {selectedEvent && ( // Renderiza el diálogo de confirmación solo si hay un evento seleccionado
+
+      {selectedEvent && (
         <ConfirmCancelDialog
           open={isConfirmDialogOpen}
-          onOpenChange={setIsConfirmDialogOpen}
+          onOpenChange={handleConfirmDialogClose}
           message={getConfirmationMessage()}
           onConfirm={handleConfirmAction}
         />

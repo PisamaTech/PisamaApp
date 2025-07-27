@@ -132,7 +132,7 @@ export const Reservas = () => {
       return;
 
     clearError();
-    startLoading();
+    startLoading("Cancelando...");
     setIsConfirmCancelOpen(false);
 
     try {

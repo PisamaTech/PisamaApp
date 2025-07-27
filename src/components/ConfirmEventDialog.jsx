@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, Repeat } from "lucide-react";
 import { Separator } from "./ui";
 import { useUIStore } from "@/stores/uiStore";
+import { useCallback } from "react";
 
 export const ConfirmCancelDialog = ({
   open,
@@ -47,9 +48,43 @@ export const ConfirmCancelDialog = ({
       : "Renovar Reservas"
     : "Confirmar";
 
+  // ✅ FUNCIÓN CRÍTICA: Manejar confirmación y cerrar inmediatamente
+  const handleConfirm = useCallback(() => {
+    // Primero cerrar el diálogo de confirmación
+    onOpenChange(false);
+
+    // Luego ejecutar la acción
+    setTimeout(() => {
+      onConfirm();
+    }, 100);
+  }, [onOpenChange, onConfirm]);
+
+  // ✅ FUNCIÓN CRÍTICA: Manejar cancelación
+  const handleCancel = useCallback(() => {
+    onOpenChange(false);
+  }, [onOpenChange]);
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      // ✅ CRÍTICO: Prevenir cierre accidental con escape/click fuera durante loading
+      modal={true}
+    >
+      <DialogContent
+        className="max-w-md"
+        // ✅ CRÍTICO: Prevenir cierre durante operación
+        onPointerDownOutside={(e) => {
+          if (loading) {
+            e.preventDefault();
+          }
+        }}
+        onEscapeKeyDown={(e) => {
+          if (loading) {
+            e.preventDefault();
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle
             className={`flex items-center gap-2 ${
@@ -70,12 +105,16 @@ export const ConfirmCancelDialog = ({
           <div className="text-gray-600">{message.message}</div>
           <DialogFooter>
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
+              <Button
+                variant="outline"
+                onClick={handleCancel}
+                disabled={loading}
+              >
                 Volver
               </Button>
               <Button
                 variant={buttonVariant}
-                onClick={onConfirm}
+                onClick={handleConfirm}
                 disabled={loading}
               >
                 {confirmButtonText}
