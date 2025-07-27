@@ -211,9 +211,16 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
   const handleConfirmCancelAction = async () => {
     if (!selectedEvent || !profileId) return;
 
-    // ✅ CRÍTICO: Activar loading ANTES de cerrar diálogos
+    // ✅ CRÍTICO: Activar loading con mensaje específico ANTES de cerrar diálogos
     clearError();
-    startLoading();
+
+    // Determinar el mensaje de loading basado en la acción
+    const loadingMessage =
+      actionToConfirm === "single"
+        ? "Cancelando reserva..."
+        : "Cancelando serie de reservas...";
+
+    startLoading(loadingMessage);
 
     // ✅ CRÍTICO: Cerrar diálogo de confirmación pero mantener el principal abierto para mostrar loading
     setIsConfirmDialogOpen(false);

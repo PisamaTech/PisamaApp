@@ -2,6 +2,7 @@ import { create } from "zustand";
 
 export const useUIStore = create((set) => ({
   loading: false,
+  loadingMessage: "Cargando...", // Mensaje personalizable para el loading
   error: null,
   loadingCount: 0, // Para manejar múltiples cargas simultáneas
   theme: "light",
@@ -17,16 +18,25 @@ export const useUIStore = create((set) => ({
   penalizedBookingForReagendamiento: null, // Guarda la reserva original a reagendar
   // --- Fin Estados para Reagendamiento ---
 
-  //Manejo de cargas
-  startLoading: () => set({ loading: true }),
+  // ✅ ACTUALIZADO: Manejo de cargas con mensaje personalizable
+  startLoading: (message = "Cargando...") =>
+    set({
+      loading: true,
+      loadingMessage: message,
+    }),
 
-  stopLoading: () => set({ loading: false }),
+  stopLoading: () =>
+    set({
+      loading: false,
+      loadingMessage: "Cargando...", // Reset al mensaje por defecto
+    }),
 
   //Seteo de errores
   setError: (error) =>
     set({
       error: error?.message || error || "Error desconocido",
       loading: false,
+      loadingMessage: "Cargando...", // ✅ NUEVO: Reset del mensaje también en errores
     }),
 
   clearError: () => set({ error: null }),
