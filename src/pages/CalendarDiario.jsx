@@ -160,6 +160,29 @@ export const CalendarDiario = () => {
           Mostrar solo mis reservas
         </Label>
       </div>
+      {/* Leyenda de Colores de Eventos */}
+      <div className="flex justify-center items-center flex-wrap gap-x-6 gap-y-2 p-3 my-4 rounded-lg bg-slate-50 border border-slate-200">
+        <div className="flex items-center">
+          <div
+            className="w-4 h-4 rounded-sm mr-2 border border-slate-400/50"
+            style={{ backgroundColor: "#5b9bd5" }}
+          ></div>
+          <p className="text-sm text-slate-700">
+            <span className="font-semibold">Reservas Fijas:</span> se repiten
+            todas las semanas.
+          </p>
+        </div>
+        <div className="flex items-center">
+          <div
+            className="w-4 h-4 rounded-sm mr-2 border border-slate-400/50"
+            style={{ backgroundColor: "#92d050" }}
+          ></div>
+          <p className="text-sm text-slate-700">
+            <span className="font-semibold">Reservas Eventuales:</span> uso
+            único en esa fecha.
+          </p>
+        </div>
+      </div>
       <div className="h-[800px] bg-white rounded-lg shadow-lg">
         <Calendar
           localizer={localizer}
