@@ -376,12 +376,12 @@ export const ReservationDialog = ({
               {/* Mensaje condicional para reservas fijas */}
               {tipoReserva === ReservationType.FIJA && (
                 <div className="text-sm text-blue-600 mt-2">
-                  Las reservas fijas se agendan por un plazo de 6 meses.
+                  Las reservas fijas se agendan por un plazo de 4 meses.
                   <br />
                   Se le enviará un mensaje un mes antes del vencimiento para
                   recordarle.
                   <br />
-                  En caso de necesitarlo, podrá volver a renovarla por otros 6
+                  En caso de necesitarlo, podrá volver a renovarla por otros 4
                   meses.
                 </div>
               )}

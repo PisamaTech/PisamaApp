@@ -150,7 +150,7 @@ const Dashboard = () => {
             <p className="text-sm">
               ¿Estás seguro de que quieres renovar la reserva FIJA de los{" "}
               <b className="font-semibold">{selectedSerieForAction.title}</b>{" "}
-              por 6 meses más?
+              por 4 meses más?
               <br />
               <span className="text-sm text-muted-foreground">
                 Se crearán y validarán nuevas reservas para el próximo período.

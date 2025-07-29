@@ -46,7 +46,7 @@ export const useCalendarState = () => {
   // Función para confirmar la reserva
   const handleConfirmReserve = (reservationData) => {
     const newHourlyEvents = generateHourlyEvents(reservationData); // Creo reservas individuales
-    // Si la hora en FIJA, genero recurrencias por 6 meses
+    // Si la hora en FIJA, genero recurrencias por 4 meses
     if (newHourlyEvents[0].tipo_reserva === "Fija") {
       const reservaFija = newHourlyEvents.flatMap((baseEvent) => {
         return generateRecurringEvents(baseEvent);
