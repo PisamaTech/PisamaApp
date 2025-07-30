@@ -315,8 +315,8 @@ const BillingManagementTab = () => {
                 />
               </PaginationItem>
               <PaginationItem>
-                <PaginationLink isActive>
-                  Página {currentPage} de {totalPages}
+                <PaginationLink isActive className="w-14">
+                  {currentPage} de {totalPages}
                 </PaginationLink>
               </PaginationItem>
               <PaginationItem>

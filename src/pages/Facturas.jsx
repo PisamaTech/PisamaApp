@@ -372,7 +372,7 @@ export const Facturas = () => {
                           />
                         </PaginationItem>
                         <PaginationItem>
-                          <PaginationLink isActive>
+                          <PaginationLink isActive className="w-14">
                             {previewCurrentPage} de {totalPreviewPages}
                           </PaginationLink>
                         </PaginationItem>
@@ -411,7 +411,7 @@ export const Facturas = () => {
               </PaginationItem>
               <PaginationItem>
                 <PaginationLink isActive>
-                  Página {historyCurrentPage} de {totalHistoryPages}
+                  {historyCurrentPage} de {totalHistoryPages}
                 </PaginationLink>
               </PaginationItem>
               <PaginationItem>
