@@ -79,9 +79,11 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
 
   // Extraer datos del usuario
   const { profile } = useAuthStore.getState();
-  const { id: profileId } = profile;
-  const mismoUsuario = selectedEvent && profileId === selectedEvent.usuario_id;
+  const { id: profileId, role: userRole } = profile;
 
+  // Determinar si el usuario puede realizar acciones de cancelación
+  const isOwner = selectedEvent && profileId === selectedEvent.usuario_id;
+  const canCancel = isOwner || userRole === "admin";
   // Obtener cantidad de eventos futuros en la serie
   useEffect(() => {
     const fetchFutureEvents = async () => {
@@ -577,7 +579,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                               variant="destructive"
                               className="bg-orange-400 hover:bg-orange-600/50"
                               disabled={
-                                !mismoUsuario ||
+                                !isOwner ||
                                 loading ||
                                 (selectedEvent.recurrence_end_date &&
                                   dayjs(selectedEvent.recurrence_end_date).diff(
@@ -591,7 +593,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                             </Button>
                           </span>
                         </TooltipTrigger>
-                        {(!mismoUsuario ||
+                        {(!isOwner ||
                           (selectedEvent.recurrence_end_date &&
                             dayjs(selectedEvent.recurrence_end_date).diff(
                               dayjs(),
@@ -650,7 +652,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                     }}
                     variant="destructive"
                     className="ml-2 bg-fija hover:bg-fija/70"
-                    disabled={!mismoUsuario || loading}
+                    disabled={!canCancel || loading}
                   >
                     Cancelar Serie Completa
                   </Button>
@@ -664,7 +666,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                   }}
                   variant="destructive"
                   className="bg-eventual text-slate-900 hover:bg-eventual/70"
-                  disabled={!mismoUsuario || loading}
+                  disabled={!canCancel || loading}
                 >
                   Cancelar Esta Reserva
                 </Button>
