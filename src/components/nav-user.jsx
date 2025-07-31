@@ -87,7 +87,9 @@ export function NavUser({ user }) {
             <DropdownMenuItem
               onClick={() => {
                 signOut();
-                navigate("/");
+                setTimeout(() => {
+                  navigate("/");
+                }, 1000);
               }}
             >
               <LogOut />

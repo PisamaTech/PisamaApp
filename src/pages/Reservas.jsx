@@ -1,4 +1,3 @@
-// src/pages/Reservas.jsx (Ejemplo)
 import { useState, useEffect, useMemo } from "react";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom"; // Para navegar al reagendar
@@ -18,22 +17,17 @@ import {
 } from "@/utils/constants";
 
 // --- Importaciones para Date Range Picker ---
-import { CalendarIcon, MoreHorizontal } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import {
-  Badge,
   Button,
   Calendar,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
   Label,
   Select,
   SelectContent,
@@ -52,7 +46,6 @@ import {
   Separator,
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
@@ -63,12 +56,6 @@ import {} from "@/components/ui/card";
 import {} from "@/components/ui/table";
 import {} from "@/components/ui/badge";
 import camillaIcon from "../assets/massage-table-50.png";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui";
 import { ConfirmCancelDialog } from "@/components/ConfirmEventDialog";
 import { mapReservationToEvent } from "@/utils/calendarUtils";
 import ReservaRow from "@/components/ReservaRow";

@@ -2,11 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useUIStore } from "@/stores/uiStore";
 import { searchAllReservations, fetchAllUsers } from "@/services/adminService";
 import dayjs from "dayjs";
-import {
-  ReservationStatus,
-  ReservationType,
-  resources,
-} from "@/utils/constants";
+import { ReservationStatus, resources } from "@/utils/constants";
 
 // --- Importaciones de Componentes Shadcn UI ---
 import {
@@ -62,6 +58,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { UserCombobox } from "./UserCombobox";
+import camillaIcon from "@/assets/massage-table-50.png";
 
 const ReservationsManagementTab = () => {
   const { loading, startLoading, stopLoading, showToast } = useUIStore();
@@ -158,20 +155,7 @@ const ReservationsManagementTab = () => {
     setCurrentPage((prev) => Math.min(prev + 1, totalPages));
   };
 
-  const getStatusVariant = (status) => {
-    switch (status) {
-      case "pagada":
-      case "completada":
-        return "success";
-      case "pendiente":
-      case "penalizada":
-        return "warning";
-      case "cancelada":
-        return "destructive";
-      default:
-        return "secondary";
-    }
-  };
+  console.log(reservations);
 
   return (
     <div className="space-y-4">
@@ -237,10 +221,14 @@ const ReservationsManagementTab = () => {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Día</TableHead>
               <TableHead>Fecha y Hora</TableHead>
-              <TableHead>Cliente</TableHead>
+              <TableHead>Usuario</TableHead>
               <TableHead>Consultorio</TableHead>
               <TableHead>Estado</TableHead>
+              <TableHead>Tipo</TableHead>
+              <TableHead>Camilla</TableHead>
+              <TableHead>Fecha de Creación</TableHead>
               <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
@@ -255,11 +243,17 @@ const ReservationsManagementTab = () => {
               reservations.map((reserva) => (
                 <TableRow key={reserva.id}>
                   <TableCell>
-                    {dayjs(reserva.start_time).format("DD/MM/YY HH:mm")}
+                    {dayjs(reserva.start_time)
+                      .locale("es")
+                      .format("dddd")
+                      .replace(/^\w/, (c) => c.toUpperCase())}
                   </TableCell>
                   <TableCell>
-                    {`${reserva.usuario_firstName || ""} ${
-                      reserva.usuario_lastName || ""
+                    {dayjs(reserva.start_time).format("DD/MM/YY [-] HH:mm")}
+                  </TableCell>
+                  <TableCell>
+                    {`${reserva.usuario_firstname || ""} ${
+                      reserva.usuario_lastname || ""
                     }`.trim() || "N/A"}
                   </TableCell>
                   <TableCell>
@@ -267,12 +261,26 @@ const ReservationsManagementTab = () => {
                       `ID: ${reserva.consultorio_id}`}
                   </TableCell>
                   <TableCell>
-                    <Badge
-                      variant={getStatusVariant(reserva.estado)}
-                      className="capitalize"
-                    >
+                    <Badge variant={reserva.estado} className="capitalize">
                       {reserva.estado}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={reserva.tipo_reserva.toLowerCase()}>
+                      {reserva.tipo_reserva}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {reserva.usaCamilla && camillaIcon && (
+                      <img
+                        src={camillaIcon}
+                        alt="Icono de Camilla"
+                        className="w-5 h-6"
+                      />
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {dayjs(reserva.created_at).format("DD/MM/YY [-] HH:mm")}
                   </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm">
