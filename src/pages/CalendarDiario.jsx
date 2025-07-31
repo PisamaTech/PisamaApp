@@ -33,7 +33,7 @@ import { EventDialog } from "../components/EventDialog";
 import { useEventStore } from "../stores/calendarStore";
 import { handleNavigate } from "@/utils/calendarUtils";
 import { useReservationHandler } from "@/hooks/useReservationHandler";
-import { Plus, XCircle } from "lucide-react";
+import { Info, Plus, XCircle } from "lucide-react";
 
 // Localizer
 dayjs.locale("es");
@@ -183,6 +183,18 @@ export const CalendarDiario = () => {
           </p>
         </div>
       </div>
+      {/* --- Mensaje de Ayuda para Reservar --- */}
+      {!selectedSlot && (
+        <Alert className="bg-blue-50 border-blue-200 text-blue-800">
+          <Info className="h-4 w-4 !text-blue-800" />
+          <AlertTitle>¿Cómo reservar?</AlertTitle>
+          <AlertDescription>
+            Para realizar una reserva, selecciona un horario disponible y luego
+            haz clic nuevamente sobre él o en el botón flotante (+) para
+            confirmar.
+          </AlertDescription>
+        </Alert>
+      )}
       <div className="h-[800px] bg-white rounded-lg shadow-lg">
         <Calendar
           localizer={localizer}
@@ -197,7 +209,7 @@ export const CalendarDiario = () => {
           resources={resources}
           resourceIdAccessor="id"
           resourceTitleAccessor="title"
-          selectable
+          selectable={"ignoreEvents"}
           longPressThreshold={20}
           formats={formatosPersonalizadosDayjs}
           messages={calendarMessages}

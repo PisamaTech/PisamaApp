@@ -37,7 +37,7 @@ import { useEventStore } from "@/stores/calendarStore";
 import { handleNavigate } from "@/utils/calendarUtils";
 import { EventDialog } from "@/components";
 import { useReservationHandler } from "@/hooks/useReservationHandler";
-import { Plus, XCircle } from "lucide-react";
+import { Info, Plus, XCircle } from "lucide-react";
 import flecha from "../assets/double-right.gif";
 
 // Localizer
@@ -243,6 +243,19 @@ export const CalendarSemanal = () => {
           </p>
         </div>
       </div>
+
+      {/* --- Mensaje de Ayuda para Reservar --- */}
+      {!selectedSlot && (
+        <Alert className="bg-blue-50 border-blue-200 text-blue-800">
+          <Info className="h-4 w-4 !text-blue-800" />
+          <AlertTitle>¿Cómo reservar?</AlertTitle>
+          <AlertDescription>
+            Para realizar una reserva, selecciona un horario disponible y luego
+            haz clic nuevamente sobre él o en el botón flotante (+) para
+            confirmar.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Separator className="mb-4" />
       <div className="h-2"></div>
