@@ -58,6 +58,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { UserCombobox } from "./UserCombobox";
+import { EventDialog } from "@/components/EventDialog";
 import camillaIcon from "@/assets/massage-table-50.png";
 
 const ReservationsManagementTab = () => {
@@ -67,6 +68,10 @@ const ReservationsManagementTab = () => {
   const [totalReservations, setTotalReservations] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+
+  // --- Estados para manejar el EventDialog ---
+  const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
+  const [selectedEventForDialog, setSelectedEventForDialog] = useState(null);
 
   const [allUsers, setAllUsers] = useState([]); // Para el filtro de usuarios
   const [filters, setFilters] = useState({
@@ -153,6 +158,21 @@ const ReservationsManagementTab = () => {
 
   const handleNextPage = () => {
     setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  };
+
+  const handleViewDetails = (reserva) => {
+    // EventDialog espera un campo 'titulo' para el nombre del usuario.
+    // También espera objetos Date para las horas de inicio y fin.
+    const formattedEvent = {
+      ...reserva,
+      titulo: `${reserva.usuario_firstname || ""} ${
+        reserva.usuario_lastname || ""
+      }`.trim(),
+      start_time: new Date(reserva.start_time),
+      end_time: new Date(reserva.end_time),
+    };
+    setSelectedEventForDialog(formattedEvent);
+    setIsEventDialogOpen(true);
   };
 
   console.log(reservations);
@@ -283,7 +303,11 @@ const ReservationsManagementTab = () => {
                     {dayjs(reserva.created_at).format("DD/MM/YY [-] HH:mm")}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleViewDetails(reserva)}
+                    >
                       Ver Detalles
                     </Button>
                   </TableCell>
@@ -342,6 +366,14 @@ const ReservationsManagementTab = () => {
             </PaginationContent>
           </Pagination>
         </div>
+      )}
+
+      {isEventDialogOpen && (
+        <EventDialog
+          open={isEventDialogOpen}
+          onOpenChange={setIsEventDialogOpen}
+          selectedEvent={selectedEventForDialog}
+        />
       )}
     </div>
   );
