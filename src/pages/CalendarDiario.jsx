@@ -198,6 +198,7 @@ export const CalendarDiario = () => {
           resourceIdAccessor="id"
           resourceTitleAccessor="title"
           selectable
+          longPressThreshold={20}
           formats={formatosPersonalizadosDayjs}
           messages={calendarMessages}
           min={dayjs("2024-12-03T07:00:00").toDate()}

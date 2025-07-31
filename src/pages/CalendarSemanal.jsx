@@ -269,6 +269,7 @@ export const CalendarSemanal = () => {
             toolbar: CustomToolbar,
           }}
           selectable={true}
+          longPressThreshold={20}
           onSelectSlot={(slotInfo) =>
             handleSelectSlot(slotInfo, selectedConsultorio)
           }
