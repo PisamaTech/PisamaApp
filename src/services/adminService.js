@@ -248,7 +248,7 @@ export const searchAllReservations = async (
     }
 
     query = query
-      .order("start_time", { ascending: false }) // Las más recientes primero
+      .order("id", { ascending: false }) // Las más recientes primero
       .range(offset, offset + itemsPerPage - 1);
 
     const { data, error, count } = await query;

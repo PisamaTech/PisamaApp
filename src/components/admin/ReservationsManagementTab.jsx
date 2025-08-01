@@ -67,7 +67,7 @@ const ReservationsManagementTab = () => {
   const [reservations, setReservations] = useState([]);
   const [totalReservations, setTotalReservations] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  const [itemsPerPage] = useState(20);
 
   // --- Estados para manejar el EventDialog ---
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
@@ -93,7 +93,10 @@ const ReservationsManagementTab = () => {
         const { data } = await fetchAllUsers(1, 1000);
         setAllUsers(data);
       } catch (error) {
-        console.error("No se pudieron cargar los usuarios para el filtro.");
+        console.error(
+          "No se pudieron cargar los usuarios para el filtro:",
+          error
+        );
       }
     };
     loadUsers();
@@ -180,7 +183,7 @@ const ReservationsManagementTab = () => {
   return (
     <div className="space-y-4">
       {/* Filtros */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2 items-center">
         <UserCombobox
           users={allUsers}
           selectedUserId={filters.userId}
