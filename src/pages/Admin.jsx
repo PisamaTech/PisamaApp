@@ -1,3 +1,4 @@
+import AdminDashboardTab from "@/components/admin/AdminDashboardTab";
 import BillingManagementTab from "@/components/admin/BillingManagementTab";
 import PricingManagementTab from "@/components/admin/PricingManagementTab";
 import ReservationsManagementTab from "@/components/admin/ReservationsManagementTab";
@@ -49,9 +50,7 @@ export const Admin = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              <p className="text-center text-muted-foreground p-10">
-                [WIP: Aquí irán los KPIs y gráficos del negocio]
-              </p>
+              <AdminDashboardTab />
             </CardContent>
           </Card>
         </TabsContent>

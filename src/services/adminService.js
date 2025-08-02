@@ -260,3 +260,256 @@ export const searchAllReservations = async (
     throw new Error(`No se pudieron obtener las reservas: ${error.message}`);
   }
 };
+
+// * 1. Obtiene los ingresos de facturas pagadas para el mes actual y el anterior */
+export const getRevenueSummary = async () => {
+  const startOfCurrentMonth = dayjs().startOf("month").toISOString();
+  const endOfCurrentMonth = dayjs().endOf("month").toISOString();
+  const startOfLastMonth = dayjs()
+    .subtract(1, "month")
+    .startOf("month")
+    .toISOString();
+  const endOfLastMonth = dayjs()
+    .subtract(1, "month")
+    .endOf("month")
+    .toISOString();
+
+  // Usamos una función RPC para hacer el cálculo agregado en la base de datos, es más eficiente.
+  const { data, error } = await supabase.rpc("get_revenue_summary", {
+    current_month_start: startOfCurrentMonth,
+    current_month_end: endOfCurrentMonth,
+    last_month_start: startOfLastMonth,
+    last_month_end: endOfLastMonth,
+  });
+
+  if (error) throw error;
+  // La RPC devolverá algo como { current_month_revenue: 5000, last_month_revenue: 4500 }
+  return data;
+};
+
+/**
+ * 2. Obtiene el conteo y la suma total de facturas pendientes.
+ */
+export const getPendingBillingSummary = async () => {
+  const { data, error, count } = await supabase
+    .from("facturas")
+    .select("monto_total", { count: "exact" })
+    .eq("estado", "pendiente");
+
+  if (error) throw error;
+
+  const totalAmount = data.reduce(
+    (sum, invoice) => sum + invoice.monto_total,
+    0
+  );
+  return { count: count || 0, totalAmount };
+};
+
+/**
+ * 3. Calcula la ocupación de hoy.
+ */
+export const getTodaysOccupancy = async () => {
+  const startOfDay = dayjs().startOf("day").toISOString();
+  const endOfDay = dayjs().endOf("day").toISOString();
+  const totalConsultorios = 5;
+  const horasOperativas = 16;
+
+  // La consulta ahora solo pide el conteo, no los datos
+  const { count, error } = await supabase
+    .from("reservas")
+    .select("*", { count: "exact", head: true }) // Pide solo el conteo
+    .in("estado", ["activa", "utilizada", "penalizada"])
+    .gte("start_time", startOfDay)
+    .lt("end_time", endOfDay);
+
+  if (error) throw error;
+
+  // El número de horas reservadas es simplemente el conteo de filas
+  const horasReservadas = count || 0;
+
+  const horasDisponibles = totalConsultorios * horasOperativas;
+  const porcentajeOcupacion =
+    horasDisponibles > 0 ? (horasReservadas / horasDisponibles) * 100 : 0;
+
+  return {
+    horasReservadas,
+    horasDisponibles,
+    porcentajeOcupacion: Math.round(porcentajeOcupacion),
+  };
+};
+
+/**
+ * 4. Cuenta los nuevos usuarios en los últimos 30 días.
+ */
+export const getNewUsersCount = async () => {
+  const thirtyDaysAgo = dayjs().subtract(30, "days").toISOString();
+
+  const { error, count } = await supabase
+    .from("user_profiles")
+    .select("id", { count: "exact", head: true }) // head: true solo pide el conteo, más rápido
+    .gte("created_at", thirtyDaysAgo);
+
+  if (error) throw error;
+  return count || 0;
+};
+
+/**
+ * 5. Obtiene las horas reservadas por día para el gráfico de barras.
+ */
+export const getDailyBookingStats = async (days = 7) => {
+  const startDate = dayjs()
+    .subtract(days - 1, "day")
+    .startOf("day")
+    .toISOString();
+  const endDate = dayjs().endOf("day").toISOString();
+
+  // Usamos una RPC para agrupar por día, es mucho más eficiente.
+  const { data, error } = await supabase.rpc("get_daily_booking_stats", {
+    start_date: startDate,
+    end_date: endDate,
+  });
+
+  if (error) throw error;
+  return data || []; // La RPC devolverá un array de { dia, horas_reservadas }
+};
+
+/**
+ * 6. Obtiene las horas reservadas por consultorio para el mes actual.
+ */
+export const getOccupancyByConsultorio = async () => {
+  const startOfMonth = dayjs().startOf("month").toISOString();
+  const endOfMonth = dayjs().endOf("month").toISOString();
+
+  // Usamos una RPC para agrupar por consultorio.
+  const { data, error } = await supabase.rpc("get_occupancy_by_consultorio", {
+    start_date: startOfMonth,
+    end_date: endOfMonth,
+  });
+
+  if (error) throw error;
+  return data || []; // La RPC devolverá un array de { nombre_consultorio, horas_reservadas }
+};
+
+/**
+ * 7. Obtiene las últimas reservas creadas.
+ */
+export const getRecentBookings = async (limit = 10) => {
+  // Usamos la VISTA 'reservas_completas' para obtener los nombres
+  const { data, error } = await supabase
+    .from("reservas_completas")
+    .select(
+      "id, start_time, usuario_firstname, usuario_lastname, consultorio_nombre"
+    )
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return data || [];
+};
+
+/**
+ * 8. Obtiene las últimas cancelaciones o penalizaciones.
+ */
+export const getRecentCancellations = async (limit = 10) => {
+  const { data, error } = await supabase
+    .from("reservas_completas")
+    .select(
+      "id, start_time, usuario_firstname, usuario_lastname, consultorio_nombre, estado, fecha_cancelacion"
+    )
+    .in("estado", ["cancelada", "penalizada"])
+    .order("fecha_cancelacion", { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return data || [];
+};
+
+/**
+ * Agregador: Obtiene todos los datos necesarios para el dashboard de administración en paralelo.
+ * Llama a todas las funciones de servicio individuales y las empaqueta en un solo objeto.
+ *
+ * @returns {Promise<object>} Un objeto que contiene todos los datos del dashboard.
+ */
+export const fetchAdminDashboardData = async () => {
+  console.log("Cargando todos los datos del dashboard de administración...");
+
+  try {
+    // Usamos Promise.allSettled en lugar de Promise.all para mayor resiliencia.
+    // Si una de las consultas falla, las demás aún pueden tener éxito.
+    const results = await Promise.allSettled([
+      getRevenueSummary(),
+      getPendingBillingSummary(),
+      getTodaysOccupancy(),
+      getNewUsersCount(),
+      getDailyBookingStats(7), // Para la vista por defecto de 7 días
+      getOccupancyByConsultorio(),
+      getRecentBookings(5), // Un límite más pequeño para el dashboard
+      getRecentCancellations(5),
+    ]);
+
+    // Procesamos los resultados para manejar los casos de éxito y fallo individualmente
+    const [
+      revenueSummaryRes,
+      pendingBillingSummaryRes,
+      todaysOccupancyRes,
+      newUsersCountRes,
+      dailyBookingStatsRes,
+      occupancyByConsultorioRes,
+      recentBookingsRes,
+      recentCancellationsRes,
+    ] = results;
+
+    // Construimos el objeto final, asignando los datos si la promesa se cumplió, o null/valor por defecto si falló.
+    const dashboardData = {
+      revenueSummary:
+        revenueSummaryRes.status === "fulfilled"
+          ? revenueSummaryRes.value
+          : { currentMonthRevenue: 0, lastMonthRevenue: 0 },
+      pendingBillingSummary:
+        pendingBillingSummaryRes.status === "fulfilled"
+          ? pendingBillingSummaryRes.value
+          : { count: 0, totalAmount: 0 },
+      todaysOccupancy:
+        todaysOccupancyRes.status === "fulfilled"
+          ? todaysOccupancyRes.value
+          : { horasReservadas: 0, horasDisponibles: 0, porcentajeOcupacion: 0 },
+      newUsersCount:
+        newUsersCountRes.status === "fulfilled" ? newUsersCountRes.value : 0,
+      dailyBookingStats:
+        dailyBookingStatsRes.status === "fulfilled"
+          ? dailyBookingStatsRes.value
+          : [],
+      occupancyByConsultorio:
+        occupancyByConsultorioRes.status === "fulfilled"
+          ? occupancyByConsultorioRes.value
+          : [],
+      recentBookings:
+        recentBookingsRes.status === "fulfilled" ? recentBookingsRes.value : [],
+      recentCancellations:
+        recentCancellationsRes.status === "fulfilled"
+          ? recentCancellationsRes.value
+          : [],
+    };
+
+    // Opcional: Registrar si alguna de las promesas falló
+    results.forEach((result, index) => {
+      if (result.status === "rejected") {
+        console.error(
+          `La consulta del dashboard en el índice ${index} falló:`,
+          result.reason
+        );
+      }
+    });
+
+    console.log(
+      "Datos del dashboard de administración cargados:",
+      dashboardData
+    );
+    return dashboardData;
+  } catch (error) {
+    // Este catch se activaría si hay un error no relacionado con las promesas,
+    // pero el manejo principal se hace al procesar los resultados de Promise.allSettled.
+    console.error("Error inesperado en fetchAdminDashboardData:", error);
+    throw error;
+  }
+};
