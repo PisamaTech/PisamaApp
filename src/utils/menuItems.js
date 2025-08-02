@@ -6,6 +6,13 @@ import {
   Settings,
   Calendar1,
   LayoutDashboard,
+  Info,
+  LucideMessageCircleQuestion,
+  MessageCircleQuestionIcon,
+  MessageCircleQuestion,
+  FileQuestion,
+  ShieldQuestion,
+  MailQuestion,
 } from "lucide-react";
 
 export const menuItems = [
@@ -38,6 +45,11 @@ export const menuItems = [
     title: "Perfil",
     url: "/perfil",
     icon: Settings,
+  },
+  {
+    title: "Ayuda",
+    url: "/ayuda",
+    icon: MessageCircleQuestion,
   },
   {
     title: "Administrador",

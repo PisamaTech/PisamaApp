@@ -38,6 +38,7 @@ const AppBar = () => {
     { label: "Mis Reservas", icon: <BookOpen className="h-5 w-5" /> },
     { label: "Mis Facturas", icon: <FileText className="h-5 w-5" /> },
     { label: "Perfil", icon: <UserIcon className="h-5 w-5" /> },
+    { label: "Ayuda", icon: <BadgeQuestionMark className="h-5 w-5" /> },
   ];
 
   if (user.role === "admin") {

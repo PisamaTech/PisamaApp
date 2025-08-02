@@ -21,6 +21,7 @@ import ErrorToast from "./components/ErrorToast";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import AdminRouteGuard from "./components/AdminRouteGuard";
+import Ayuda from "./pages/Ayuda";
 
 function App() {
   const { user, checkSession } = useAuthStore();
@@ -73,6 +74,7 @@ function App() {
                 }
               />
               <Route path="perfil" element={<Perfil />} />
+              <Route path="ayuda" element={<Ayuda />} />
               <Route path="reset-password" element={<ResetPassword />} />
               {/* Si no coincide ninguna, redirigimos a calendario */}
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
