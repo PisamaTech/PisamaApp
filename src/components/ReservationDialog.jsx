@@ -60,7 +60,8 @@ export const ReservationDialog = ({
       // Carga solo si el modo está activo y el diálogo está abierto
       const loadUsers = async () => {
         try {
-          const users = await fetchAllUsers();
+          const users = await fetchAllUsers(1, 200);
+          console.log(users);
           setUserList(users.data);
         } catch (error) {
           console.error("No se pudo cargar la lista de usuarios:", error);
