@@ -258,6 +258,11 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
             toastMessage =
               "Cancelaste con menos de 24hs. La reserva fue PENALIZADA, por lo que deberás pagarla. Pero puedes reagendarla por un plazo de 6 días a partir de la fecha de la reserva original, sin costo adicional.";
             break;
+          case "RESCHEDULE_PENALIZED":
+            toastTitle = "Reserva reagendada Penalizada";
+            toastMessage =
+              "Cancelaste con menos de 24hs. La reserva ya era una reserva REAGENDADA, por lo que deberás pagarla, sin otra posibilidad de reagendarla.";
+            break;
           case "CANCELLED":
             toastTitle = "Reserva Cancelada";
             toastMessage =

@@ -322,7 +322,7 @@ export const _updateBookingStatus = async (
 };
 
 export const cancelBooking = async (bookingId, userId) => {
-  // 1. Obtener la reserva a cancelar, incluyendo 'reagendamiento_de_id'
+  // 1. Obtener la reserva a cancelar
   const { data: bookingToCancel, error: fetchError } = await supabase
     .from("reservas")
     .select("id, start_time, estado, usuario_id, reagendamiento_de_id")
@@ -331,8 +331,9 @@ export const cancelBooking = async (bookingId, userId) => {
 
   if (fetchError) {
     console.error("Error al obtener la reserva para cancelar:", fetchError);
-    if (fetchError.code === "PGRST116")
+    if (fetchError.code === "PGRST116") {
       throw new Error(`Reserva con ID ${bookingId} no encontrada.`);
+    }
     throw new Error(`Error al buscar la reserva: ${fetchError.message}`);
   }
 
@@ -346,69 +347,78 @@ export const cancelBooking = async (bookingId, userId) => {
     );
   }
 
-  // --- 3. Lógica Condicional: ¿Es un Reagendamiento? ---
-  if (bookingToCancel.reagendamiento_de_id) {
-    // Llama a la función de servicio que invoca la RPC para revertir
-    try {
-      const updatedBookings = await revertReagendamiento(
+  // 3. Calcular si se aplica penalización (lógica centralizada)
+  const now = dayjs();
+  const startTime = dayjs(bookingToCancel.start_time);
+  const hoursDifference = startTime.diff(now, "hour");
+  const isPenaltyApplicable = hoursDifference <= 25; // Como se usa la hora de inicio, se calculan 25 horas de diferencia.
+
+  try {
+    // 4. Lógica Condicional: ¿Es un Reagendamiento?
+    if (bookingToCancel.reagendamiento_de_id) {
+      // 4a. Si es un reagendamiento CANCELADO CON ANTICIPACIÓN
+      if (!isPenaltyApplicable) {
+        const updatedBookings = await revertReagendamiento(
+          bookingId,
+          bookingToCancel.reagendamiento_de_id,
+          userId
+        );
+        return {
+          actionType: "RESCHEDULE_REVERTED",
+          updatedBookings,
+        };
+      }
+
+      // 4b. Si es un reagendamiento CANCELADO CON PENALIZACIÓN
+      const updatedBooking = await _updateBookingStatus(
         bookingId,
-        bookingToCancel.reagendamiento_de_id,
-        userId
+        ReservationStatus.PENALIZADA,
+        now.toDate(), // fecha_cancelacion
+        now.toDate() // reagendar_hasta (penalización inmediata)
       );
       return {
-        actionType: "RESCHEDULE_REVERTED",
-        updatedBookings: updatedBookings,
+        actionType: "RESCHEDULE_PENALIZED",
+        updatedBookings: [updatedBooking],
       };
-    } catch (error) {
-      console.error("Fallo al revertir el reagendamiento:", error);
-      throw new Error(
-        `No se pudo revertir el reagendamiento: ${error.message}`
-      );
     }
-  } else {
-    // --- 4. Lógica de Cancelación Normal (si NO es un reagendamiento) ---
 
-    const now = dayjs();
-    const startTime = dayjs(bookingToCancel.start_time);
-    const hoursDifference = startTime.diff(now, "hour");
-    const isPenaltyApplicable = hoursDifference <= 24;
-
+    // 5. Lógica de Cancelación Normal (NO es un reagendamiento)
     let newStatus;
     let reagendarHastaDate = null;
-    let actionType; // <-- Variable para guardar el tipo de acción
-    const cancellationDate = new Date();
+    let actionType;
 
     if (isPenaltyApplicable) {
+      // 5a. Cancelación normal CON PENALIZACIÓN
       newStatus = ReservationStatus.PENALIZADA;
-      actionType = "PENALIZED"; // <-- Guardamos el tipo de acción
+      actionType = "PENALIZED";
       reagendarHastaDate = dayjs(startTime)
         .add(6, "days")
         .endOf("day")
         .toDate();
     } else {
+      // 5b. Cancelación normal SIN PENALIZACIÓN
       newStatus = ReservationStatus.CANCELADA;
-      actionType = "CANCELLED"; // <-- Guardamos el tipo de acción
+      actionType = "CANCELLED";
     }
 
-    try {
-      // Llama a la función auxiliar para hacer la actualización en la BD
-      const updatedBooking = await _updateBookingStatus(
-        bookingId,
-        newStatus,
-        cancellationDate,
-        reagendarHastaDate
-      );
-      return {
-        actionType: actionType,
-        updatedBookings: [updatedBooking], // Devuelve un array con la reserva
-      };
-    } catch (error) {
-      console.error(
-        `Error al actualizar el estado de la reserva ${bookingId}:`,
-        error
-      );
-      throw new Error(`No se pudo actualizar la reserva: ${error.message}`);
-    }
+    const updatedBooking = await _updateBookingStatus(
+      bookingId,
+      newStatus,
+      now.toDate(), // fecha_cancelacion
+      reagendarHastaDate // reagendar_hasta
+    );
+
+    return {
+      actionType,
+      updatedBookings: [updatedBooking],
+    };
+  } catch (error) {
+    // 6. Manejo de errores centralizado para actualizaciones
+    console.error(
+      `Falló la operación de cancelación para la reserva ${bookingId}:`,
+      error
+    );
+    throw new Error(`No se pudo completar la cancelación: ${error.message}`);
   }
 };
 
