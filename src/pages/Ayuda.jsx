@@ -57,10 +57,18 @@ const faqCategories = {
               todas las horas que necesites.
             </p>
             <p className="mt-4">
-              Al soltar el clic, el diálogo de confirmación se abrirá con el
-              rango de horas completo que seleccionaste. El sistema calculará
-              automáticamente el costo total y los descuentos por volumen si
-              aplican.
+              Luego haz click en el botón (+) [en la esquina inferior derecha].
+              El diálogo de confirmación se abrirá con el rango de horas
+              completo que seleccionaste.
+            </p>
+            <p className="mt-4">
+              También desde el cuadro de diálogo de una reserva puede
+              seleccionar una hora de comienzo y de fin de la reserva. Amplia el
+              bloque de horas que necesites y confirma la reserva.
+            </p>
+            <p className="mt-4">
+              El sistema generará automáticamente una reserva por cada hora
+              seleccionada.
             </p>
           </div>
         ),
@@ -73,12 +81,13 @@ const faqCategories = {
             <p>
               Actualmente, el sistema de reservas está configurado para agendar
               en bloques de <strong>horas completas</strong> (ej. 13:00, 14:00,
-              15:00).
+              15:00). En caso de necesitar una hora fraccionada deberás reservar
+              y abonar la hora completa.
             </p>
             <p className="mt-4">
               No es posible iniciar una reserva en una fracción de hora como las
-              13:30. Si necesitas un horario puntual y especial, por favor,
-              contacta directamente con el administrador del espacio.
+              13:30. Si necesitas un horario puntual y especial, contacta
+              directamente con el administrador del espacio.
             </p>
           </div>
         ),
@@ -113,13 +122,17 @@ const faqCategories = {
             </p>
             <p className="mt-4">
               Si seleccionas "Sí", el sistema verificará que la camilla no esté
-              en uso por otro profesional en el mismo edificio durante ese
-              horario, aunque sea en un consultorio diferente. Si hay un
-              conflicto de camilla, no podrás completar la reserva para ese
-              horario y deberás elegir otro.
+              en uso por otro profesional durante ese horario, en un consultorio
+              diferente. Si hay un conflicto de camilla, no podrás completar la
+              reserva para ese horario y deberás elegir otro.
             </p>
-            <p className="mt-4 text-sm text-muted-foreground">
+            <p className="mt-4">
               Actualmente, el uso de la camilla no tiene un costo adicional.
+            </p>
+            <p className="mt-4">
+              La camilla debe armarse y desarmarse durante la hora de la
+              reserva. La misma, luego de ser utilizada, debe ser dejada en el
+              lugar de la cocina de donde se retiró.
             </p>
           </div>
         ),
@@ -169,7 +182,7 @@ const faqCategories = {
       },
       {
         id: "faq-cancel-2",
-        question: "¿Cómo cancelo una reserva eventual?",
+        question: "¿Cómo cancelo una reserva EVENTUAL?",
         answer: (
           <div>
             <p>Puedes cancelar una reserva eventual de dos formas:</p>
@@ -196,7 +209,7 @@ const faqCategories = {
       {
         id: "faq-cancel-3",
         question:
-          "¿Puedo cancelar una sola reserva dentro de una serie de reservas fijas?",
+          "¿Puedo cancelar una sola reserva dentro de una serie de reservas FIJAS?",
         answer: (
           <div>
             <p>
@@ -224,7 +237,7 @@ const faqCategories = {
       },
       {
         id: "faq-cancel-4",
-        question: "¿Cómo cancelo una serie de reservas fijas?",
+        question: "¿Cómo cancelo una reserva FIJA?",
         answer: (
           <div>
             <p>
@@ -403,7 +416,7 @@ const faqCategories = {
                 <strong>"Cancelada"</strong> sin ningún costo.
               </li>
               <li>
-                La reserva penalizada original se<strong> "reactivará"</strong>.
+                La reserva penalizada original se <strong>"reactivará"</strong>.
                 Su estado volverá a ser "Penalizada" y podrás volver a intentar
                 reagendarla.
               </li>
@@ -427,7 +440,7 @@ const faqCategories = {
             <ul className="list-disc pl-5 mb-4 space-y-2">
               <li>
                 La reserva reagendada se marcará como{" "}
-                <strong>"Cancelada"</strong>.
+                <strong>"Penalizada" pero NO podrá ser reagendada.</strong>.
               </li>
               <li>
                 La reserva penalizada original permanecerá en su estado final
@@ -607,7 +620,7 @@ const Ayuda = () => {
         {Object.values(faqCategories).map((category, index) => (
           <Card key={index}>
             <CardHeader>
-              <CardTitle className="flex items-center gap-3">
+              <CardTitle className="flex items-center gap-3 text-xl font-bold italic">
                 {category.icon}
                 {category.title}
               </CardTitle>
