@@ -67,22 +67,29 @@ export const AuthPage = () => {
     lastName,
     phone,
   }) => {
-    // Limpiamos los espacios en blanco de los campos de texto
-    const trimmedData = {
+    // Limpiamos los espacios en blanco y formateamos los campos de texto
+    const trimmedFirstName = firstName.trim();
+    const trimmedLastName = lastName.trim();
+
+    const processedData = {
       email: email.trim(),
       // La contraseña no se suele 'trimmear' por si el usuario usa espacios intencionadamente
       password: password,
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
+      firstName:
+        trimmedFirstName.charAt(0).toUpperCase() +
+        trimmedFirstName.slice(1).toLowerCase(),
+      lastName:
+        trimmedLastName.charAt(0).toUpperCase() +
+        trimmedLastName.slice(1).toLowerCase(),
       phone: phone.trim(),
     };
 
     const success = await signUp(
-      trimmedData.email,
-      trimmedData.password,
-      trimmedData.firstName,
-      trimmedData.lastName,
-      trimmedData.phone
+      processedData.email,
+      processedData.password,
+      processedData.firstName,
+      processedData.lastName,
+      processedData.phone
     );
     reset();
     if (success) {
