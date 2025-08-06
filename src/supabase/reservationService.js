@@ -351,7 +351,7 @@ export const cancelBooking = async (bookingId, userId) => {
   const now = dayjs();
   const startTime = dayjs(bookingToCancel.start_time);
   const hoursDifference = startTime.diff(now, "hour");
-  const isPenaltyApplicable = hoursDifference <= 25; // Como se usa la hora de inicio, se calculan 25 horas de diferencia.
+  const isPenaltyApplicable = hoursDifference < 24;
 
   try {
     // 4. Lógica Condicional: ¿Es un Reagendamiento?
