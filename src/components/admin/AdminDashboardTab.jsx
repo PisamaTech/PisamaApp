@@ -282,7 +282,7 @@ const AdminDashboardTab = () => {
                           "DD/MM/YY [-] HH:mm"
                         )}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell>
                         <Badge
                           variant={cancellation.estado}
                           className="capitalize"
