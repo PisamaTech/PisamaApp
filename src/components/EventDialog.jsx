@@ -536,7 +536,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                     id="fechaCancelacion"
                     type="text"
                     value={dayjs(selectedEvent.fecha_cancelacion).format(
-                      "DD/MM/YYYY"
+                      "DD/MM/YY [-] HH:mm"
                     )}
                     disabled
                   />
