@@ -398,7 +398,7 @@ export const getRecentBookings = async (limit = 10) => {
   const { data, error } = await supabase
     .from("reservas_completas")
     .select(
-      "id, start_time, usuario_firstname, usuario_lastname, consultorio_nombre"
+      "id, start_time, usuario_firstname, usuario_lastname, consultorio_nombre, created_at"
     )
     .order("created_at", { ascending: false })
     .limit(limit);
