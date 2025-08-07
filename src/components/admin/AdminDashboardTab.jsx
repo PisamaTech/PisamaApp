@@ -261,6 +261,7 @@ const AdminDashboardTab = () => {
                   <TableRow>
                     <TableHead>Usuario</TableHead>
                     <TableHead>Fecha Original</TableHead>
+                    <TableHead>Fecha Cancelación</TableHead>
                     <TableHead className="text-right">Estado</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -274,6 +275,11 @@ const AdminDashboardTab = () => {
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {dayjs(cancellation.start_time).format(
+                          "DD/MM/YY [-] HH:mm"
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {dayjs(cancellation.fecha_cancelacion).format(
                           "DD/MM/YY [-] HH:mm"
                         )}
                       </TableCell>
