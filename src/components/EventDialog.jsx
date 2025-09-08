@@ -236,7 +236,9 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
       } else if (actionToConfirm === "series") {
         result = await cancelRecurringSeries(
           selectedEvent.recurrence_id,
-          profileId,
+          selectedEvent.usuario_id, // seriesOwnerId
+          profileId, // requestingUserId
+          userRole, // requestingUserRole
           selectedEvent.start_time
         );
       }

@@ -134,7 +134,6 @@ export const Reservas = () => {
         // const currentDateForCancellation = dayjs().toDate(); // Fecha actual para la solicitud
         result = await cancelRecurringSeries(
           selectedReservationForAction.recurrence_id,
-          userId,
           selectedReservationForAction.usuario_id, // seriesOwnerId
           userId, // requestingUserId
           profile?.role, // requestingUserRole

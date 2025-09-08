@@ -118,7 +118,9 @@ export const cancelSingleReservation = async (reservationId) => {
 // Cancelar una serie de reserva fijas
 export const cancelRecurringSeries = async (
   recurrenceId,
-  userId,
+  seriesOwnerId,
+  requestingUserId,
+  requestingUserRole,
   cancellationRequestDate
 ) => {
   // Corroboramos que cancellationRequestDate es un objeto Date y luego lo convertimos a ISO string
@@ -132,7 +134,9 @@ export const cancelRecurringSeries = async (
       "cancel_recurring_series_with_penalty",
       {
         p_recurrence_id: recurrenceId,
-        p_user_id: userId,
+        p_series_owner_id: seriesOwnerId,
+        p_requesting_user_id: requestingUserId,
+        p_requesting_user_role: requestingUserRole,
         p_cancellation_request_date: cancellationDateISO,
       }
     );
