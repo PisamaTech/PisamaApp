@@ -600,3 +600,34 @@ export const extendAndCreateSeries = async (
     );
   }
 };
+
+/**
+ * Permite a un administrador cambiar el estado de una reserva de 'penalizada' a 'cancelada'.
+ * Llama a la RPC 'admin_forgive_penalties'.
+ *
+ * @param {string} bookingId - El ID de la reserva a modificar.
+ * @param {string} adminUserId - El ID del administrador que realiza la acción.
+ * @returns {Promise<object>} La reserva actualizada.
+ */
+export const forgivePenalty = async (bookingId, adminUserId) => {
+  try {
+    const { data, error } = await supabase
+      .rpc("admin_forgive_penalties", {
+        p_booking_id: bookingId,
+        p_requesting_user_id: adminUserId,
+      })
+      .single(); // Esperamos un solo objeto de vuelta
+
+    if (error) throw error;
+
+    return data;
+  } catch (error) {
+    console.error(
+      `Error al perdonar la penalización para la reserva ${bookingId}:`,
+      error
+    );
+    throw new Error(
+      `No se pudo actualizar el estado de la reserva: ${error.message}`
+    );
+  }
+};

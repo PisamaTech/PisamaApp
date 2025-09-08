@@ -15,8 +15,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui";
 import dayjs from "dayjs";
-import { useState, useEffect, useRef, useCallback } from "react";
-import { CalendarClock, RefreshCw } from "lucide-react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { CalendarClock, RefreshCw, ShieldCheck } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import { ReservationStatus, ReservationType } from "@/utils/constants";
 import { ConfirmCancelDialog } from "./ConfirmEventDialog";
@@ -24,6 +24,7 @@ import {
   cancelBooking,
   cancelRecurringSeries,
   renewAndValidateSeries,
+  forgivePenalty,
   supabase,
 } from "@/supabase";
 import { useUIStore } from "@/stores/uiStore";
@@ -372,6 +373,46 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
     }
   };
 
+  const handleForgivePenalty = async () => {
+    if (!selectedEvent || userRole !== "admin" || !profileId) return;
+
+    clearError();
+    startLoading("Actualizando estado...");
+
+    try {
+      console.log(selectedEvent.id, profileId);
+      const updatedBooking = await forgivePenalty(selectedEvent.id, profileId);
+
+      // Actualizar el store del calendario
+      updateEvent(mapReservationToEvent(updatedBooking));
+
+      // Cerrar el diálogo
+      onOpenChange(false);
+
+      // Mostrar toast después de cerrar
+      setTimeout(() => {
+        showToast({
+          type: "success",
+          title: "Estado Actualizado",
+          message: "La penalización de la reserva ha sido perdonada.",
+        });
+      }, 200);
+    } catch (err) {
+      setError(err);
+      onOpenChange(false); // Cerrar también en caso de error
+
+      setTimeout(() => {
+        showToast({
+          type: "error",
+          title: "Error",
+          message: err.message || "No se pudo actualizar el estado.",
+        });
+      }, 200);
+    } finally {
+      stopLoading();
+    }
+  };
+
   // ✅ FUNCIÓN CORREGIDA: Manejar cierre del diálogo de confirmación
   const handleConfirmDialogClose = useCallback((isOpen) => {
     setIsConfirmDialogOpen(isOpen);
@@ -650,6 +691,19 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
 
           <DialogFooter>
             <div className="mt-4 flex justify-end gap-2">
+              {/* --- NUEVO BOTÓN PARA DESPENALIZAR --- */}
+              {userRole === "admin" &&
+                selectedEvent.estado === ReservationStatus.PENALIZADA && (
+                  <Button
+                    onClick={handleForgivePenalty}
+                    className="bg-emerald-700 hover:bg-emerald-600"
+                    disabled={loading}
+                  >
+                    <ShieldCheck className="mr-2 h-4 w-4" />
+                    Despenalizar Reserva
+                  </Button>
+                )}
+
               {selectedEvent.tipo_reserva === ReservationType.FIJA &&
                 selectedEvent.estado === ReservationStatus.ACTIVA && (
                   <Button
