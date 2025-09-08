@@ -6,7 +6,7 @@ import { useUIStore } from "@/stores/uiStore";
 import {
   fetchUserReservations,
   cancelBooking as cancelBookingService, // Renombrar para evitar conflicto
-  cancelRecurringSeries, // Renombrar para evitar conflicto
+  cancelRecurringSeries,
 } from "@/supabase/reservationService";
 import { useEventStore } from "@/stores/calendarStore"; // Para actualizar eventos
 import { EventDialog } from "@/components/EventDialog";
@@ -127,13 +127,17 @@ export const Reservas = () => {
       if (cancelActionTypeForModal === "single") {
         result = await cancelBookingService(
           selectedReservationForAction.id,
-          userId
+          userId,
+          profile?.role
         );
       } else if (cancelActionTypeForModal === "series") {
         // const currentDateForCancellation = dayjs().toDate(); // Fecha actual para la solicitud
         result = await cancelRecurringSeries(
           selectedReservationForAction.recurrence_id,
           userId,
+          selectedReservationForAction.usuario_id, // seriesOwnerId
+          userId, // requestingUserId
+          profile?.role, // requestingUserRole
           selectedReservationForAction.start_time
         );
       }

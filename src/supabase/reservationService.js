@@ -321,7 +321,7 @@ export const _updateBookingStatus = async (
   }
 };
 
-export const cancelBooking = async (bookingId, userId) => {
+export const cancelBooking = async (bookingId, userId, userRole) => {
   // 1. Obtener la reserva a cancelar
   const { data: bookingToCancel, error: fetchError } = await supabase
     .from("reservas")
@@ -338,7 +338,7 @@ export const cancelBooking = async (bookingId, userId) => {
   }
 
   // 2. Validaciones iniciales
-  if (bookingToCancel.usuario_id !== userId) {
+  if (userRole !== "admin" && bookingToCancel.usuario_id !== userId) {
     throw new Error("No tienes permiso para cancelar esta reserva.");
   }
   if (bookingToCancel.estado !== ReservationStatus.ACTIVA) {

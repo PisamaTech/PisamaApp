@@ -232,7 +232,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
       let result;
 
       if (actionToConfirm === "single") {
-        result = await cancelBooking(selectedEvent.id, profileId);
+        result = await cancelBooking(selectedEvent.id, profileId, userRole);
       } else if (actionToConfirm === "series") {
         result = await cancelRecurringSeries(
           selectedEvent.recurrence_id,
