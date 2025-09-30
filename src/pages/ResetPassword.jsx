@@ -1,55 +1,108 @@
-import { useState } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
-import { supabase } from "../supabase";
+import { updateUserPassword } from "../supabase";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Input,
+  Label,
+  Separator,
+} from "@/components/ui";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { passwordSchema } from "@/validations/validationSchemas";
+import { useUIStore } from "@/stores/uiStore";
 
 export const ResetPassword = () => {
-  const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const accessToken = searchParams.get("access_token");
+  const { loading, startLoading, stopLoading, showToast } = useUIStore();
 
-  const handleReset = async (e) => {
-    e.preventDefault();
-    setMessage("");
-    setError("");
+  const {
+    register: registerPassword,
+    handleSubmit: handleSubmitPassword,
+    formState: { errors: passwordErrors },
+    reset: resetPasswordForm,
+  } = useForm({
+    resolver: zodResolver(passwordSchema),
+  });
 
-    const { error } = await supabase.auth.updateUser({ password });
-
-    if (error) {
-      setError(error.message);
-    } else {
-      setMessage("Contraseña actualizada. Redirigiendo...");
-      setTimeout(() => navigate("/login"), 3000);
+  const onPasswordSubmit = async (data) => {
+    startLoading();
+    try {
+      await updateUserPassword(data.newPassword);
+      showToast({
+        type: "success",
+        title: "Éxito",
+        message: "Tu contraseña ha sido cambiada.",
+      });
+      resetPasswordForm(); // Limpia los campos de contraseña
+    } catch (error) {
+      showToast({
+        type: "error",
+        title: "Error",
+        message: "No se pudo cambiar la contraseña.",
+      });
+    } finally {
+      stopLoading();
     }
   };
 
-  if (!accessToken) {
-    return <p className="text-red-500">Acceso no válido. Intenta de nuevo.</p>;
-  }
-
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
-      <h2 className="text-2xl font-bold mb-4">Restablecer Contraseña</h2>
-      <form onSubmit={handleReset} className="w-80 bg-white p-6 rounded shadow">
-        <input
-          type="password"
-          placeholder="Nueva contraseña"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          className="w-full p-2 border rounded mb-4"
-        />
-        <button
-          type="submit"
-          className="w-full bg-blue-500 text-white p-2 rounded"
-        >
-          Restablecer contraseña
-        </button>
-      </form>
-      {message && <p className="text-green-500 mt-2">{message}</p>}
-      {error && <p className="text-red-500 mt-2">{error}</p>}
+      <h2 className="text-2xl font-bold mb-5">Restablecer Contraseña</h2>
+      {/* --- Card de Cambio de Contraseña --- */}
+      <Card className="max-w-md w-full">
+        <CardHeader>
+          <CardTitle>Cambiar Contraseña</CardTitle>
+          <CardDescription>
+            Asegúrate de usar una contraseña segura.
+          </CardDescription>
+        </CardHeader>
+        <Separator className="mt-[-4px] mb-4" />
+        <CardContent>
+          <form
+            onSubmit={handleSubmitPassword(onPasswordSubmit)}
+            className="space-y-4"
+          >
+            <div className="space-y-1">
+              <Label htmlFor="newPassword">Nueva Contraseña</Label>
+              <Input
+                id="newPassword"
+                type="password"
+                autoComplete="new-password"
+                {...registerPassword("newPassword")}
+              />
+              {passwordErrors.newPassword && (
+                <p className="text-sm text-red-500">
+                  {passwordErrors.newPassword.message}
+                </p>
+              )}
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="confirmPassword">
+                Confirmar Nueva Contraseña
+              </Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                autoComplete="new-password"
+                {...registerPassword("confirmPassword")}
+              />
+              {passwordErrors.confirmPassword && (
+                <p className="text-sm text-red-500">
+                  {passwordErrors.confirmPassword.message}
+                </p>
+              )}
+            </div>
+            <div className="flex justify-end">
+              <Button type="submit" variant="destructive" disabled={loading}>
+                {loading ? "Actualizando..." : "Actualizar Contraseña"}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 };

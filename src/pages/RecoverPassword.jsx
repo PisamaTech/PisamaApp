@@ -41,7 +41,7 @@ export const RecoverPassword = () => {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `https://reservas.pisama.uy/reset-password`,
       });
 
       if (error) {
