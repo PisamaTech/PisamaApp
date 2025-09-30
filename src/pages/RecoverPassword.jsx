@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { supabase } from "../supabase"; // Asegúrate de tener esta configuración
+import { supabase } from "../supabase";
 import {
   Button,
   Card,
@@ -9,46 +9,52 @@ import {
   CardTitle,
   Input,
 } from "@/components/ui";
-import { TabsContent } from "@radix-ui/react-tabs";
-import "animate.css";
-import resetPasswordImage from "../assets/ResetPasswordLogo2.webp";
 import { Label } from "@radix-ui/react-dropdown-menu";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  loginSchema,
-  registerSchema,
-} from "../validations/validationSchemas.js"; // Importamos los esquemas de validación
-import { useAuthStore } from "@/stores/authStore";
+import { z } from "zod";
+import "animate.css";
+import resetPasswordImage from "../assets/ResetPasswordLogo2.webp";
+
+// Schema específico para recuperación (solo email)
+const recoverPasswordSchema = z.object({
+  email: z.string().email("Por favor, introduce un email válido"),
+});
 
 export const RecoverPassword = () => {
-  const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-
-  const { loading } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(false);
 
   const {
-    register: loginRegister,
-    handleSubmit: handleLoginSubmit,
-    formState: { errors: loginErrors },
+    register,
+    handleSubmit,
+    formState: { errors },
   } = useForm({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(recoverPasswordSchema),
   });
 
-  const handleRecover = async (e) => {
-    e.preventDefault();
+  const handleRecover = async (data) => {
     setMessage("");
     setError("");
+    setIsLoading(true);
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "http://localhost:5173/reset-password",
-    });
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
 
-    if (error) {
-      setError(error.message);
-    } else {
-      setMessage("Revisa tu email para restablecer tu contraseña.");
+      if (error) {
+        setError(error.message);
+      } else {
+        setMessage(
+          "¡Correo enviado! Revisa tu bandeja de entrada para restablecer tu contraseña."
+        );
+      }
+    } catch (err) {
+      setError("Ocurrió un error inesperado. Por favor, inténtalo de nuevo.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -74,7 +80,7 @@ export const RecoverPassword = () => {
           </CardHeader>
           <CardContent>
             <div className="animate__animated animate__fadeIn animate__slow">
-              <form onSubmit={() => {}}>
+              <form onSubmit={handleSubmit(handleRecover)}>
                 <div className="space-y-5">
                   <div className="space-y-3">
                     <Label htmlFor="email" className="text-sm font-semibold">
@@ -84,23 +90,37 @@ export const RecoverPassword = () => {
                       id="email"
                       type="email"
                       placeholder="ejemplo@correo.com"
-                      className={loginErrors.email ? "border-red-500" : ""} // Borde rojo si hay error
+                      className={errors.email ? "border-red-500" : ""}
                       autoComplete="username"
-                      {...loginRegister("email")}
+                      {...register("email")}
                     />
-                    {loginErrors.email && (
+                    {errors.email && (
                       <p className="text-sm text-red-500">
-                        {loginErrors.email.message}
+                        {errors.email.message}
                       </p>
                     )}
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading
-                      ? "Restableciendo contraseña..."
-                      : "Restablecer contraseña"}
+
+                  {/* Mensaje de éxito */}
+                  {message && (
+                    <div className="p-3 rounded-md bg-green-50 border border-green-200">
+                      <p className="text-sm text-green-700">{message}</p>
+                    </div>
+                  )}
+
+                  {/* Mensaje de error */}
+                  {error && (
+                    <div className="p-3 rounded-md bg-red-50 border border-red-200">
+                      <p className="text-sm text-red-700">{error}</p>
+                    </div>
+                  )}
+
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading
+                      ? "Enviando..."
+                      : "Enviar enlace de recuperación"}
                   </Button>
                 </div>
-                <div className="h-2.5" />
               </form>
             </div>
           </CardContent>
