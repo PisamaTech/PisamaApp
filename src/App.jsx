@@ -14,6 +14,7 @@ import {
   FacturaDetalle,
 } from "./pages";
 import { useAuthStore } from "./stores/authStore";
+import { useNotificationStore } from "./stores/notificationStore";
 import LoadingOverlay from "./components/LoadingOverlay";
 import { useEffect } from "react";
 import { useUIStore } from "@/stores/uiStore";
@@ -26,10 +27,28 @@ import Ayuda from "./pages/Ayuda";
 function App() {
   const { user, checkSession } = useAuthStore();
   const { toast, hideToast } = useUIStore();
+  const initializeNotifications = useNotificationStore(
+    (state) => state.initialize
+  );
+  const clearNotifications = useNotificationStore((state) => state.clear);
 
   useEffect(() => {
     checkSession();
   }, [checkSession]);
+
+  // --- Nuevo useEffect para gestionar el ciclo de vida del notificationStore ---
+  useEffect(() => {
+    if (user) {
+      // Si hay una sesión activa, inicializa las notificaciones
+      initializeNotifications(user.id);
+    }
+
+    // Función de limpieza que se ejecuta cuando el componente se desmonta
+    // o cuando la sesión cambia (ej. al cerrar sesión).
+    return () => {
+      clearNotifications();
+    };
+  }, [user, initializeNotifications, clearNotifications]); // Dependencias
 
   return (
     <BrowserRouter>

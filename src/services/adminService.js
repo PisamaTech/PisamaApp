@@ -1,5 +1,6 @@
 import { supabase } from "@/supabase/supabase.config"; // Asegúrate que la ruta es correcta
 import dayjs from "dayjs";
+import { createNotification } from "./notificationService";
 
 /**
  * Obtiene una lista paginada de todos los usuarios, con opción de búsqueda.
@@ -140,6 +141,25 @@ export const markInvoiceAsPaid = async (invoiceId) => {
       .single();
 
     if (error) throw error;
+
+    // --- 2. AÑADE LA CREACIÓN DE LA NOTIFICACIÓN AQUÍ ---
+    if (data) {
+      createNotification({
+        usuario_id: data.usuario_id,
+        tipo: "FACTURA_PAGADA",
+        titulo: "¡Pago Confirmado!",
+        mensaje: `Hemos confirmado tu pago de la factura #${
+          data.id
+        } correspondiente al período entre el ${dayjs(
+          data.periodo_inicio
+        ).format("DD/MM/YY")} - ${dayjs(data.periodo_fin).format(
+          "DD/MM/YY"
+        )}. ¡Muchas gracias!`,
+        enlace: `/facturas/${data.id}`,
+        metadata: { factura_id: data.id },
+      });
+    }
+
     return data;
   } catch (error) {
     console.error(

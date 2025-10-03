@@ -5,6 +5,7 @@ import isSameOrAfter from "dayjs/plugin/isSameOrAfter"; // Para comparar fechas
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore"; // Para comparar fechas
 import { generateRecurringEventsForRenewal } from "@/utils/calendarUtils";
 import { checkForConflicts } from "../utils/calendarUtils";
+import { createNotification } from "@/services/notificationService";
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
@@ -411,6 +412,22 @@ export const cancelBooking = async (bookingId, userId, userRole) => {
       now.toDate(), // fecha_cancelacion
       reagendarHastaDate // reagendar_hasta
     );
+
+    // SI ES PENALIZACIÓN CREA LA NOTIFICACIÓN AQUÍ ---
+    if (actionType === "PENALIZED") {
+      createNotification({
+        usuario_id: userId,
+        tipo: "REAGENDAMIENTO_DISPONIBLE",
+        titulo: "Oportunidad de Reagendamiento",
+        mensaje: `Tu reserva del ${dayjs(updatedBooking.start_time).format(
+          "DD/MM HH:mm"
+        )} fue cancelada con penalización. Puedes reagendarla sin costo hasta el ${dayjs(
+          updatedBooking.permite_reagendar_hasta
+        ).format("DD/MM/YYYY")}.`,
+        enlace: "/dashboard",
+        metadata: { reserva_id: updatedBooking.id },
+      });
+    }
 
     return {
       actionType,

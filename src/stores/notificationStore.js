@@ -1,0 +1,166 @@
+import { create } from "zustand";
+import { supabase } from "@/supabase/supabase.config";
+
+// Variable para mantener la referencia a la suscripción de Supabase
+let subscription = null;
+
+export const useNotificationStore = create((set, get) => ({
+  notifications: [], // Array para almacenar las notificaciones In-App
+  unreadCount: 0, // Conteo de notificaciones no leídas
+  isLoading: true, // Estado para la carga inicial
+
+  /**
+   * Obtiene las notificaciones iniciales y se suscribe a los cambios en tiempo real.
+   * Debe ser llamado cuando el usuario inicia sesión.
+   */
+  initialize: async (userId) => {
+    if (!userId) return;
+
+    console.log(
+      "Inicializando el store de notificaciones para el usuario:",
+      userId
+    );
+    set({ isLoading: true });
+
+    try {
+      // 1. Carga inicial de notificaciones
+      const { data, error } = await supabase
+        .from("cola_envios")
+        .select(
+          `
+          id,
+          estado,
+          notificacion_id,
+          notificaciones (
+            id,
+            titulo,
+            mensaje,
+            enlace,
+            created_at
+          )
+        `
+        )
+        .eq("canal", "in-app")
+        .eq("notificaciones.usuario_id", userId) // Filtrar por usuario en la tabla relacionada
+        .order("created_at", {
+          foreignTable: "notificaciones",
+          ascending: false,
+        })
+        .limit(20); // Cargar las últimas 20 para empezar
+
+      if (error) throw error;
+
+      const notifications = data || [];
+      const unreadCount = notifications.filter(
+        (n) => n.estado === "pendiente"
+      ).length;
+
+      set({ notifications, unreadCount, isLoading: false });
+
+      // 2. Suscripción a cambios en tiempo real
+      // Si ya hay una suscripción, la eliminamos primero para evitar duplicados
+      if (subscription) {
+        supabase.removeChannel(subscription);
+        subscription = null;
+      }
+
+      subscription = supabase
+        .channel(`cola_envios_user_${userId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT", // Escuchar solo nuevas inserciones
+            schema: "public",
+            table: "cola_envios",
+            filter: `canal=eq.in-app`, // Filtrar por canal
+          },
+          async (payload) => {
+            console.log(
+              "Nueva notificación In-App recibida en tiempo real:",
+              payload
+            );
+
+            // La notificación es para el usuario actual?
+            // Necesitamos hacer una consulta rápida para obtener el usuario_id de la notificación principal.
+            const { data: newNotificationDetails, error } = await supabase
+              .from("notificaciones")
+              .select("usuario_id, titulo, mensaje, enlace, created_at")
+              .eq("id", payload.new.notificacion_id)
+              .single();
+
+            if (
+              error ||
+              !newNotificationDetails ||
+              newNotificationDetails.usuario_id !== userId
+            ) {
+              console.log(
+                "Notificación recibida, pero no es para el usuario actual."
+              );
+              return;
+            }
+
+            // Construir el objeto de notificación como lo esperamos en el estado
+            const newFullNotification = {
+              id: payload.new.id,
+              estado: payload.new.estado,
+              notificacion_id: payload.new.notificacion_id,
+              notificaciones: {
+                id: payload.new.notificacion_id,
+                usuario_id: newNotificationDetails.usuario_id,
+                titulo: newNotificationDetails.titulo,
+                mensaje: newNotificationDetails.mensaje,
+                enlace: newNotificationDetails.enlace,
+                created_at: newNotificationDetails.created_at,
+              },
+            };
+
+            // Añadir la nueva notificación al principio de la lista y actualizar el contador
+            set((state) => ({
+              notifications: [newFullNotification, ...state.notifications],
+              unreadCount: state.unreadCount + 1,
+            }));
+          }
+        )
+        .subscribe();
+    } catch (error) {
+      console.error("Error al inicializar el store de notificaciones:", error);
+      set({ isLoading: false });
+    }
+  },
+
+  /**
+   * Limpia el store y se desuscribe de los cambios.
+   * Debe ser llamado cuando el usuario cierra sesión.
+   */
+  clear: () => {
+    if (subscription) {
+      supabase.removeChannel(subscription);
+      subscription = null;
+    }
+    set({ notifications: [], unreadCount: 0, isLoading: true });
+    console.log("Store de notificaciones limpiado.");
+  },
+
+  // Acciones para que la UI actualice el estado
+  setNotificationsAsRead: (notificationIdsToUpdate) =>
+    set((state) => {
+      const ids = Array.isArray(notificationIdsToUpdate)
+        ? notificationIdsToUpdate
+        : [notificationIdsToUpdate];
+      return {
+        notifications: state.notifications.map((n) =>
+          ids.includes(n.notificacion_id) ? { ...n, estado: "leido" } : n
+        ),
+        unreadCount: state.unreadCount - ids.length,
+      };
+    }),
+
+  setAllNotificationsAsRead: () =>
+    set((state) => ({
+      notifications: state.notifications.map((n) => ({
+        ...n,
+        estado: "leido",
+      })),
+      unreadCount: 0,
+    })),
+}));
