@@ -64,14 +64,14 @@ export const NotificationPanel = () => {
   };
 
   return (
-    <div className="w-80 md:w-96">
+    <div className="w-fit bg-muted rounded-lg shadow-xl border-2">
       <div className="p-4 flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Notificaciones</h3>
+        <h3 className="text-lg font-semibold pr-3">Notificaciones</h3>
         <Button
-          variant="link"
+          variant="outline"
           size="sm"
           onClick={handleMarkAllAsRead}
-          disabled={
+          isabled={
             notifications.filter((n) => n.estado === "pendiente").length === 0
           }
         >
@@ -93,7 +93,7 @@ export const NotificationPanel = () => {
               <div
                 key={notification.id}
                 onClick={() => handleNotificationClick(notification)}
-                className="p-3 rounded-lg hover:bg-muted cursor-pointer"
+                className="p-3 rounded-lg hover:bg-slate-200 cursor-pointer"
               >
                 <div className="flex items-start gap-3">
                   {notification.estado === "pendiente" && (

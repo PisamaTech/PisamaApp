@@ -8,9 +8,9 @@ export const NotificationBell = forwardRef((props, ref) => {
 
   return (
     <Button
-      variant="ghost"
+      variant="outline"
       size="icon"
-      className="relative"
+      className="relative ml-2"
       ref={ref}
       {...props}
     >
