@@ -11,10 +11,15 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
   Separator,
 } from "./ui";
 import { Link, useLocation, Outlet } from "react-router-dom";
 import { menuItems } from "@/utils/menuItems";
+import { NotificationBell } from "./notificactions/NotificationBell";
+import { NotificationPanel } from "./notificactions/NotificationPanel";
 
 function getTitleByURL(url) {
   const item = menuItems.find((item) => item.url === url); // Busca el elemento con la URL específica
@@ -49,6 +54,16 @@ export default function Layout() {
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
+            <Popover>
+              <PopoverTrigger asChild>
+                {/* La campana es el botón que abre el Popover */}
+                <NotificationBell />
+              </PopoverTrigger>
+              <PopoverContent className="p-0 border-none" align="end">
+                {/* El panel es el contenido que se muestra */}
+                <NotificationPanel />
+              </PopoverContent>
+            </Popover>
           </div>
         </header>
         <div

@@ -20,6 +20,7 @@ import {
   Label,
   Separator,
 } from "@/components/ui";
+import NotificationPreferences from "@/components/profile/NotificationPreferences";
 
 export const Perfil = () => {
   const { profile, updateProfileData } = useAuthStore();
@@ -161,6 +162,8 @@ export const Perfil = () => {
           </form>
         </CardContent>
       </Card>
+
+      <NotificationPreferences />
 
       {/* --- Card de Configuración de Cuenta --- */}
       <Card>

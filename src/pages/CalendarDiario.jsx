@@ -85,7 +85,6 @@ export const CalendarDiario = () => {
       useEventStore.getState().loadInitialEvents(); // Llama a loadInitialEvents del store al montar
     }
   }, []);
-  console.log(useEventStore.getState().events.length);
   // Filtrar eventos
   const filteredEvents = useMemo(() => {
     return events.filter((event) => {
