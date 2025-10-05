@@ -16,17 +16,14 @@ dayjs.extend(relativeTime);
 dayjs.locale("es");
 
 export const NotificationPanel = () => {
-  const {
-    notifications,
-    isLoading,
-    setNotificationsAsRead,
-    setAllNotificationsAsRead,
-  } = useNotificationStore((state) => ({
-    notifications: state.notifications,
-    isLoading: state.isLoading,
-    setNotificationsAsRead: state.setNotificationsAsRead,
-    setAllNotificationsAsRead: state.setAllNotificationsAsRead,
-  }));
+  const notifications = useNotificationStore((state) => state.notifications);
+  const isLoading = useNotificationStore((state) => state.isLoading);
+  const setNotificationsAsRead = useNotificationStore(
+    (state) => state.setNotificationsAsRead
+  );
+  const setAllNotificationsAsRead = useNotificationStore(
+    (state) => state.setAllNotificationsAsRead
+  );
 
   const navigate = useNavigate();
 

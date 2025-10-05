@@ -134,7 +134,14 @@ export const useNotificationStore = create((set, get) => ({
    */
   clear: () => {
     if (subscription) {
-      supabase.removeChannel(subscription);
+      // No esperar (await), pero sí capturar errores potenciales de la promesa.
+      // Esto es clave para evitar promesas no controladas en el ciclo de vida de React.
+      supabase.removeChannel(subscription).catch((error) => {
+        console.warn(
+          "Error al remover el canal de notificación (normal en desarrollo):",
+          error.message
+        );
+      });
       subscription = null;
     }
     set({ notifications: [], unreadCount: 0, isLoading: true });

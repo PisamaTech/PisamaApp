@@ -38,17 +38,16 @@ function App() {
 
   // --- Nuevo useEffect para gestionar el ciclo de vida del notificationStore ---
   useEffect(() => {
-    if (user) {
-      // Si hay una sesión activa, inicializa las notificaciones
-      initializeNotifications(user.id);
-    }
+    if (!user?.id) return;
 
-    // Función de limpieza que se ejecuta cuando el componente se desmonta
-    // o cuando la sesión cambia (ej. al cerrar sesión).
+    const id = user.id;
+    initializeNotifications(id);
+
     return () => {
+      // Limpia solo si el id coincide (evita limpiar mientras la conexión aún se abre)
       clearNotifications();
     };
-  }, [user, initializeNotifications, clearNotifications]); // Dependencias
+  }, [clearNotifications, initializeNotifications, user?.id]);
 
   return (
     <BrowserRouter>
