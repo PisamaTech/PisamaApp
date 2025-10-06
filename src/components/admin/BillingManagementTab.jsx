@@ -253,7 +253,7 @@ const BillingManagementTab = () => {
                     }`.trim() || "Usuario no encontrado"}
                   </TableCell>
                   <TableCell className="font-medium">
-                    ${invoice.monto_total.toFixed(2)}
+                    ${invoice.monto_total.toLocaleString("es-UY")}
                   </TableCell>
                   <TableCell>
                     <Badge

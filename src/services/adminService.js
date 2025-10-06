@@ -461,10 +461,10 @@ export const fetchAdminDashboardData = async () => {
       getPendingBillingSummary(),
       getTodaysOccupancy(),
       getNewUsersCount(),
-      getDailyBookingStats(7), // Para la vista por defecto de 7 días
+      getDailyBookingStats(8), // Para la vista por defecto de 7 días
       getOccupancyByConsultorio(),
-      getRecentBookings(5), // Un límite más pequeño para el dashboard
-      getRecentCancellations(5),
+      getRecentBookings(10), // Un límite más pequeño para el dashboard
+      getRecentCancellations(10),
     ]);
 
     // Procesamos los resultados para manejar los casos de éxito y fallo individualmente

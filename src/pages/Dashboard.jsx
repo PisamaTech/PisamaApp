@@ -500,7 +500,10 @@ const Dashboard = () => {
                             {dayjs(invoice.periodo_fin).format("DD/MM/YY")}
                           </TableCell>
                           <TableCell className="text-right font-bold">
-                            ${invoice.monto_total.toFixed(2)}
+                            $
+                            {invoice.monto_total
+                              .toFixed(0)
+                              .toLocaleString("es-UY")}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -525,7 +528,7 @@ const Dashboard = () => {
                 <div className="flex justify-between items-baseline p-4 bg-muted rounded-lg">
                   <span className="text-muted-foreground">Total estimado:</span>
                   <span className="text-2xl font-bold">
-                    ${currentPeriodPreview.totals.final.toFixed(2)}
+                    ${currentPeriodPreview.totals.final.toLocaleString("es-UY")}
                   </span>
                 </div>
               ) : (
