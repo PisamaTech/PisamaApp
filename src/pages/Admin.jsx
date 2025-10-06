@@ -1,5 +1,6 @@
 import AdminDashboardTab from "@/components/admin/AdminDashboardTab";
 import BillingManagementTab from "@/components/admin/BillingManagementTab";
+import BroadcastTab from "@/components/admin/BroadcastTab";
 import PricingManagementTab from "@/components/admin/PricingManagementTab";
 import ReservationsManagementTab from "@/components/admin/ReservationsManagementTab";
 import UserManagementTab from "@/components/admin/UserManagementTab";
@@ -36,6 +37,7 @@ export const Admin = () => {
           <TabsTrigger value="reservas">Reservas</TabsTrigger>
           <TabsTrigger value="facturacion">Facturación</TabsTrigger>
           <TabsTrigger value="precios">Precios</TabsTrigger>
+          <TabsTrigger value="comunicacion">Comunicación</TabsTrigger>
         </TabsList>
 
         {/* --- Contenido de cada Pestaña --- */}
@@ -113,6 +115,11 @@ export const Admin = () => {
               <PricingManagementTab />
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Pestaña 6: Gestión de Notificaciones */}
+        <TabsContent value="comunicacion">
+          <BroadcastTab />
         </TabsContent>
       </Tabs>
     </div>

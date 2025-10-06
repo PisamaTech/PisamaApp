@@ -137,7 +137,7 @@ const NotificationPreferences = () => {
           <PreferenceRow
             control={control}
             name="ultimo_dia_reagendamiento"
-            label="Aviso de último día para reagendar"
+            label="Aviso de último día para reagendar una reserva penalizada"
           />
 
           {/* Puedes añadir más filas aquí para otros tipos de notificaciones */}

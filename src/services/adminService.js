@@ -533,3 +533,38 @@ export const fetchAdminDashboardData = async () => {
     throw error;
   }
 };
+
+/**
+ * Llama a la RPC para crear una notificación masiva para todos los usuarios.
+ * @param {object} broadcastData - Objeto con { tipo, titulo, mensaje, enlace }.
+ * @returns {Promise<object>} El resultado de la RPC.
+ */
+export const sendBroadcastNotification = async (broadcastData) => {
+  try {
+    if (
+      !broadcastData.tipo ||
+      !broadcastData.titulo ||
+      !broadcastData.mensaje
+    ) {
+      throw new Error(
+        "Tipo, título y mensaje son requeridos para una notificación masiva."
+      );
+    }
+
+    const { data, error } = await supabase.rpc(
+      "create_broadcast_notification",
+      {
+        p_tipo: broadcastData.tipo,
+        p_titulo: broadcastData.titulo,
+        p_mensaje: broadcastData.mensaje,
+        p_enlace: broadcastData.enlace || null,
+      }
+    );
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Error al enviar notificación masiva:", error);
+    throw new Error(`No se pudo enviar la notificación: ${error.message}`);
+  }
+};
