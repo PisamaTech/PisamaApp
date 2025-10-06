@@ -46,11 +46,16 @@ export const FacturaDetalle = () => {
     stopLoading,
     showToast,
   } = useUIStore();
-  const { invoiceData, loading, error, updateLocalInvoice } = useInvoiceDetails(
-    id,
-    userId,
-    userRole
-  );
+  const {
+    invoiceData,
+    customerProfile, // Obtener el perfil del cliente desde el hook
+    loading,
+    error,
+    updateLocalInvoice,
+  } = useInvoiceDetails(id, userId, userRole);
+
+  // Determinar qué perfil mostrar. Prioridad al del cliente si existe.
+  const displayProfile = customerProfile || profile;
 
   // --- Lógica para renderizar colores de fondo en la factura ---
   let lastWeekNumber = null; // Variable para rastrear la última semana procesada
@@ -143,6 +148,7 @@ export const FacturaDetalle = () => {
   }
 
   const { factura, detalles } = invoiceData;
+  console.log(detalles);
 
   return (
     <div className="container mx-auto p-4 md:p-8 space-y-6">
@@ -164,7 +170,7 @@ export const FacturaDetalle = () => {
                 Detalle de Factura #{factura.id}
               </CardTitle>
               <CardDescription>
-                Nombre:{` ${profile.firstName} ${profile.lastName}`}
+                Nombre:{` ${displayProfile?.firstName || ""} ${displayProfile?.lastName || ""}`}
                 <br />
                 Período: {dayjs(factura.periodo_inicio).format(
                   "DD/MM/YYYY"

@@ -37,3 +37,22 @@ export const updateUserPassword = async (newPassword) => {
   }
   return data.user;
 };
+
+/**
+ * Obtiene el perfil de un usuario por su ID.
+ * @param {string} userId - El ID del usuario a buscar.
+ * @returns {Promise<object|null>} El perfil del usuario o null si no se encuentra o hay un error.
+ */
+export const getProfileById = async (userId) => {
+  const { data, error } = await supabase
+    .from("user_profiles")
+    .select("firstName, lastName")
+    .eq("id", userId)
+    .single();
+
+  if (error) {
+    console.error(`Error buscando el perfil para el ID ${userId}:`, error);
+    return null; // No lanzar error, solo devolver null
+  }
+  return data;
+};

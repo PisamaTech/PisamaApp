@@ -140,7 +140,7 @@ const BroadcastTab = () => {
             <Input
               id="enlace"
               {...register("enlace")}
-              placeholder="Ej: https://tu-app.com/ayuda"
+              placeholder="Ej: /dashboard"
             />
             {errors.enlace && (
               <p className="text-sm text-red-500">{errors.enlace.message}</p>

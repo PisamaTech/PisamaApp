@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { fetchInvoiceDetails } from "@/services/billingService";
+import { getProfileById } from "@/supabase/profileService"; // Importar la nueva función
 
 /**
  * Custom hook para obtener y gestionar los detalles de una factura.
@@ -10,6 +11,7 @@ import { fetchInvoiceDetails } from "@/services/billingService";
  * @param {string} userRole - El rol del usuario para la validación de permisos.
  * @returns {{
  *   invoiceData: object | null,
+ *   customerProfile: object | null, // Perfil del dueño de la factura
  *   loading: boolean,
  *   error: Error | null,
  *   updateLocalInvoice: (updatedFactura: object) => void
@@ -17,6 +19,7 @@ import { fetchInvoiceDetails } from "@/services/billingService";
  */
 export const useInvoiceDetails = (invoiceId, userId, userRole) => {
   const [invoiceData, setInvoiceData] = useState(null);
+  const [customerProfile, setCustomerProfile] = useState(null); // Estado para el perfil del cliente
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -28,9 +31,17 @@ export const useInvoiceDetails = (invoiceId, userId, userRole) => {
 
     setLoading(true);
     setError(null);
+    setCustomerProfile(null); // Resetear en cada carga
+
     try {
       const data = await fetchInvoiceDetails(invoiceId, userId, userRole);
       setInvoiceData(data);
+
+      // Si el usuario de la factura no es el usuario actual, buscar su perfil
+      if (data && data.factura && data.factura.usuario_id !== userId) {
+        const profile = await getProfileById(data.factura.usuario_id);
+        setCustomerProfile(profile);
+      }
     } catch (err) {
       setError(err);
       console.error("Error al cargar detalles de la factura:", err);
@@ -54,5 +65,5 @@ export const useInvoiceDetails = (invoiceId, userId, userRole) => {
     });
   }, []);
 
-  return { invoiceData, loading, error, updateLocalInvoice };
+  return { invoiceData, customerProfile, loading, error, updateLocalInvoice };
 };

@@ -40,11 +40,12 @@ export const ConsultorioOccupancyChart = ({ data }) => {
           cx="50%"
           cy="45%"
           labelLine={false}
-          outerRadius={110}
-          innerRadius={60} // Esto lo convierte en un gráfico de dona
+          outerRadius={100}
+          innerRadius={50} // Esto lo convierte en un gráfico de dona
           fill="#8884d8"
           dataKey="value"
           paddingAngle={3}
+          label
         >
           {formattedData.map((entry, index) => (
             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
