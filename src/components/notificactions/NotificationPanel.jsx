@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useNotificationStore } from "@/stores/notificationStore";
+import { useAuthStore } from "@/stores/authStore"; // Importar el store de autenticación
 import {
   markNotificationAsRead,
   markAllNotificationsAsRead,
@@ -24,6 +25,18 @@ export const NotificationPanel = () => {
   const setAllNotificationsAsRead = useNotificationStore(
     (state) => state.setAllNotificationsAsRead
   );
+  const user = useAuthStore((state) => state.user); // Obtener el usuario actual
+
+  // Ordenar notificaciones: no leídas primero, luego por fecha
+  const sortedNotifications = [...notifications].sort((a, b) => {
+    if (a.estado === "pendiente" && b.estado !== "pendiente") return -1;
+    if (a.estado !== "pendiente" && b.estado === "pendiente") return 1;
+    // Si el estado es el mismo, ordenar por fecha (más nuevas primero)
+    return (
+      new Date(b.notificaciones.created_at) -
+      new Date(a.notificaciones.created_at)
+    );
+  });
 
   const navigate = useNavigate();
 
@@ -49,10 +62,10 @@ export const NotificationPanel = () => {
       .filter((n) => n.estado === "pendiente")
       .map((n) => n.notificacion_id);
 
-    if (unreadIds.length === 0) return;
+    if (unreadIds.length === 0 || !user) return; // Añadir guarda por si no hay usuario
 
     try {
-      await markAllNotificationsAsRead(); // El servicio llama a la RPC
+      await markAllNotificationsAsRead(user.id); // Pasar el ID del usuario
       // Actualiza todo el estado local
       setAllNotificationsAsRead();
     } catch (error) {
@@ -64,14 +77,14 @@ export const NotificationPanel = () => {
   };
 
   return (
-    <div className="w-fit bg-muted rounded-lg shadow-xl border-2">
+    <div className="w-fit overflow-auto bg-muted rounded-lg shadow-xl border-2">
       <div className="p-4 flex items-center justify-between">
         <h3 className="text-lg font-semibold pr-3">Notificaciones</h3>
         <Button
           variant="outline"
           size="sm"
           onClick={handleMarkAllAsRead}
-          isabled={
+          disabled={
             notifications.filter((n) => n.estado === "pendiente").length === 0
           }
         >
@@ -80,7 +93,7 @@ export const NotificationPanel = () => {
       </div>
       <Separator />
 
-      <ScrollArea className="h-80">
+      <ScrollArea className="h-96 overflow-auto">
         <div className="p-2">
           {isLoading ? (
             <p className="text-center text-muted-foreground p-4">Cargando...</p>
@@ -89,7 +102,7 @@ export const NotificationPanel = () => {
               No tienes notificaciones.
             </p>
           ) : (
-            notifications.map((notification) => (
+            sortedNotifications.map((notification) => (
               <div
                 key={notification.id}
                 onClick={() => handleNotificationClick(notification)}

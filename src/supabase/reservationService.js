@@ -420,10 +420,10 @@ export const cancelBooking = async (bookingId, userId, userRole) => {
         tipo: "REAGENDAMIENTO_DISPONIBLE",
         titulo: "Oportunidad de Reagendamiento",
         mensaje: `Tu reserva del ${dayjs(updatedBooking.start_time).format(
-          "DD/MM HH:mm"
+          "DD/MM[,] HH:mm[hs]"
         )} fue cancelada con penalización. Puedes reagendarla sin costo hasta el ${dayjs(
           updatedBooking.permite_reagendar_hasta
-        ).format("DD/MM/YYYY")}.`,
+        ).format("dddd[, ]DD/MM/YYYY")}.`,
         enlace: "/dashboard",
         metadata: { reserva_id: updatedBooking.id },
       });

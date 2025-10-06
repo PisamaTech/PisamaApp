@@ -72,14 +72,9 @@ export const useNotificationStore = create((set, get) => ({
             event: "INSERT", // Escuchar solo nuevas inserciones
             schema: "public",
             table: "cola_envios",
-            filter: `canal=eq.in-app`, // Filtrar por canal
+            // filter: `canal=eq.in-app`, // Filtrar por canal
           },
           async (payload) => {
-            console.log(
-              "Nueva notificación In-App recibida en tiempo real:",
-              payload
-            );
-
             // La notificación es para el usuario actual?
             // Necesitamos hacer una consulta rápida para obtener el usuario_id de la notificación principal.
             const { data: newNotificationDetails, error } = await supabase
@@ -121,7 +116,21 @@ export const useNotificationStore = create((set, get) => ({
             }));
           }
         )
-        .subscribe();
+        .subscribe((status, err) => {
+          if (status === "SUBSCRIBED") {
+            console.log(
+              "¡Conectado al canal de notificaciones en tiempo real!"
+            );
+          }
+          if (status === "CHANNEL_ERROR") {
+            console.error("Error en el canal de notificaciones:", err);
+          }
+          if (status === "TIMED_OUT") {
+            console.warn(
+              "Se agotó el tiempo de espera para conectar al canal de notificaciones."
+            );
+          }
+        });
     } catch (error) {
       console.error("Error al inicializar el store de notificaciones:", error);
       set({ isLoading: false });
