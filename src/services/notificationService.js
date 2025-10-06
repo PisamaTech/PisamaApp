@@ -38,7 +38,6 @@ export const createNotification = async (notificationData) => {
 
     if (error) throw error;
 
-    console.log(`Notificación creada exitosamente con ID: ${notificationId}`);
     return notificationId; // Devuelve el ID de la notificación creada
   } catch (error) {
     console.error("Error en el servicio createNotification:", error);

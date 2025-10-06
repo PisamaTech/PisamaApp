@@ -16,10 +16,6 @@ export const useNotificationStore = create((set, get) => ({
   initialize: async (userId) => {
     if (!userId) return;
 
-    console.log(
-      "Inicializando el store de notificaciones para el usuario:",
-      userId
-    );
     set({ isLoading: true });
 
     try {

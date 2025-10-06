@@ -380,7 +380,6 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
     startLoading("Actualizando estado...");
 
     try {
-      console.log(selectedEvent.id, profileId);
       const updatedBooking = await forgivePenalty(selectedEvent.id, profileId);
 
       // Actualizar el store del calendario
