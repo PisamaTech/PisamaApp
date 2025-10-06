@@ -6,13 +6,7 @@ import {
   Settings,
   Calendar1,
   LayoutDashboard,
-  Info,
-  LucideMessageCircleQuestion,
-  MessageCircleQuestionIcon,
   MessageCircleQuestion,
-  FileQuestion,
-  ShieldQuestion,
-  MailQuestion,
 } from "lucide-react";
 
 export const menuItems = [

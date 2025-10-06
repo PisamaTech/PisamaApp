@@ -18,13 +18,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Eye, CheckCircle } from "lucide-react";
+import { Eye, CheckCircle } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -176,7 +170,9 @@ const BillingManagementTab = () => {
         showToast({
           type: "error",
           title: "Error",
-          message: "No se pudieron cargar las facturas.",
+          message: `No se pudieron cargar las facturas: ${
+            error.message || "Error Desconocido"
+          }.`,
         });
       } finally {
         stopLoading();
@@ -231,7 +227,9 @@ const BillingManagementTab = () => {
       showToast({
         type: "error",
         title: "Error",
-        message: "No se pudo actualizar la factura.",
+        message: `No se pudo actualizar la factura: ${
+          error.message || "Error Desconocido"
+        }.`,
       });
     } finally {
       stopLoading();

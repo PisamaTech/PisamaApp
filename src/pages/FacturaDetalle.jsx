@@ -148,7 +148,6 @@ export const FacturaDetalle = () => {
   }
 
   const { factura, detalles } = invoiceData;
-  console.log(detalles);
 
   return (
     <div className="container mx-auto p-4 md:p-8 space-y-6">
@@ -170,7 +169,10 @@ export const FacturaDetalle = () => {
                 Detalle de Factura #{factura.id}
               </CardTitle>
               <CardDescription>
-                Nombre:{` ${displayProfile?.firstName || ""} ${displayProfile?.lastName || ""}`}
+                Nombre:
+                {` ${displayProfile?.firstName || ""} ${
+                  displayProfile?.lastName || ""
+                }`}
                 <br />
                 Período: {dayjs(factura.periodo_inicio).format(
                   "DD/MM/YYYY"
