@@ -24,7 +24,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Eye, CheckCircle } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   Pagination,
   PaginationContent,
@@ -64,8 +70,60 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ReservationStatus } from "@/utils/constants";
 import { useNavigate } from "react-router-dom";
+
+// Componente Combobox para el filtro de usuarios
+function UserCombobox({ users, selectedUserId, onSelect }) {
+  const [open, setOpen] = useState(false);
+  const selectedUser = users.find((user) => user.id === selectedUserId);
+  const selectedUserName = selectedUser
+    ? `${selectedUser.firstName} ${selectedUser.lastName}`
+    : "Todos los usuarios";
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="w-[250px] justify-between"
+        >
+          {selectedUserName}
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[250px] p-0">
+        <Command>
+          <CommandInput placeholder="Buscar usuario..." />
+          <CommandEmpty>No se encontró el usuario.</CommandEmpty>
+          <CommandGroup>
+            <CommandItem onSelect={() => onSelect("todos")}>
+              Todos los usuarios
+            </CommandItem>
+            {users.map((user) => (
+              <CommandItem
+                key={user.id}
+                onSelect={() => {
+                  onSelect(user.id);
+                  setOpen(false);
+                }}
+              >
+                <Check
+                  className={cn(
+                    "mr-2 h-4 w-4",
+                    selectedUserId === user.id ? "opacity-100" : "opacity-0"
+                  )}
+                />
+                {user.firstName} {user.lastName}
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 const BillingManagementTab = () => {
   const { loading, startLoading, stopLoading, showToast } = useUIStore();
@@ -192,227 +250,192 @@ const BillingManagementTab = () => {
   };
 
   return (
-    <div className="space-y-4">
-      {/* Filtros */}
-      <div className="flex items-center gap-4">
-        {/* Filtro de Usuario (Combobox) */}
-        <UserCombobox
-          users={allUsers}
-          selectedUserId={filters.userId}
-          onSelect={(id) => handleFilterChange("userId", id)}
-        />
+    <TooltipProvider>
+      <div className="space-y-4">
+        {/* Filtros */}
+        <div className="flex items-center gap-4">
+          {/* Filtro de Usuario (Combobox) */}
+          <UserCombobox
+            users={allUsers}
+            selectedUserId={filters.userId}
+            onSelect={(id) => handleFilterChange("userId", id)}
+          />
 
-        {/* Filtro de Estado */}
-        <Select
-          value={filters.status}
-          onValueChange={(value) => handleFilterChange("status", value)}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filtrar por estado" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos los estados</SelectItem>
-            <SelectItem value="pendiente">Pendiente</SelectItem>
-            <SelectItem value="pagada">Pagada</SelectItem>
-          </SelectContent>
-        </Select>
+          {/* Filtro de Estado */}
+          <Select
+            value={filters.status}
+            onValueChange={(value) => handleFilterChange("status", value)}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filtrar por estado" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos los estados</SelectItem>
+              <SelectItem value="pendiente">Pendiente</SelectItem>
+              <SelectItem value="pagada">Pagada</SelectItem>
+            </SelectContent>
+          </Select>
 
-        <Button onClick={handleApplyFilters}>Buscar</Button>
-      </div>
+          <Button onClick={handleApplyFilters}>Buscar</Button>
+        </div>
 
-      {/* Tabla de Facturas */}
-      <div className="border rounded-md">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Período</TableHead>
-              <TableHead>Cliente</TableHead>
-              <TableHead>Monto Total</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead>Fecha de Emisión</TableHead>
-              <TableHead className="text-right">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
+        {/* Tabla de Facturas */}
+        <div className="border rounded-md">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
-                  Cargando...
-                </TableCell>
+                <TableHead>Período</TableHead>
+                <TableHead>Cliente</TableHead>
+                <TableHead>Monto Total</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead>Fecha de Emisión</TableHead>
+                <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
-            ) : invoices.length > 0 ? (
-              invoices.map((invoice) => (
-                <TableRow key={invoice.id}>
-                  <TableCell>
-                    {dayjs(invoice.periodo_inicio).format("DD/MM/YY")} -{" "}
-                    {dayjs(invoice.periodo_fin).format("DD/MM/YY")}
-                  </TableCell>
-                  <TableCell>
-                    {`${invoice.firstName || ""} ${
-                      invoice.lastName || ""
-                    }`.trim() || "Usuario no encontrado"}
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    ${invoice.monto_total.toLocaleString("es-UY")}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={getStatusVariant(invoice.estado)}
-                      className="capitalize"
-                    >
-                      {invoice.estado}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {dayjs(invoice.fecha_emision).format("DD/MM/YYYY")}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => navigate(`/facturas/${invoice.id}`)}
-                        >
-                          Ver Detalle
-                        </DropdownMenuItem>
-                        {invoice.estado === "pendiente" && (
-                          <DropdownMenuItem
-                            onClick={() => openConfirmationDialog(invoice)}
-                            className="text-green-600 focus:text-green-600"
-                          >
-                            Marcar como Pagada
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="h-24 text-center">
+                    Cargando...
                   </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
-                  No se encontraron facturas.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* Paginación */}
-      {!loading && totalPages > 1 && (
-        <div className="flex justify-center pt-4">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                  aria-disabled={currentPage === 1}
-                />
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationLink isActive className="w-14">
-                  {currentPage} de {totalPages}
-                </PaginationLink>
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() =>
-                    setCurrentPage((p) => Math.min(p + 1, totalPages))
-                  }
-                  aria-disabled={currentPage === totalPages}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
+              ) : invoices.length > 0 ? (
+                invoices.map((invoice) => (
+                  <TableRow key={invoice.id}>
+                    <TableCell>
+                      {dayjs(invoice.periodo_inicio).format("DD/MM/YY")} -{" "}
+                      {dayjs(invoice.periodo_fin).format("DD/MM/YY")}
+                    </TableCell>
+                    <TableCell>
+                      {`${invoice.firstName || ""} ${
+                        invoice.lastName || ""
+                      }`.trim() || "Usuario no encontrado"}
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      ${invoice.monto_total.toLocaleString("es-UY")}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={getStatusVariant(invoice.estado)}
+                        className="capitalize"
+                      >
+                        {invoice.estado}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {dayjs(invoice.fecha_emision).format("DD/MM/YYYY")}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        {invoice.estado === "pendiente" && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => openConfirmationDialog(invoice)}
+                                className="text-green-600 hover:text-green-700"
+                              >
+                                <CheckCircle
+                                  strokeWidth={3}
+                                  className="h-4 w-4"
+                                />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Marcar como Pagada</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() =>
+                                navigate(`/facturas/${invoice.id}`)
+                              }
+                            >
+                              <Eye strokeWidth={2.5} className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Ver Detalle</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={6} className="h-24 text-center">
+                    No se encontraron facturas.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </div>
-      )}
 
-      {/* Modal de Confirmación */}
-      <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Confirmar Pago?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Estás a punto de marcar la factura del período{" "}
-              <b>
-                {selectedInvoice &&
-                  `${dayjs(selectedInvoice.periodo_inicio).format(
-                    "DD/MM/YY"
-                  )} - ${dayjs(selectedInvoice.periodo_fin).format(
-                    "DD/MM/YY"
-                  )}`}
-              </b>{" "}
-              como pagada. Esta acción no se puede deshacer fácilmente.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleMarkAsPaid}>
-              Confirmar Pago
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+        {/* Paginación */}
+        {!loading && totalPages > 1 && (
+          <div className="flex justify-center pt-4">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                    aria-disabled={currentPage === 1}
+                  />
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationLink isActive className="w-14">
+                    {currentPage} de {totalPages}
+                  </PaginationLink>
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() =>
+                      setCurrentPage((p) => Math.min(p + 1, totalPages))
+                    }
+                    aria-disabled={currentPage === totalPages}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
+
+        {/* Modal de Confirmación */}
+        <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Confirmar Pago?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Estás a punto de marcar la factura del período{" "}
+                <b>
+                  {selectedInvoice &&
+                    `${dayjs(selectedInvoice.periodo_inicio).format(
+                      "DD/MM/YY"
+                    )} - ${dayjs(selectedInvoice.periodo_fin).format(
+                      "DD/MM/YY"
+                    )}`}
+                </b>{" "}
+                como pagada. Esta acción no se puede deshacer fácilmente.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleMarkAsPaid}>
+                Confirmar Pago
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </TooltipProvider>
   );
 };
-
-// Componente Combobox para el filtro de usuarios
-function UserCombobox({ users, selectedUserId, onSelect }) {
-  const [open, setOpen] = useState(false);
-  const selectedUser = users.find((user) => user.id === selectedUserId);
-  const selectedUserName = selectedUser
-    ? `${selectedUser.firstName} ${selectedUser.lastName}`
-    : "Todos los usuarios";
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className="w-[250px] justify-between"
-        >
-          {selectedUserName}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[250px] p-0">
-        <Command>
-          <CommandInput placeholder="Buscar usuario..." />
-          <CommandEmpty>No se encontró el usuario.</CommandEmpty>
-          <CommandGroup>
-            <CommandItem onSelect={() => onSelect("todos")}>
-              Todos los usuarios
-            </CommandItem>
-            {users.map((user) => (
-              <CommandItem
-                key={user.id}
-                onSelect={() => {
-                  onSelect(user.id);
-                  setOpen(false);
-                }}
-              >
-                <Check
-                  className={cn(
-                    "mr-2 h-4 w-4",
-                    selectedUserId === user.id ? "opacity-100" : "opacity-0"
-                  )}
-                />
-                {user.firstName} {user.lastName}
-              </CommandItem>
-            ))}
-          </CommandGroup>
-        </Command>
-      </PopoverContent>
-    </Popover>
-  );
-}
 
 export default BillingManagementTab;
