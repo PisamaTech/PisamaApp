@@ -46,7 +46,7 @@ export const UserCombobox = ({ users, selectedUserId, onSelect }) => {
         <Command>
           <CommandInput placeholder="Buscar usuario..." />
           <CommandEmpty>No se encontró ningún usuario.</CommandEmpty>
-          <CommandGroup>
+          <CommandGroup className="max-h-72 overflow-y-auto">
             {/* Opción para seleccionar "Todos" */}
             <CommandItem
               onSelect={() => {
