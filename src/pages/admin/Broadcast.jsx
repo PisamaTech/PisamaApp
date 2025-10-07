@@ -79,90 +79,90 @@ const Broadcast = () => {
 
   return (
     <div className="container mx-auto p-4 md:p-8 space-y-6">
-        <div className="space-y-1">
-            <h1 className="text-3xl font-bold">Comunicación</h1>
-            <p className="text-muted-foreground">
-                Envía notificaciones masivas a todos los usuarios.
-            </p>
-        </div>
-        <Separator />
-        <Card>
+      <div className="space-y-1">
+        <h1 className="text-3xl font-bold">Comunicación</h1>
+        <p className="text-muted-foreground">
+          Envía notificaciones masivas a todos los usuarios.
+        </p>
+      </div>
+      <Separator />
+      <Card>
         <CardHeader>
-            <CardTitle>Enviar Notificación Masiva</CardTitle>
-            <CardDescription>
+          <CardTitle>Enviar Notificación Masiva</CardTitle>
+          <CardDescription>
             Envía un mensaje a todos los usuarios de la plataforma. La
-            notificación se enviará a los canales que cada usuario tenga activados
-            en sus preferencias.
-            </CardDescription>
+            notificación se enviará a los canales que cada usuario tenga
+            activados en sus preferencias.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-1">
-                <Label htmlFor="tipo">Tipo de Notificación</Label>
-                <Select
+              <Label htmlFor="tipo">Tipo de Notificación</Label>
+              <Select
                 onValueChange={(value) =>
-                    reset({ ...control._formValues, tipo: value })
+                  reset({ ...control._formValues, tipo: value })
                 }
-                >
+              >
                 <SelectTrigger>
-                    <SelectValue placeholder="Selecciona el tipo de aviso" />
+                  <SelectValue placeholder="Selecciona el tipo de aviso" />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="NUEVA_FUNCIONALIDAD">
+                  <SelectItem value="AVISO_GENERAL">Aviso General</SelectItem>
+                  <SelectItem value="NUEVA_FUNCIONALIDAD">
                     Nueva Funcionalidad
-                    </SelectItem>
-                    <SelectItem value="CAMBIO_DE_PRECIO">
+                  </SelectItem>
+                  <SelectItem value="CAMBIO_DE_PRECIO">
                     Cambio de Precio
-                    </SelectItem>
-                    <SelectItem value="AVISO_GENERAL">Aviso General</SelectItem>
+                  </SelectItem>
                 </SelectContent>
-                </Select>
-                {errors.tipo && (
+              </Select>
+              {errors.tipo && (
                 <p className="text-sm text-red-500">{errors.tipo.message}</p>
-                )}
+              )}
             </div>
             <div className="space-y-1">
-                <Label htmlFor="titulo">Título</Label>
-                <Input
+              <Label htmlFor="titulo">Título</Label>
+              <Input
                 id="titulo"
                 {...register("titulo")}
                 placeholder="Ej: ¡Nueva sección de Ayuda disponible!"
-                />
-                {errors.titulo && (
+              />
+              {errors.titulo && (
                 <p className="text-sm text-red-500">{errors.titulo.message}</p>
-                )}
+              )}
             </div>
             <div className="space-y-1">
-                <Label htmlFor="mensaje">Mensaje</Label>
-                <Textarea
+              <Label htmlFor="mensaje">Mensaje</Label>
+              <Textarea
                 id="mensaje"
                 {...register("mensaje")}
                 placeholder="Describe la novedad o el aviso aquí..."
                 rows={5}
-                />
-                {errors.mensaje && (
+              />
+              {errors.mensaje && (
                 <p className="text-sm text-red-500">{errors.mensaje.message}</p>
-                )}
+              )}
             </div>
             <div className="space-y-1">
-                <Label htmlFor="enlace">Enlace (Opcional)</Label>
-                <Input
+              <Label htmlFor="enlace">Enlace (Opcional)</Label>
+              <Input
                 id="enlace"
                 {...register("enlace")}
                 placeholder="Ej: /dashboard"
-                />
-                {errors.enlace && (
+              />
+              {errors.enlace && (
                 <p className="text-sm text-red-500">{errors.enlace.message}</p>
-                )}
+              )}
             </div>
             <div className="flex justify-end">
-                <Button type="submit" variant="destructive" disabled={loading}>
+              <Button type="submit" variant="destructive" disabled={loading}>
                 {loading ? "Enviando..." : "Enviar a Todos los Usuarios"}
-                </Button>
+              </Button>
             </div>
-            </form>
+          </form>
         </CardContent>
-        </Card>
+      </Card>
     </div>
   );
 };
