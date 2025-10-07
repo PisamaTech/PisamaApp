@@ -4,9 +4,12 @@ import {
   Wallet,
   UserPlus,
   Settings,
-  Calendar1,
+  Calendar as CalendarIcon, // Renombrado para evitar conflicto
   LayoutDashboard,
   MessageCircleQuestion,
+  Users,
+  DollarSign,
+  Send,
 } from "lucide-react";
 
 export const menuItems = [
@@ -18,7 +21,7 @@ export const menuItems = [
   {
     title: "Agenda Diaria",
     url: "/calendario_diario",
-    icon: Calendar1,
+    icon: CalendarIcon,
   },
   {
     title: "Agenda Semanal",
@@ -47,7 +50,38 @@ export const menuItems = [
   },
   {
     title: "Administrador",
-    url: "/admin",
     icon: UserPlus,
+    subItems: [
+      {
+        title: "Dashboard",
+        url: "/admin/dashboard",
+        icon: LayoutDashboard,
+      },
+      {
+        title: "Usuarios",
+        url: "/admin/user-management",
+        icon: Users,
+      },
+      {
+        title: "Reservas",
+        url: "/admin/reservations-management",
+        icon: CalendarIcon,
+      },
+      {
+        title: "Facturación",
+        url: "/admin/billing-management",
+        icon: Wallet,
+      },
+      {
+        title: "Precios",
+        url: "/admin/pricing-management",
+        icon: DollarSign,
+      },
+      {
+        title: "Comunicación",
+        url: "/admin/broadcast",
+        icon: Send,
+      },
+    ],
   },
 ];

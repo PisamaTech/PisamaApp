@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
+import { useState } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -8,17 +9,20 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { NavUser } from "./nav-user";
 import { HeaderMenu } from "./HeaderMenu";
 import { useAuthStore } from "@/stores/authStore";
-// import { DarkLightMode } from "./Dark-LightMode";
 import { menuItems } from "@/utils/menuItems";
 
 export function AppSidebar() {
   const { profile } = useAuthStore();
   const location = useLocation();
+  const [openSubmenu, setOpenSubmenu] = useState(true); // Default to open
 
   const data = {
     user: {
@@ -44,16 +48,49 @@ export function AppSidebar() {
                   return true;
                 })
                 .map((item) => {
+                  if (item.subItems) {
+                    const isParentActive = item.subItems.some(
+                      (sub) => location.pathname === sub.url
+                    );
+                    return (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton
+                          onClick={() => setOpenSubmenu(!openSubmenu)}
+                          isActive={isParentActive}
+                        >
+                          <item.icon />
+                          <span>{item.title}</span>
+                        </SidebarMenuButton>
+                        {openSubmenu && (
+                          <SidebarMenuSub>
+                            {item.subItems.map((subItem) => {
+                              const isSubActive =
+                                location.pathname === subItem.url;
+                              return (
+                                <SidebarMenuSubItem key={subItem.title}>
+                                  <SidebarMenuSubButton
+                                    asChild
+                                    isActive={isSubActive}
+                                  >
+                                    <Link to={subItem.url}>
+                                      <subItem.icon />
+                                      <span>{subItem.title}</span>
+                                    </Link>
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                              );
+                            })}
+                          </SidebarMenuSub>
+                        )}
+                      </SidebarMenuItem>
+                    );
+                  }
+
                   const isActive = location.pathname === item.url;
                   return (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild>
-                        <Link
-                          to={item.url}
-                          style={{
-                            fontWeight: isActive ? "bold" : "normal",
-                          }}
-                        >
+                      <SidebarMenuButton asChild isActive={isActive}>
+                        <Link to={item.url}>
                           <item.icon />
                           <span>{item.title}</span>
                         </Link>
@@ -65,9 +102,6 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      {/* <SidebarFooter>
-        <DarkLightMode />
-      </SidebarFooter> */}
       <SidebarSeparator className="my-1" />
       <SidebarFooter>
         <NavUser user={data.user} />

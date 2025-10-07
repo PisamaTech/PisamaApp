@@ -1,4 +1,3 @@
-export * from "./Admin";
 export * from "./AuthPage";
 export * from "./CalendarDiario";
 export * from "./CalendarSemanal";

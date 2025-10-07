@@ -5,7 +5,6 @@ import {
   CalendarSemanal,
   Reservas,
   Facturas,
-  Admin,
   Perfil,
   ResetPassword,
   RecoverPassword,
@@ -13,6 +12,12 @@ import {
   Error404,
   FacturaDetalle,
 } from "./pages";
+import AdminDashboard from "./pages/admin/Dashboard";
+import UserManagement from "./pages/admin/UserManagement";
+import ReservationsManagement from "./pages/admin/ReservationsManagement";
+import BillingManagement from "./pages/admin/BillingManagement";
+import PricingManagement from "./pages/admin/PricingManagement";
+import Broadcast from "./pages/admin/Broadcast";
 import { useAuthStore } from "./stores/authStore";
 import { useNotificationStore } from "./stores/notificationStore";
 import LoadingOverlay from "./components/LoadingOverlay";
@@ -85,11 +90,31 @@ function App() {
               <Route path="/facturas/:id" element={<FacturaDetalle />} />
               <Route
                 path="/admin"
-                element={
-                  <AdminRouteGuard>
-                    <Admin />
-                  </AdminRouteGuard>
-                }
+                element={<Navigate to="/admin/dashboard" replace />}
+              />
+              <Route
+                path="/admin/dashboard"
+                element={<AdminRouteGuard><AdminDashboard /></AdminRouteGuard>}
+              />
+              <Route
+                path="/admin/user-management"
+                element={<AdminRouteGuard><UserManagement /></AdminRouteGuard>}
+              />
+              <Route
+                path="/admin/reservations-management"
+                element={<AdminRouteGuard><ReservationsManagement /></AdminRouteGuard>}
+              />
+              <Route
+                path="/admin/billing-management"
+                element={<AdminRouteGuard><BillingManagement /></AdminRouteGuard>}
+              />
+              <Route
+                path="/admin/pricing-management"
+                element={<AdminRouteGuard><PricingManagement /></AdminRouteGuard>}
+              />
+              <Route
+                path="/admin/broadcast"
+                element={<AdminRouteGuard><Broadcast /></AdminRouteGuard>}
               />
               <Route path="perfil" element={<Perfil />} />
               <Route path="ayuda" element={<Ayuda />} />
