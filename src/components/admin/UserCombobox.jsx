@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PropTypes from "prop-types";
 import {
   Button,
   Command,
@@ -87,4 +88,16 @@ export const UserCombobox = ({ users, selectedUserId, onSelect }) => {
       </PopoverContent>
     </Popover>
   );
+};
+
+UserCombobox.propTypes = {
+  users: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string,
+      firstName: PropTypes.string,
+      lastName: PropTypes.string,
+    })
+  ).isRequired,
+  selectedUserId: PropTypes.string,
+  onSelect: PropTypes.func.isRequired,
 };
