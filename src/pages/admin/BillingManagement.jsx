@@ -186,10 +186,10 @@ const BillingManagementPage = () => {
     <TooltipProvider>
       <div className="container mx-auto p-4 md:p-8 space-y-6">
         <div className="space-y-1">
-            <h1 className="text-3xl font-bold">Gestión de Facturación</h1>
-            <p className="text-muted-foreground">
-                Visualiza todas las facturas y gestiona los pagos.
-            </p>
+          <h1 className="text-3xl font-bold">Gestión de Facturación</h1>
+          <p className="text-muted-foreground">
+            Visualiza todas las facturas y gestiona los pagos.
+          </p>
         </div>
         <Separator />
         {/* Filtros */}
@@ -206,7 +206,7 @@ const BillingManagementPage = () => {
             value={filters.status}
             onValueChange={(value) => handleFilterChange("status", value)}
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-1/4">
               <SelectValue placeholder="Filtrar por estado" />
             </SelectTrigger>
             <SelectContent>

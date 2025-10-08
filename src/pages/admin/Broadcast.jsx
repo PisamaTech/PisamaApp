@@ -1,71 +1,129 @@
-import { useForm } from "react-hook-form";
+import { useState, useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useUIStore } from "@/stores/uiStore";
-import { sendBroadcastNotification } from "@/services/adminService";
+import {
+  sendBroadcastNotification,
+  sendNotificationToUsers,
+  fetchAllUsers,
+} from "@/services/adminService";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-  Separator,
-} from "@/components/ui";
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { UserMultiSelectCombobox } from "@/components/admin/UserMultiSelectCombobox";
 
-const broadcastSchema = z.object({
-  tipo: z.string().nonempty("Debes seleccionar un tipo."),
-  titulo: z.string().min(5, "El título debe tener al menos 5 caracteres."),
-  mensaje: z.string().min(10, "El mensaje debe tener al menos 10 caracteres."),
-  enlace: z
-    .string()
-    .optional()
-    .or(z.literal(""))
-    .refine(
-      (val) => val === "" || /^\/[a-zA-Z0-9-_\/]+$/.test(val),
-      "Debe ser una ruta válida que comience con '/' (por ejemplo: /perfil, /dashboard, /calendario_diario)."
-    ),
-});
+const broadcastSchema = z
+  .object({
+    targetMode: z.enum(["all", "specific"], {
+      required_error: "Debes seleccionar a quién enviar el mensaje.",
+    }),
+    userIds: z.array(z.string()).optional(),
+    tipo: z.string().optional(),
+    titulo: z.string().min(5, "El título debe tener al menos 5 caracteres."),
+    mensaje: z
+      .string()
+      .min(10, "El mensaje debe tener al menos 10 caracteres."),
+    enlace: z
+      .string()
+      .optional()
+      .or(z.literal(""))
+      .refine(
+        (val) => val === "" || /^\/[a-zA-Z0-9-_\/]+$/.test(val),
+        "Debe ser una ruta válida que comience con '/' (por ejemplo: /perfil)."
+      ),
+  })
+  .refine(
+    (data) => {
+      if (data.targetMode === "specific") {
+        return data.userIds && data.userIds.length > 0;
+      }
+      return true;
+    },
+    {
+      message: "Debes seleccionar al menos un usuario.",
+      path: ["userIds"], // Asocia el error al campo de usuarios
+    }
+  );
 
 const Broadcast = () => {
   const { loading, startLoading, stopLoading, showToast } = useUIStore();
+  const [allUsers, setAllUsers] = useState([]);
+
   const {
     register,
     handleSubmit,
     control,
     reset,
+    watch,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(broadcastSchema),
+    defaultValues: {
+      targetMode: "all",
+      userIds: [],
+      tipo: "AVISO_GENERAL", // Hardcoded value
+      titulo: "",
+      mensaje: "",
+      enlace: "",
+    },
   });
 
+  const targetMode = watch("targetMode");
+
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        // Pedimos un número alto de usuarios para traer a todos.
+        const { data } = await fetchAllUsers(1, 1000);
+        setAllUsers(data);
+      } catch (error) {
+        showToast({
+          type: "error",
+          title: "Error al Cargar Usuarios",
+          message: error.message,
+        });
+      }
+    };
+    loadUsers();
+  }, [showToast]);
+
   const onSubmit = async (data) => {
-    // Confirmación antes de enviar
-    const confirmed = window.confirm(
-      "¿Estás seguro de que quieres enviar esta notificación a TODOS los usuarios? Esta acción no se puede deshacer."
-    );
-    if (!confirmed) return;
+    const { targetMode, userIds, ...notificationData } = data;
+
+    const confirmationMessage =
+      targetMode === "all"
+        ? "¿Estás seguro de que quieres enviar esta notificación a TODOS los usuarios?"
+        : `¿Estás seguro de que quieres enviar esta notificación a ${userIds.length} usuario(s) seleccionado(s)?`;
+
+    if (!window.confirm(confirmationMessage)) return;
 
     startLoading();
     try {
-      const result = await sendBroadcastNotification(data);
+      let result;
+      if (targetMode === "all") {
+        result = await sendBroadcastNotification(notificationData);
+      } else {
+        result = await sendNotificationToUsers(userIds, notificationData);
+      }
+
       showToast({
         type: "success",
         title: "Envío Exitoso",
         message: `Se encolaron ${result.notifications_created} notificaciones para ser enviadas.`,
       });
-      reset({ tipo: "", titulo: "", mensaje: "", enlace: "" }); // Limpia el formulario
+      reset(); // Limpia todo el formulario a sus valores por defecto
     } catch (error) {
       showToast({
         type: "error",
@@ -82,45 +140,62 @@ const Broadcast = () => {
       <div className="space-y-1">
         <h1 className="text-3xl font-bold">Comunicación</h1>
         <p className="text-muted-foreground">
-          Envía notificaciones masivas a todos los usuarios.
+          Envía notificaciones masivas o a usuarios específicos.
         </p>
       </div>
       <Separator />
       <Card>
         <CardHeader>
-          <CardTitle>Enviar Notificación Masiva</CardTitle>
+          <CardTitle>Enviar Notificación</CardTitle>
           <CardDescription>
-            Envía un mensaje a todos los usuarios de la plataforma. La
-            notificación se enviará a los canales que cada usuario tenga
-            activados en sus preferencias.
+            Selecciona el destinatario y completa los detalles del mensaje.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-1">
-              <Label htmlFor="tipo">Tipo de Notificación</Label>
-              <Select
-                onValueChange={(value) =>
-                  reset({ ...control._formValues, tipo: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona el tipo de aviso" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="AVISO_GENERAL">Aviso General</SelectItem>
-                  <SelectItem value="NUEVA_FUNCIONALIDAD">
-                    Nueva Funcionalidad
-                  </SelectItem>
-                  <SelectItem value="CAMBIO_DE_PRECIO">
-                    Cambio de Precio
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              {errors.tipo && (
-                <p className="text-sm text-red-500">{errors.tipo.message}</p>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <Controller
+              name="targetMode"
+              control={control}
+              render={({ field }) => (
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                  className="flex space-x-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="all" id="all" />
+                    <Label htmlFor="all">Todos los usuarios</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="specific" id="specific" />
+                    <Label htmlFor="specific">Usuarios Específicos</Label>
+                  </div>
+                </RadioGroup>
               )}
-            </div>
+            />
+
+            {targetMode === "specific" && (
+              <div className="space-y-1">
+                <Label>Usuarios</Label>
+                <Controller
+                  name="userIds"
+                  control={control}
+                  render={({ field }) => (
+                    <UserMultiSelectCombobox
+                      users={allUsers}
+                      selectedUserIds={field.value}
+                      onUsersChange={field.onChange}
+                    />
+                  )}
+                />
+                {errors.userIds && (
+                  <p className="text-sm text-red-500">
+                    {errors.userIds.message}
+                  </p>
+                )}
+              </div>
+            )}
+
             <div className="space-y-1">
               <Label htmlFor="titulo">Título</Label>
               <Input
@@ -132,6 +207,7 @@ const Broadcast = () => {
                 <p className="text-sm text-red-500">{errors.titulo.message}</p>
               )}
             </div>
+
             <div className="space-y-1">
               <Label htmlFor="mensaje">Mensaje</Label>
               <Textarea
@@ -144,6 +220,7 @@ const Broadcast = () => {
                 <p className="text-sm text-red-500">{errors.mensaje.message}</p>
               )}
             </div>
+
             <div className="space-y-1">
               <Label htmlFor="enlace">Enlace (Opcional)</Label>
               <Input
@@ -155,9 +232,10 @@ const Broadcast = () => {
                 <p className="text-sm text-red-500">{errors.enlace.message}</p>
               )}
             </div>
+
             <div className="flex justify-end">
               <Button type="submit" variant="destructive" disabled={loading}>
-                {loading ? "Enviando..." : "Enviar a Todos los Usuarios"}
+                {loading ? "Enviando..." : "Enviar Notificación"}
               </Button>
             </div>
           </form>

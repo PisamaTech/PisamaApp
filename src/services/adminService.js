@@ -568,3 +568,48 @@ export const sendBroadcastNotification = async (broadcastData) => {
     throw new Error(`No se pudo enviar la notificación: ${error.message}`);
   }
 };
+
+/**
+ * Envia una notificación a una lista específica de usuarios.
+ * @param {string[]} userIds - Array de IDs de los usuarios a notificar.
+ * @param {object} notificationData - Objeto con { tipo, titulo, mensaje, enlace }.
+ * @returns {Promise<{notifications_created: number}>} El número de notificaciones creadas.
+ */
+export const sendNotificationToUsers = async (userIds, notificationData) => {
+  try {
+    if (
+      !userIds ||
+      userIds.length === 0 ||
+      !notificationData.tipo ||
+      !notificationData.titulo ||
+      !notificationData.mensaje
+    ) {
+      throw new Error(
+        "Se requiere una lista de usuarios, tipo, título y mensaje."
+      );
+    }
+
+    const notificationPromises = userIds.map((userId) =>
+      createNotification({
+        usuario_id: userId,
+        ...notificationData,
+      })
+    );
+
+    const results = await Promise.allSettled(notificationPromises);
+
+    const successfulCreations = results.filter(
+      (res) => res.status === "fulfilled" && res.value !== null
+    ).length;
+
+    if (successfulCreations === 0) {
+      throw new Error("No se pudo crear ninguna notificación.");
+    }
+
+    return { notifications_created: successfulCreations };
+  } catch (error) {
+    console.error("Error al enviar notificación a usuarios específicos:", error);
+    throw new Error(`No se pudo enviar la notificación: ${error.message}`);
+  }
+};
+
