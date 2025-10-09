@@ -40,8 +40,17 @@ const broadcastSchema = z
       .optional()
       .or(z.literal(""))
       .refine(
-        (val) => val === "" || /^\/[a-zA-Z0-9-_\/]+$/.test(val),
-        "Debe ser una ruta válida que comience con '/' (por ejemplo: /perfil)."
+        (val) => {
+          if (val === "") return true;
+          const isInternalPath = val.startsWith("/");
+          const isExternalUrl =
+            val.startsWith("http://") || val.startsWith("https://");
+          return isInternalPath || isExternalUrl;
+        },
+        {
+          message:
+            "Debe ser una ruta interna (ej: /perfil) o una URL completa (ej: https://...).",
+        }
       ),
   })
   .refine(

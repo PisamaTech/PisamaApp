@@ -85,7 +85,7 @@ const Dashboard = () => {
   // Función para iniciar el flujo de reagendamiento
   const handleReagendarClick = (reservaPenalizada) => {
     startReagendamientoMode(reservaPenalizada);
-    navigate("/calendario_semanal");
+    navigate("/calendario_diario");
   };
 
   // --- 3. Reemplaza tu función handleRenewSeries por esta ---

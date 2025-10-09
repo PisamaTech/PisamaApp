@@ -51,9 +51,17 @@ export const NotificationPanel = () => {
         console.error("Error al marcar la notificación como leída:", error);
       }
     }
-    // Si la notificación tiene un enlace, navegamos a él
+    // Si la notificación tiene un enlace, procesarlo
     if (notification.notificaciones.enlace) {
-      navigate(notification.notificaciones.enlace);
+      const url = notification.notificaciones.enlace;
+      // Comprobar si es una URL externa o una ruta interna
+      if (url.startsWith("http://") || url.startsWith("https://")) {
+        // Es una URL externa, abrir en una nueva pestaña
+        window.open(url, "_blank", "noopener,noreferrer");
+      } else {
+        // Es una ruta interna, navegar con react-router
+        navigate(url);
+      }
     }
   };
 
