@@ -86,7 +86,14 @@ export const useAuthStore = create(
 
       // Registrar nuevo usuario
 
-      signUp: async (email, password, firstName, lastName, phone) => {
+      signUp: async (
+        email,
+        password,
+        firstName,
+        lastName,
+        phone,
+        profession
+      ) => {
         const { startLoading, setError, clearError, showToast, stopLoading } =
           useUIStore.getState();
 
@@ -123,6 +130,7 @@ export const useAuthStore = create(
                 lastName: lastName, // Guarda el apellido
                 phone,
                 email,
+                profession,
               },
             ]);
 

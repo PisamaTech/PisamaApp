@@ -27,6 +27,8 @@ export const registerSchema = z
     email: z.string().email({
       message: "Por favor, introduce un email válido.",
     }),
+    profession: z.string().min(1, { message: "Selecciona una profesión." }),
+    otherProfession: z.string().optional(),
     password: z.string().min(6, {
       message: "La contraseña debe tener al menos 6 caracteres.",
     }),
@@ -35,7 +37,19 @@ export const registerSchema = z
   .refine((data) => data.password === data.confirmPassword, {
     message: "Las contraseñas no coinciden",
     path: ["confirmPassword"], // path of error
-  });
+  })
+  .refine(
+    (data) => {
+      if (data.profession === "otro") {
+        return data.otherProfession && data.otherProfession.length > 0;
+      }
+      return true;
+    },
+    {
+      message: "Por favor, especifique su profesión.",
+      path: ["otherProfession"],
+    }
+  );
 
 export const reservationSchema = z
   .object({

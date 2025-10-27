@@ -24,25 +24,24 @@ export const useNotificationStore = create((set, get) => ({
         .from("cola_envios")
         .select(
           `
-          id,
-          estado,
-          notificacion_id,
-          notificaciones (
-            id,
-            titulo,
-            mensaje,
-            enlace,
-            created_at
-          )
-        `
+                  id,
+                  estado,
+                  notificacion_id,
+                  notificaciones:notificaciones!inner (
+                    id,
+                    titulo,
+                    mensaje,
+                    enlace,
+                    created_at
+                  )
+                `
         )
         .eq("canal", "in-app")
         .eq("notificaciones.usuario_id", userId) // Filtrar por usuario en la tabla relacionada
         .order("created_at", {
-          foreignTable: "notificaciones",
           ascending: false,
         })
-        .limit(20); // Cargar las últimas 20 para empezar
+        .limit(10); // Cargar las últimas 10 para empezar
 
       if (error) throw error;
 
@@ -84,9 +83,6 @@ export const useNotificationStore = create((set, get) => ({
               !newNotificationDetails ||
               newNotificationDetails.usuario_id !== userId
             ) {
-              console.log(
-                "Notificación recibida, pero no es para el usuario actual."
-              );
               return;
             }
 
@@ -113,11 +109,6 @@ export const useNotificationStore = create((set, get) => ({
           }
         )
         .subscribe((status, err) => {
-          if (status === "SUBSCRIBED") {
-            console.log(
-              "¡Conectado al canal de notificaciones en tiempo real!"
-            );
-          }
           if (status === "CHANNEL_ERROR") {
             console.error("Error en el canal de notificaciones:", err);
           }
@@ -150,7 +141,6 @@ export const useNotificationStore = create((set, get) => ({
       subscription = null;
     }
     set({ notifications: [], unreadCount: 0, isLoading: true });
-    console.log("Store de notificaciones limpiado.");
   },
 
   // Acciones para que la UI actualice el estado

@@ -19,7 +19,6 @@ import {
   loginSchema,
   registerSchema,
 } from "../validations/validationSchemas.js"; // Importamos los esquemas de validación
-// import { handleSignIn, handleSignUp } from "../helpers/authFunctions";
 
 import "animate.css";
 import logoPisama from "../assets/EspacioPimasaLogo-300.webp";
@@ -48,9 +47,12 @@ export const AuthPage = () => {
     register: registerRegister,
     handleSubmit: handleRegisterSubmit,
     formState: { errors: registerErrors },
+    watch,
   } = useForm({
     resolver: zodResolver(registerSchema),
   });
+
+  const professionValue = watch("profession");
 
   // Manejador de envío del formulario de inicio de sesión
   const onLoginSubmit = async ({ email, password }) => {
@@ -66,6 +68,8 @@ export const AuthPage = () => {
     firstName,
     lastName,
     phone,
+    profession,
+    otherProfession,
   }) => {
     // Limpiamos los espacios en blanco y formateamos los campos de texto
     const trimmedFirstName = firstName.trim();
@@ -82,6 +86,7 @@ export const AuthPage = () => {
         trimmedLastName.charAt(0).toUpperCase() +
         trimmedLastName.slice(1).toLowerCase(),
       phone: phone.trim(),
+      profession: profession === "otro" ? otherProfession : profession,
     };
 
     const success = await signUp(
@@ -89,7 +94,8 @@ export const AuthPage = () => {
       processedData.password,
       processedData.firstName,
       processedData.lastName,
-      processedData.phone
+      processedData.phone,
+      processedData.profession
     );
     reset();
     if (success) {
@@ -278,6 +284,53 @@ export const AuthPage = () => {
                         </p>
                       )}
                     </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="profession">Profesión</Label>
+                      <select
+                        id="profession"
+                        className={`w-full p-2 border rounded-lg text-sm ${
+                          registerErrors.profession ? "border-red-500" : ""
+                        }`}
+                        {...registerRegister("profession")}
+                      >
+                        <option value="">Selecciona tu profesión</option>
+                        <option value="psicologo">Psicólogo</option>
+                        <option value="psiquiatra">Psiquiatra</option>
+                        <option value="terapeuta alternativo">
+                          Terapeuta Alternativo
+                        </option>
+                        <option value="masajista">Masajista</option>
+                        <option value="fisioterapeuta">Fisioterapeuta</option>
+                        <option value="nutricionista">Nutricionista</option>
+                        <option value="otro">Otro</option>
+                      </select>
+                      {registerErrors.profession && (
+                        <p className="text-sm text-red-500">
+                          {registerErrors.profession.message}
+                        </p>
+                      )}
+                    </div>
+                    {professionValue === "otro" && (
+                      <div className="space-y-2">
+                        <Label htmlFor="otherProfession">Otra Profesión</Label>
+                        <Input
+                          id="otherProfession"
+                          type="text"
+                          placeholder="Especifique su profesión"
+                          className={
+                            registerErrors.otherProfession
+                              ? "border-red-500"
+                              : ""
+                          }
+                          {...registerRegister("otherProfession")}
+                        />
+                        {registerErrors.otherProfession && (
+                          <p className="text-sm text-red-500">
+                            {registerErrors.otherProfession.message}
+                          </p>
+                        )}
+                      </div>
+                    )}
                     <div className="space-y-2">
                       <Label htmlFor="register-password">Contraseña</Label>
                       <div className="relative">
