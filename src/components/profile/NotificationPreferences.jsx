@@ -51,6 +51,7 @@ const NotificationPreferences = () => {
 
   // Función que se ejecuta al guardar los cambios
   const onSubmit = async (data) => {
+    console.log(data);
     startLoading();
     try {
       // Filtramos el 'usuario_id' para no enviarlo en el update
@@ -138,6 +139,13 @@ const NotificationPreferences = () => {
             control={control}
             name="ultimo_dia_reagendamiento"
             label="Aviso de último día para reagendar una reserva penalizada"
+          />
+
+          {/* Fila de Preferencia: Último día reagendamiento */}
+          <PreferenceRow
+            control={control}
+            name="aviso_general"
+            label="Avisos generales sobre novedades de Espacio PISAMA"
           />
 
           {/* Puedes añadir más filas aquí para otros tipos de notificaciones */}
