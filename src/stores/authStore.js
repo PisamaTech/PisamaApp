@@ -106,6 +106,12 @@ export const useAuthStore = create(
               email,
               password,
               options: {
+                data: {
+                  firstName,
+                  lastName,
+                  phone,
+                  profession,
+                },
                 emailRedirectTo: `https://reservas.pisama.uy/confirmacion`,
               },
             });
@@ -114,40 +120,40 @@ export const useAuthStore = create(
             setError(authError);
             showToast({
               type: "error",
-              title: "Error",
+              title: "Error de registro",
               message: authError.message,
             });
-            throw authError;
+            return false; // ❌ señal de fallo
           }
 
-          // Guardar datos adicionales en la tabla `user_profiles`
-          const { data: profileData, error: profileError } = await supabase
-            .from("user_profiles")
-            .insert([
-              {
-                id: authData.user?.id, // Guarda el ID del usuario
-                firstName: firstName, // Guarda el nombre
-                lastName: lastName, // Guarda el apellido
-                phone,
-                email,
-                profession,
-              },
-            ]);
+          // // Guardar datos adicionales en la tabla `user_profiles`
+          // const { data: profileData, error: profileError } = await supabase
+          //   .from("user_profiles")
+          //   .insert([
+          //     {
+          //       id: authData.user?.id, // Guarda el ID del usuario
+          //       firstName: firstName, // Guarda el nombre
+          //       lastName: lastName, // Guarda el apellido
+          //       phone,
+          //       email,
+          //       profession,
+          //     },
+          //   ]);
 
-          if (profileError) {
-            setError(profileError);
-            showToast({
-              type: "error",
-              title: "Error",
-              message: profileError.message,
-            });
-            throw profileError;
-          }
+          // if (profileError) {
+          //   setError(profileError);
+          //   showToast({
+          //     type: "error",
+          //     title: "Error",
+          //     message: profileError.message,
+          //   });
+          //   throw profileError;
+          // }
 
           stopLoading();
           showToast({
             type: "success",
-            title: "Operación exitosa",
+            title: "Registro exitoso",
             message:
               "Hemos enviado un email a tu correo para verificar tu cuenta. Haz clic en el enlace para activar tu cuenta.",
           });
@@ -156,7 +162,7 @@ export const useAuthStore = create(
           setError(error);
           showToast({
             type: "error",
-            title: "Error",
+            title: "Error inesperado",
             message: error.message,
           });
           return false; // ❌ señal de fallo
