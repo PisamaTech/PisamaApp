@@ -20,7 +20,7 @@ export const fetchDashboardData = async (userId, userProfile) => {
       currentPeriodPreview,
       expiringSeries,
     ] = await Promise.all([
-      fetchUpcomingBookings(userId, 5), // Obtiene las próximas 5 reservas
+      fetchUpcomingBookings(userId), // Obtiene las próximas reservas en un rango de 30 días
       fetchReschedulableBookings(userId), // Obtiene reservas para reagendar
       fetchPendingInvoices(userId), // Obtiene facturas pendientes
       fetchCurrentPeriodPreview(userId, userProfile), // Obtiene la vista previa de facturación
@@ -50,12 +50,13 @@ export const fetchDashboardData = async (userId, userProfile) => {
  */
 export const fetchUpcomingBookings = async (userId, limit = 5) => {
   try {
+    const startDate = dayjs().startOf("day").toISOString();
     const { data, error } = await supabase
       .from("reservas")
       .select("*") // Seleccionamos todo para tener los datos para el EventDialog
       .eq("usuario_id", userId)
       .eq("estado", "activa") // Solo reservas activas
-      .gte("start_time", new Date().toISOString()) // Cuya hora de inicio sea a partir de ahora
+      .gte("start_time", startDate) // Cuya hora de inicio sea a partir de ahora
       .order("start_time", { ascending: true }) // Ordenadas de la más próxima a la más lejana
       .limit(limit); // Limita el número de resultados
 
