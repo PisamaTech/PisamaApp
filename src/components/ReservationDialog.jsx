@@ -119,7 +119,7 @@ export const ReservationDialog = ({
     return text.charAt(0) + ".";
   }
 
-  // Manejar la sumisión del formulario
+  // ✅ FUNCIÓN CORREGIDA: Manejar sumisión con mejor control de cierre
   const onSubmit = (data) => {
     // La validación ahora ocurre antes de llamar a onSubmit
     // Primero, valida el usuario si estamos en modo admin
@@ -160,8 +160,21 @@ export const ReservationDialog = ({
       // --- Clave: Añade el ID de la reserva original si es un reagendamiento ---
       reagendamiento_de_id: isReagendamiento ? penalizedBooking.id : null,
     };
-    onConfirm(reservationData);
-    onOpenChange(false); // Cerrar el diálogo
+
+    // ✅ MEJORADO: Ejecutar confirmación y cerrar con timing controlado
+    try {
+      onConfirm(reservationData);
+      // ✅ CRÍTICO: Usar setTimeout para evitar conflictos de DOM
+      setTimeout(() => {
+        onOpenChange(false);
+      }, 150);
+    } catch (error) {
+      console.error("Error al procesar reserva:", error);
+      // En caso de error, asegurar cierre limpio del diálogo
+      setTimeout(() => {
+        onOpenChange(false);
+      }, 150);
+    }
   };
 
   // --- Crea una función para manejar la selección del usuario ---

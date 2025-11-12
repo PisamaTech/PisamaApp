@@ -48,16 +48,19 @@ export const ConfirmCancelDialog = ({
       : "Renovar Reservas"
     : "Confirmar";
 
-  // ✅ FUNCIÓN CRÍTICA: Manejar confirmación y cerrar inmediatamente
+  // ✅ FUNCIÓN CORREGIDA: Manejar confirmación con mejor timing
   const handleConfirm = useCallback(() => {
-    // Primero cerrar el diálogo de confirmación
+    // Evitar doble clic
+    if (loading) return;
+
+    // Cerrar inmediatamente el diálogo de confirmación
     onOpenChange(false);
 
-    // Luego ejecutar la acción
+    // Ejecutar la acción con un delay mayor para evitar conflictos
     setTimeout(() => {
       onConfirm();
-    }, 100);
-  }, [onOpenChange, onConfirm]);
+    }, 200);
+  }, [onOpenChange, onConfirm, loading]);
 
   // ✅ FUNCIÓN CRÍTICA: Manejar cancelación
   const handleCancel = useCallback(() => {

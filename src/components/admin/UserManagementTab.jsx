@@ -17,14 +17,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal } from "lucide-react";
+import { Edit } from "lucide-react";
 import {
   Pagination,
   PaginationContent,
@@ -81,7 +75,7 @@ const UserManagementTab = () => {
         );
         setUsers(data);
         setTotalUsers(count);
-      } catch (error) {
+      } catch {
         showToast({
           type: "error",
           title: "Error",
@@ -132,7 +126,7 @@ const UserManagementTab = () => {
         title: "Éxito",
         message: "Modalidad de pago actualizada.",
       });
-    } catch (error) {
+    } catch {
       showToast({
         type: "error",
         title: "Error",
@@ -161,15 +155,16 @@ const UserManagementTab = () => {
               <TableHead>Nombre Completo</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Teléfono</TableHead>
+              <TableHead>Profesión</TableHead>
+              <TableHead>Fecha de Ingreso</TableHead>
               <TableHead>Modalidad de Pago</TableHead>
               <TableHead>Rol</TableHead>
-              <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
+                <TableCell colSpan={7} className="h-24 text-center">
                   Cargando...
                 </TableCell>
               </TableRow>
@@ -181,10 +176,25 @@ const UserManagementTab = () => {
                   </TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.phone || "N/A"}</TableCell>
+                  <TableCell>{user.profession || "N/A"}</TableCell>
                   <TableCell>
-                    <Badge variant="outline" className="capitalize">
-                      {user.modalidad_pago}
-                    </Badge>
+                    {new Date(user.created_at).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="capitalize">
+                        {user.modalidad_pago}
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openEditModal(user)}
+                        className="h-8 w-8 p-0 hover:bg-accent"
+                        title="Editar modalidad de pago"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Badge
@@ -194,26 +204,11 @@ const UserManagementTab = () => {
                       {user.role}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => openEditModal(user)}>
-                          Editar Modalidad de Pago
-                        </DropdownMenuItem>
-                        {/* Aquí podrías añadir más acciones futuras */}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
+                <TableCell colSpan={7} className="h-24 text-center">
                   No se encontraron usuarios.
                 </TableCell>
               </TableRow>

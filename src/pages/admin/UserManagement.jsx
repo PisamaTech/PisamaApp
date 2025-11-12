@@ -169,6 +169,8 @@ const UserManagementPage = () => {
               <TableHead>Nombre Completo</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Teléfono</TableHead>
+              <TableHead>Profesión</TableHead>
+              <TableHead>Fecha de Ingreso</TableHead>
               <TableHead>Modalidad de Pago</TableHead>
               <TableHead>Rol</TableHead>
               <TableHead className="text-right">Acciones</TableHead>
@@ -177,7 +179,7 @@ const UserManagementPage = () => {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
+                <TableCell colSpan={8} className="h-24 text-center">
                   Cargando...
                 </TableCell>
               </TableRow>
@@ -189,6 +191,10 @@ const UserManagementPage = () => {
                   </TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.phone || "N/A"}</TableCell>
+                  <TableCell>{user.profession || "N/A"}</TableCell>
+                  <TableCell>
+                    {new Date(user.created_at).toLocaleDateString()}
+                  </TableCell>
                   <TableCell>
                     <Badge variant="outline" className="capitalize">
                       {user.modalidad_pago}
@@ -221,7 +227,7 @@ const UserManagementPage = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
+                <TableCell colSpan={8} className="h-24 text-center">
                   No se encontraron usuarios.
                 </TableCell>
               </TableRow>
