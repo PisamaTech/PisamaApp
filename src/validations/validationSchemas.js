@@ -21,8 +21,11 @@ export const registerSchema = z
     phone: z
       .string()
       .transform((val) => val.replace(/\D/g, "")) // Elimina todo lo que no sea dígito
-      .refine((val) => val.length >= 9 && val.length <= 15, {
-        message: "El teléfono debe tener entre 9 y 15 dígitos.",
+      .refine((val) => val.startsWith("09"), {
+        message: "El teléfono debe comenzar con 09.",
+      })
+      .refine((val) => val.length === 9, {
+        message: "El teléfono debe tener exactamente 9 dígitos.",
       }),
     email: z.string().email({
       message: "Por favor, introduce un email válido.",
@@ -115,12 +118,16 @@ export const profileSchema = z.object({
   lastName: z.string().min(2, "El apellido debe tener al menos 2 caracteres."),
   phone: z
     .string()
-    .min(9, "Por favor, introduce un teléfono válido.")
-    .max(15, "El teléfono no puede tener más de 15 números.")
     .transform((val) => val.replace(/\D/g, "")) // Elimina todo lo que no sea dígito
-    .refine((val) => val.length >= 9 && val.length <= 15, {
-      message: "El teléfono debe tener entre 9 y 15 dígitos.",
+    .refine((val) => val.startsWith("09"), {
+      message: "El teléfono debe comenzar con 09.",
+    })
+    .refine((val) => val.length === 9, {
+      message: "El teléfono debe tener exactamente 9 dígitos.",
     }),
+  profession: z
+    .string()
+    .min(1, { message: "Por favor, introduce tu profesión." }),
 });
 
 export const passwordSchema = z

@@ -37,6 +37,7 @@ export const Perfil = () => {
       firstName: profile?.firstName || "",
       lastName: profile?.lastName || "",
       phone: profile?.phone || "",
+      profession: profile?.profession || "",
     },
   });
 
@@ -57,6 +58,7 @@ export const Perfil = () => {
         firstName: data.firstName.trim(),
         lastName: data.lastName.trim(),
         phone: data.phone.trim(),
+        profession: data.profession.trim(),
       };
       const updatedProfile = await updateUserProfile(
         profile.id,
@@ -68,7 +70,7 @@ export const Perfil = () => {
         title: "Éxito",
         message: "Tu perfil ha sido actualizado.",
       });
-    } catch (error) {
+    } catch {
       showToast({
         type: "error",
         title: "Error",
@@ -89,7 +91,7 @@ export const Perfil = () => {
         message: "Tu contraseña ha sido cambiada.",
       });
       resetPasswordForm(); // Limpia los campos de contraseña
-    } catch (error) {
+    } catch {
       showToast({
         type: "error",
         title: "Error",
@@ -115,9 +117,7 @@ export const Perfil = () => {
       <Card>
         <CardHeader>
           <CardTitle>Datos Personales</CardTitle>
-          <CardDescription>
-            Actualiza tu nombre, apellido y teléfono.
-          </CardDescription>
+          <CardDescription>Actualiza tu información personal.</CardDescription>
         </CardHeader>
         <Separator className="mt-[-4px] mb-4" />
         <CardContent>
@@ -145,14 +145,25 @@ export const Perfil = () => {
                 )}
               </div>
             </div>
-            <div className="space-y-1">
-              <Label htmlFor="phone">Teléfono</Label>
-              <Input id="phone" {...registerProfile("phone")} />
-              {profileErrors.phone && (
-                <p className="text-sm text-red-500">
-                  {profileErrors.phone.message}
-                </p>
-              )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label htmlFor="phone">Teléfono</Label>
+                <Input id="phone" {...registerProfile("phone")} />
+                {profileErrors.phone && (
+                  <p className="text-sm text-red-500">
+                    {profileErrors.phone.message}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="profession">Profesión</Label>
+                <Input id="profession" {...registerProfile("profession")} />
+                {profileErrors.profession && (
+                  <p className="text-sm text-red-500">
+                    {profileErrors.profession.message}
+                  </p>
+                )}
+              </div>
             </div>
             <div className="flex justify-end">
               <Button type="submit" disabled={loading}>
