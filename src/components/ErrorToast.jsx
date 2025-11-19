@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { AlertCircle, CheckCircle2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -16,6 +17,17 @@ export default function ErrorToast() {
   const { isOpen, type, title, message } = toast; // <--- Desestructura las propiedades
 
   const Icon = type === "error" ? AlertCircle : CheckCircle2;
+
+  // ✅ SAFETY: Forzar limpieza de pointer-events al cerrar
+  useEffect(() => {
+    if (!isOpen) {
+      const timer = setTimeout(() => {
+        document.body.style.pointerEvents = "";
+        document.body.style.overflow = ""; // También asegurar scroll
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
 
   //  No renderizar si no está abierto
   if (!isOpen) {

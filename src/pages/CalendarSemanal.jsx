@@ -304,15 +304,16 @@ export const CalendarSemanal = () => {
           isAdminBookingMode={isAdminBookingMode}
         />
       )}
-      {isConfirmDialogOpen && (
-        <ConfirmReservationDialog
-          open={isConfirmDialogOpen}
-          onOpenChange={setIsConfirmDialogOpen}
-          hourlyEvents={hourlyEvents}
-          onConfirm={handleReservation}
-          onCancel={resetReservationState}
-        />
-      )}
+      <ConfirmReservationDialog
+        open={isConfirmDialogOpen}
+        onOpenChange={(isOpen) => {
+          setIsConfirmDialogOpen(isOpen);
+          if (!isOpen) resetReservationState();
+        }}
+        hourlyEvents={hourlyEvents}
+        onConfirm={handleReservation}
+        onCancel={resetReservationState}
+      />
       {isEventDialogOpen && (
         <EventDialog
           open={isEventDialogOpen}

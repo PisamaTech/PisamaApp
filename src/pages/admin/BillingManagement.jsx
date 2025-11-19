@@ -151,7 +151,15 @@ const BillingManagementPage = () => {
       const updatedInvoice = await markInvoiceAsPaid(selectedInvoice.id);
       // Actualizar la factura en la lista local
       setInvoices((prev) =>
-        prev.map((inv) => (inv.id === updatedInvoice.id ? updatedInvoice : inv))
+        prev.map((inv) =>
+          inv.id === updatedInvoice.id
+            ? {
+                ...updatedInvoice,
+                firstName: inv.firstName, // Mantener datos del usuario
+                lastName: inv.lastName, // Mantener datos del usuario
+              }
+            : inv
+        )
       );
       showToast({
         type: "success",
@@ -224,8 +232,9 @@ const BillingManagementPage = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>N° Factura</TableHead>
                 <TableHead>Período</TableHead>
-                <TableHead>Cliente</TableHead>
+                <TableHead>Usuario</TableHead>
                 <TableHead>Monto Total</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead>Fecha de Emisión</TableHead>
@@ -235,13 +244,14 @@ const BillingManagementPage = () => {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
+                  <TableCell colSpan={7} className="h-24 text-center">
                     Cargando...
                   </TableCell>
                 </TableRow>
               ) : invoices.length > 0 ? (
                 invoices.map((invoice) => (
                   <TableRow key={invoice.id}>
+                    <TableCell className="font-medium">{invoice.id}</TableCell>
                     <TableCell>
                       {dayjs(invoice.periodo_inicio).format("DD/MM/YY")} -{" "}
                       {dayjs(invoice.periodo_fin).format("DD/MM/YY")}
@@ -309,7 +319,7 @@ const BillingManagementPage = () => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
+                  <TableCell colSpan={7} className="h-24 text-center">
                     No se encontraron facturas.
                   </TableCell>
                 </TableRow>

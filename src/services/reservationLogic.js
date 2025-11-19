@@ -89,11 +89,13 @@ export const confirmarReserva = async (hourlyEvents) => {
         });
       }
 
-      showToast({
-        type: "success",
-        title: "Reagendamiento Exitoso",
-        message: "La reserva ha sido reagendada correctamente.",
-      });
+      setTimeout(() => {
+        showToast({
+          type: "success",
+          title: "Reagendamiento Exitoso",
+          message: "La reserva ha sido reagendada correctamente.",
+        });
+      }, 500);
       stopReagendamientoMode(); // <-- Clave: Salir del modo reagendamiento
       return modifiedBookings;
     } else {
@@ -107,11 +109,13 @@ export const confirmarReserva = async (hourlyEvents) => {
         addEvent(formattedEvent);
       });
 
-      showToast({
-        type: "success",
-        title: "Confirmado",
-        message: "Las reservas se han guardado correctamente.",
-      });
+      setTimeout(() => {
+        showToast({
+          type: "success",
+          title: "Confirmado",
+          message: "Las reservas se han guardado correctamente.",
+        });
+      }, 500);
       return createdBookings;
     }
   } catch (error) {

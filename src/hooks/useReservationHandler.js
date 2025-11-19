@@ -7,7 +7,7 @@ export const useReservationHandler = (resetReservationState) => {
 
   const handleReservation = useCallback(
     async (hourlyEvents) => {
-      resetReservationState();
+      // resetReservationState(); // REMOVED: Prevent premature unmount
       try {
         startLoading("Confirmando reserva...");
         const result = await confirmarReserva(hourlyEvents);
