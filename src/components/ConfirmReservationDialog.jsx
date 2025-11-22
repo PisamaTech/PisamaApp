@@ -34,16 +34,21 @@ export const ConfirmReservationDialog = ({
       // Ejecutar la confirmación
       await onConfirm(hourlyEvents);
 
-      // Cerrar diálogo con un pequeño delay para evitar conflictos de DOM
-      // Cerrar diálogo inmediatamente
-      onOpenChange(false);
+      // ✅ CRÍTICO: Delay para permitir que React complete actualizaciones del DOM
+      setTimeout(() => {
+        onOpenChange(false);
+      }, 100);
     } catch (error) {
       console.error("Error al confirmar reserva:", error);
       // En caso de error, asegurar que el diálogo se cierre correctamente
-      // En caso de error, asegurar que el diálogo se cierre correctamente
-      onOpenChange(false);
+      setTimeout(() => {
+        onOpenChange(false);
+      }, 100);
     } finally {
-      setIsProcessing(false);
+      // ✅ Delay antes de resetear isProcessing para prevenir doble clic
+      setTimeout(() => {
+        setIsProcessing(false);
+      }, 200);
     }
   }, [isProcessing, onConfirm, hourlyEvents, onOpenChange]);
 

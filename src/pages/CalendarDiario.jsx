@@ -237,6 +237,7 @@ export const CalendarDiario = () => {
         />
       )}
       <ConfirmReservationDialog
+        key={isConfirmDialogOpen ? 'confirm-open' : 'confirm-closed'}
         open={isConfirmDialogOpen}
         onOpenChange={(isOpen) => {
           setIsConfirmDialogOpen(isOpen);

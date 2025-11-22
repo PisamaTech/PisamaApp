@@ -18,6 +18,7 @@ import ReservationsManagement from "./pages/admin/ReservationsManagement";
 import BillingManagement from "./pages/admin/BillingManagement";
 import PricingManagement from "./pages/admin/PricingManagement";
 import Broadcast from "./pages/admin/Broadcast";
+import PerformancePage from "./pages/admin/Performance";
 import { useAuthStore } from "./stores/authStore";
 import { useNotificationStore } from "./stores/notificationStore";
 import LoadingOverlay from "./components/LoadingOverlay";
@@ -95,6 +96,10 @@ function App() {
               <Route
                 path="/admin/dashboard"
                 element={<AdminRouteGuard><AdminDashboard /></AdminRouteGuard>}
+              />
+              <Route
+                path="/admin/performance"
+                element={<AdminRouteGuard><PerformancePage /></AdminRouteGuard>}
               />
               <Route
                 path="/admin/user-management"

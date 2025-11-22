@@ -613,3 +613,119 @@ export const sendNotificationToUsers = async (userIds, notificationData) => {
   }
 };
 
+
+/**
+ * --- SECCIÓN DE RENDIMIENTO ---
+ */
+
+/**
+ * Obtiene estadísticas mensuales de horas (activas, utilizadas, penalizadas).
+ * @param {number} year - Año a consultar.
+ */
+export const fetchMonthlyHoursStats = async (year) => {
+  const { data, error } = await supabase.rpc("get_monthly_hours_stats", {
+    year_input: year,
+  });
+  if (error) throw error;
+  return data || [];
+};
+
+/**
+ * Obtiene estadísticas de tipos de reserva y reagendamientos por mes.
+ * @param {number} year - Año a consultar.
+ */
+export const fetchReservationTypeStats = async (year) => {
+  const { data, error } = await supabase.rpc("get_reservation_type_stats", {
+    year_input: year,
+  });
+  if (error) throw error;
+  return data || [];
+};
+
+/**
+ * Obtiene datos para el mapa de calor (Día vs Hora).
+ * @param {string} startDate - Fecha inicio ISO.
+ * @param {string} endDate - Fecha fin ISO.
+ */
+export const fetchHeatmapData = async (startDate, endDate) => {
+  const { data, error } = await supabase.rpc("get_heatmap_data", {
+    start_date: startDate,
+    end_date: endDate,
+  });
+  if (error) throw error;
+  return data || [];
+};
+
+/**
+ * Obtiene el top de usuarios (VIP).
+ * @param {number} limit - Cantidad de usuarios a traer.
+ */
+export const fetchTopUsers = async (limit = 10) => {
+  const { data, error } = await supabase.rpc("get_top_users_v2", {
+    p_limit: limit,
+  });
+  if (error) throw error;
+  return data || [];
+};
+
+/**
+ * Obtiene KPIs generales (Ticket promedio, Churn, etc.) en un rango.
+ * @param {string} startDate
+ * @param {string} endDate
+ */
+export const fetchKpiStats = async (startDate, endDate) => {
+  const { data, error } = await supabase.rpc("get_kpi_stats", {
+    start_date: startDate,
+    end_date: endDate,
+  });
+  if (error) throw error;
+  return data;
+};
+
+/**
+ * Agregador para la página de Rendimiento.
+ * @param {number} year - Año seleccionado.
+ */
+export const fetchPerformanceData = async (year) => {
+  const startOfYear = dayjs().year(year).startOf("year").toISOString();
+  const endOfYear = dayjs().year(year).endOf("year").toISOString();
+
+  console.log(`Cargando datos de rendimiento para el año ${year}...`);
+
+  const results = await Promise.allSettled([
+    fetchMonthlyHoursStats(year),
+    fetchReservationTypeStats(year),
+    fetchHeatmapData(startOfYear, endOfYear),
+    fetchTopUsers(10),
+    fetchKpiStats(startOfYear, endOfYear),
+  ]);
+
+  const [
+    monthlyHoursRes,
+    reservationTypesRes,
+    heatmapRes,
+    topUsersRes,
+    kpiStatsRes,
+  ] = results;
+
+  return {
+    monthlyHours:
+      monthlyHoursRes.status === "fulfilled" ? monthlyHoursRes.value : [],
+    reservationTypes:
+      reservationTypesRes.status === "fulfilled"
+        ? reservationTypesRes.value
+        : [],
+    heatmap: heatmapRes.status === "fulfilled" ? heatmapRes.value : [],
+    topUsers: topUsersRes.status === "fulfilled" ? topUsersRes.value : [],
+    kpiStats:
+      kpiStatsRes.status === "fulfilled"
+        ? kpiStatsRes.value
+        : {
+            ticket_promedio: 0,
+            tasa_cancelacion: 0,
+            tasa_reagendamiento: 0,
+            total_reservas: 0,
+            ingresos_totales: 0,
+          },
+  };
+};

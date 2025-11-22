@@ -10,6 +10,7 @@ import {
   Users,
   DollarSign,
   Send,
+  TrendingUp,
 } from "lucide-react";
 
 export const menuItems = [
@@ -56,6 +57,11 @@ export const menuItems = [
         title: "Dashboard",
         url: "/admin/dashboard",
         icon: LayoutDashboard,
+      },
+      {
+        title: "Rendimiento",
+        url: "/admin/performance",
+        icon: TrendingUp,
       },
       {
         title: "Usuarios",
