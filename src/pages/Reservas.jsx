@@ -17,7 +17,7 @@ import {
 } from "@/utils/constants";
 
 // --- Importaciones para Date Range Picker ---
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -59,6 +59,37 @@ import camillaIcon from "../assets/massage-table-50.png";
 import { ConfirmCancelDialog } from "@/components/ConfirmEventDialog";
 import { mapReservationToEvent } from "@/utils/calendarUtils";
 import ReservaRow from "@/components/ReservaRow";
+
+// --- Componente para cabeceras de tabla ordenables ---
+function SortableTableHead({
+  label,
+  field,
+  currentSortField,
+  sortDirection,
+  onSort,
+}) {
+  const isActive = currentSortField === field;
+
+  return (
+    <TableHead
+      className="cursor-pointer select-none hover:bg-muted/50 transition-colors"
+      onClick={() => onSort(field)}
+    >
+      <div className="flex items-center gap-1">
+        <span>{label}</span>
+        {isActive ? (
+          sortDirection === "asc" ? (
+            <ArrowUp className="h-4 w-4" />
+          ) : (
+            <ArrowDown className="h-4 w-4" />
+          )
+        ) : (
+          <ArrowUpDown className="h-4 w-4 opacity-50" />
+        )}
+      </div>
+    </TableHead>
+  );
+}
 
 export const Reservas = () => {
   const { profile } = useAuthStore();
@@ -303,6 +334,10 @@ export const Reservas = () => {
   const [totalReservations, setTotalReservations] = useState(0);
   // --- Fin Estados de Paginación ---
 
+  // --- Estados para el ordenamiento ---
+  const [sortField, setSortField] = useState(null);
+  const [sortDirection, setSortDirection] = useState("asc"); // "asc" o "desc"
+
   // Calcula el número total de páginas
   const totalPages = useMemo(
     () => Math.ceil(totalReservations / itemsPerPage),
@@ -334,6 +369,56 @@ export const Reservas = () => {
     setFilters(defaultFiltersState);
     setAppliedFilters(defaultFiltersState);
   };
+
+  // --- Función para manejar el ordenamiento ---
+  const handleSort = (field) => {
+    if (sortField === field) {
+      // Si ya estamos ordenando por este campo, cambiar dirección
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      // Nuevo campo, ordenar ascendente por defecto
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  // --- Aplicar ordenamiento a las reservas ---
+  const sortedReservations = useMemo(() => {
+    if (!sortField) return reservas;
+
+    const sorted = [...reservas].sort((a, b) => {
+      let aValue, bValue;
+
+      switch (sortField) {
+        case "fecha":
+        case "hora":
+          // Ambos ordenan por start_time
+          aValue = new Date(a.start_time);
+          bValue = new Date(b.start_time);
+          break;
+        case "consultorio":
+          aValue = (a.consultorio_nombre || a.consultorio_id || "").toString().toLowerCase();
+          bValue = (b.consultorio_nombre || b.consultorio_id || "").toString().toLowerCase();
+          break;
+        case "tipo":
+          aValue = (a.tipo_reserva || "").toLowerCase();
+          bValue = (b.tipo_reserva || "").toLowerCase();
+          break;
+        case "estado":
+          aValue = (a.estado || "").toLowerCase();
+          bValue = (b.estado || "").toLowerCase();
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
+      if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+
+    return sorted;
+  }, [reservas, sortField, sortDirection]);
 
   // --- Efecto para cargar reservas ---
   useEffect(() => {
@@ -539,17 +624,47 @@ export const Reservas = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Día</TableHead>
-                      <TableHead>Fecha</TableHead>
-                      <TableHead>Hora</TableHead>
-                      <TableHead>Consultorio</TableHead>
-                      <TableHead>Tipo</TableHead>
-                      <TableHead>Estado</TableHead>
+                      <SortableTableHead
+                        label="Fecha"
+                        field="fecha"
+                        currentSortField={sortField}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
+                      <SortableTableHead
+                        label="Hora"
+                        field="hora"
+                        currentSortField={sortField}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
+                      <SortableTableHead
+                        label="Consultorio"
+                        field="consultorio"
+                        currentSortField={sortField}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
+                      <SortableTableHead
+                        label="Tipo"
+                        field="tipo"
+                        currentSortField={sortField}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
+                      <SortableTableHead
+                        label="Estado"
+                        field="estado"
+                        currentSortField={sortField}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
                       <TableHead>Camilla</TableHead>
                       <TableHead>Acciones</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {reservas.map((reserva) => (
+                    {sortedReservations.map((reserva) => (
                       <ReservaRow
                         key={reserva.id}
                         reserva={reserva}
