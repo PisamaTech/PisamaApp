@@ -16,7 +16,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import {
   Pagination,
   PaginationContent,
@@ -66,6 +66,10 @@ const ReservationsManagementPage = () => {
     dateRange: { from: undefined, to: undefined },
   });
   const [appliedFilters, setAppliedFilters] = useState(filters);
+
+  // --- Estados para el ordenamiento ---
+  const [sortField, setSortField] = useState(null);
+  const [sortDirection, setSortDirection] = useState("asc"); // "asc" o "desc"
 
   const totalPages = useMemo(
     () => Math.ceil(totalReservations / itemsPerPage),
@@ -163,6 +167,56 @@ const ReservationsManagementPage = () => {
     setIsEventDialogOpen(true);
   };
 
+  // --- Función para manejar el ordenamiento ---
+  const handleSort = (field) => {
+    if (sortField === field) {
+      // Si ya estamos ordenando por este campo, cambiar dirección
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      // Nuevo campo, ordenar ascendente por defecto
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  // --- Aplicar ordenamiento a las reservas ---
+  const sortedReservations = useMemo(() => {
+    if (!sortField) return reservations;
+
+    const sorted = [...reservations].sort((a, b) => {
+      let aValue, bValue;
+
+      switch (sortField) {
+        case "start_time":
+        case "created_at":
+          aValue = new Date(a[sortField]);
+          bValue = new Date(b[sortField]);
+          break;
+        case "usuario":
+          aValue = `${a.usuario_firstname || ""} ${a.usuario_lastname || ""}`.trim().toLowerCase();
+          bValue = `${b.usuario_firstname || ""} ${b.usuario_lastname || ""}`.trim().toLowerCase();
+          break;
+        case "consultorio":
+          aValue = (a.consultorio_nombre || "").toLowerCase();
+          bValue = (b.consultorio_nombre || "").toLowerCase();
+          break;
+        case "estado":
+        case "tipo_reserva":
+          aValue = (a[sortField] || "").toLowerCase();
+          bValue = (b[sortField] || "").toLowerCase();
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
+      if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+
+    return sorted;
+  }, [reservations, sortField, sortDirection]);
+
   console.log(reservations);
 
   return (
@@ -237,13 +291,49 @@ const ReservationsManagementPage = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Día</TableHead>
-              <TableHead>Fecha y Hora</TableHead>
-              <TableHead>Usuario</TableHead>
-              <TableHead>Consultorio</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead>Tipo</TableHead>
+              <SortableTableHead
+                label="Fecha y Hora"
+                field="start_time"
+                currentSortField={sortField}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+              />
+              <SortableTableHead
+                label="Usuario"
+                field="usuario"
+                currentSortField={sortField}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+              />
+              <SortableTableHead
+                label="Consultorio"
+                field="consultorio"
+                currentSortField={sortField}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+              />
+              <SortableTableHead
+                label="Estado"
+                field="estado"
+                currentSortField={sortField}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+              />
+              <SortableTableHead
+                label="Tipo"
+                field="tipo_reserva"
+                currentSortField={sortField}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+              />
               <TableHead>Camilla</TableHead>
-              <TableHead>Fecha de Creación</TableHead>
+              <SortableTableHead
+                label="Fecha de Creación"
+                field="created_at"
+                currentSortField={sortField}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+              />
               <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
@@ -254,8 +344,8 @@ const ReservationsManagementPage = () => {
                   Cargando reservas...
                 </TableCell>
               </TableRow>
-            ) : reservations.length > 0 ? (
-              reservations.map((reserva) => (
+            ) : sortedReservations.length > 0 ? (
+              sortedReservations.map((reserva) => (
                 <TableRow key={reserva.id}>
                   <TableCell>
                     {dayjs(reserva.start_time)
@@ -370,9 +460,41 @@ const ReservationsManagementPage = () => {
           selectedEvent={selectedEventForDialog}
         />
       )}
+
     </div>
   );
 };
+
+// --- Componente para cabeceras de tabla ordenables ---
+function SortableTableHead({
+  label,
+  field,
+  currentSortField,
+  sortDirection,
+  onSort,
+}) {
+  const isActive = currentSortField === field;
+
+  return (
+    <TableHead
+      className="cursor-pointer select-none hover:bg-muted/50 transition-colors"
+      onClick={() => onSort(field)}
+    >
+      <div className="flex items-center gap-1">
+        <span>{label}</span>
+        {isActive ? (
+          sortDirection === "asc" ? (
+            <ArrowUp className="h-4 w-4" />
+          ) : (
+            <ArrowDown className="h-4 w-4" />
+          )
+        ) : (
+          <ArrowUpDown className="h-4 w-4 opacity-50" />
+        )}
+      </div>
+    </TableHead>
+  );
+}
 
 function DateRangePicker({ date, onDateChange }) {
   return (
