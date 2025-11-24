@@ -533,7 +533,7 @@ export const renewAndValidateSeries = async (oldRecurrenceId, userId) => {
   const { newEvents, newRecurrenceEndDate } = generateRecurringEventsForRenewal(
     baseEventPattern,
     baseEventPattern.recurrence_end_date,
-    2 // Duración fija en meses
+    4 // Duración fija en meses
   );
 
   if (!newEvents || newEvents.length === 0) {
