@@ -33,7 +33,7 @@ export default function Layout() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-12 shrink-0 items-center gap-2 sticky top-0 bg-background z-10 shadow-sm">
+        <header className="flex h-12 shrink-0 items-center gap-2 fixed top-0 w-full bg-background z-50 shadow-sm">
           <div className="flex items-center gap-2 px-2">
             <SidebarTrigger />
             <Separator orientation="vertical" className="mr-2 h-4" />
@@ -67,8 +67,8 @@ export default function Layout() {
           </div>
         </header>
         <div
-          className="relative flex flex-1 flex-col bg-background overflow-auto"
-          style={{ height: "calc(100vh - 48px)" }}
+          className="relative flex flex-1 flex-col bg-background overflow-auto pt-12"
+          style={{ height: "100vh" }}
         >
           <Outlet />
         </div>
