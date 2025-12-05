@@ -5,9 +5,19 @@ import { ReservationStatus } from "@/utils/constants";
 
 dayjs.extend(weekOfYear);
 
-// Mock Supabase functions - before imports
+// Create persistent mocks using vi.hoisted
+const mockFetchEventsFromDatabase = vi.hoisted(() => vi.fn());
+
+const mockUIStore = vi.hoisted(() => ({
+  startLoading: vi.fn(),
+  stopLoading: vi.fn(),
+  setError: vi.fn(),
+  clearError: vi.fn(),
+}));
+
+// Mock Supabase functions
 vi.mock("@/supabase", () => ({
-  fetchEventsFromDatabase: vi.fn(),
+  fetchEventsFromDatabase: mockFetchEventsFromDatabase,
 }));
 
 // Mock calendar utils
@@ -20,21 +30,14 @@ vi.mock("@/utils/calendarUtils", () => ({
   }),
 }));
 
-// Mock UIStore
+// Mock UIStore with persistent mock
 vi.mock("@/stores/uiStore", () => ({
   useUIStore: {
-    getState: vi.fn(() => ({
-      startLoading: vi.fn(),
-      stopLoading: vi.fn(),
-      setError: vi.fn(),
-      clearError: vi.fn(),
-    })),
+    getState: () => mockUIStore,
   },
 }));
 
 import { useEventStore } from "../calendarStore";
-import { fetchEventsFromDatabase } from "@/supabase";
-import { useUIStore } from "@/stores/uiStore";
 
 describe("calendarStore", () => {
   beforeEach(() => {
@@ -44,8 +47,9 @@ describe("calendarStore", () => {
       loadedWeeksOfYear: [],
     });
 
-    // Clear all mocks
-    vi.clearAllMocks();
+    // Clear all mock calls
+    mockFetchEventsFromDatabase.mockClear();
+    Object.values(mockUIStore).forEach(fn => fn.mockClear());
   });
 
   describe("fetchEventsByWeek", () => {
@@ -67,7 +71,7 @@ describe("calendarStore", () => {
         },
       ];
 
-      fetchEventsFromDatabase.mockResolvedValue(mockReservations);
+      mockFetchEventsFromDatabase.mockResolvedValue(mockReservations);
 
       const { fetchEventsByWeek } = useEventStore.getState();
       const result = await fetchEventsByWeek(10, 2025);
@@ -80,10 +84,9 @@ describe("calendarStore", () => {
       expect(state.events).toHaveLength(2);
       expect(state.loadedWeeksOfYear).toContain(10);
 
-      const uiStore = useUIStore.getState();
-      expect(uiStore.startLoading).toHaveBeenCalledWith("Cargando eventos...");
-      expect(uiStore.stopLoading).toHaveBeenCalled();
-      expect(uiStore.clearError).toHaveBeenCalled();
+      expect(mockUIStore.startLoading).toHaveBeenCalledWith("Cargando eventos...");
+      expect(mockUIStore.stopLoading).toHaveBeenCalled();
+      expect(mockUIStore.clearError).toHaveBeenCalled();
     });
 
     it("should not fetch already loaded week", async () => {
@@ -96,9 +99,8 @@ describe("calendarStore", () => {
       const { fetchEventsByWeek } = useEventStore.getState();
       await fetchEventsByWeek(10, 2025);
 
-      expect(fetchEventsFromDatabase).not.toHaveBeenCalled();
-      const uiStore = useUIStore.getState();
-      expect(uiStore.startLoading).not.toHaveBeenCalled();
+      expect(mockFetchEventsFromDatabase).not.toHaveBeenCalled();
+      expect(mockUIStore.startLoading).not.toHaveBeenCalled();
     });
 
     it("should filter out duplicate events", async () => {
@@ -130,7 +132,7 @@ describe("calendarStore", () => {
         },
       ];
 
-      fetchEventsFromDatabase.mockResolvedValue(mockReservations);
+      mockFetchEventsFromDatabase.mockResolvedValue(mockReservations);
 
       const { fetchEventsByWeek } = useEventStore.getState();
       await fetchEventsByWeek(11, 2025);
@@ -143,15 +145,14 @@ describe("calendarStore", () => {
 
     it("should handle fetch error", async () => {
       const mockError = new Error("Database connection failed");
-      fetchEventsFromDatabase.mockRejectedValue(mockError);
+      mockFetchEventsFromDatabase.mockRejectedValue(mockError);
 
       const { fetchEventsByWeek } = useEventStore.getState();
       const result = await fetchEventsByWeek(12, 2025);
 
       expect(result).toBeNull();
-      const uiStore = useUIStore.getState();
-      expect(uiStore.setError).toHaveBeenCalledWith(mockError);
-      expect(uiStore.stopLoading).toHaveBeenCalled();
+      expect(mockUIStore.setError).toHaveBeenCalledWith(mockError);
+      expect(mockUIStore.stopLoading).toHaveBeenCalled();
     });
   });
 
@@ -178,7 +179,7 @@ describe("calendarStore", () => {
         },
       ];
 
-      fetchEventsFromDatabase.mockResolvedValue(mockReservations);
+      mockFetchEventsFromDatabase.mockResolvedValue(mockReservations);
 
       const { loadInitialEvents } = useEventStore.getState();
       const result = await loadInitialEvents();
@@ -195,22 +196,20 @@ describe("calendarStore", () => {
       expect(state.loadedWeeksOfYear).toContain(currentWeek - 1);
       expect(state.loadedWeeksOfYear).toContain(currentWeek + 1);
 
-      const uiStore = useUIStore.getState();
-      expect(uiStore.startLoading).toHaveBeenCalledWith("Cargando eventos...");
-      expect(uiStore.stopLoading).toHaveBeenCalled();
+      expect(mockUIStore.startLoading).toHaveBeenCalledWith("Cargando eventos...");
+      expect(mockUIStore.stopLoading).toHaveBeenCalled();
     });
 
     it("should handle error during initial load", async () => {
       const mockError = new Error("Failed to load");
-      fetchEventsFromDatabase.mockRejectedValue(mockError);
+      mockFetchEventsFromDatabase.mockRejectedValue(mockError);
 
       const { loadInitialEvents } = useEventStore.getState();
       const result = await loadInitialEvents();
 
       expect(result).toBeNull();
-      const uiStore = useUIStore.getState();
-      expect(uiStore.setError).toHaveBeenCalledWith(mockError);
-      expect(uiStore.stopLoading).toHaveBeenCalled();
+      expect(mockUIStore.setError).toHaveBeenCalledWith(mockError);
+      expect(mockUIStore.stopLoading).toHaveBeenCalled();
     });
   });
 
@@ -228,8 +227,7 @@ describe("calendarStore", () => {
       expect(state.events).toEqual([]);
       expect(state.loadedWeeksOfYear).toEqual([]);
 
-      const uiStore = useUIStore.getState();
-      expect(uiStore.clearError).toHaveBeenCalled();
+      expect(mockUIStore.clearError).toHaveBeenCalled();
     });
   });
 
