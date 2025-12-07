@@ -99,33 +99,52 @@ Este documento contiene un plan detallado de mejoras prioritizadas para PisamaAp
   - consultorios: 4 políticas (SELECT public + CRUD admin)
 - ⚠️ **PENDIENTE**: Aplicar migración en Supabase Dashboard
 
-### 3. Manejo de Errores Consistente
+### 3. Manejo de Errores Consistente ✅ SISTEMA IMPLEMENTADO
 **Impacto**: Alto | **Esfuerzo**: Medio | **Sprint**: 1
 
-- [ ] Implementar servicio de logging centralizado:
-  - [ ] Evaluar opciones: Sentry, LogRocket, o custom
-  - [ ] Instalar SDK elegido
-  - [ ] Configurar sourcemaps para production
-  - [ ] Configurar user context (id, email, role)
-- [ ] Crear custom error types:
-  - [ ] `AuthError`
-  - [ ] `ValidationError`
-  - [ ] `BookingConflictError`
-  - [ ] `NetworkError`
-- [ ] Implementar Error Boundaries:
-  - [ ] Error boundary global en `App.jsx`
-  - [ ] Error boundary para rutas admin
-  - [ ] Error boundary para calendario
-  - [ ] Página de fallback personalizada
+- [x] Implementar servicio de logging centralizado:
+  - [x] Logger service custom con niveles (debug, info, warn, error)
+  - [x] Métodos especializados: api(), userAction(), performance()
+  - [x] Soporte para servicios externos (Sentry, LogRocket) - ready
+  - [x] Configurar user context (id, email, role) - automático en App.jsx
+- [x] Crear custom error types:
+  - [x] `AuthError` - autenticación/autorización
+  - [x] `ValidationError` - validación de formularios
+  - [x] `BookingConflictError` - conflictos de reservas
+  - [x] `NetworkError` - errores de red/API
+  - [x] `DatabaseError` - errores de Supabase
+  - [x] `NotFoundError` - recursos no encontrados
+  - [x] `PermissionError` - permisos denegados
+  - [x] Helper `normalizeError()` para convertir errores
+- [x] Implementar Error Boundaries:
+  - [x] Error boundary global en `App.jsx`
+  - [x] Error boundary para rutas admin (AdminErrorBoundary)
+  - [x] Error boundary para calendario (CalendarErrorBoundary)
+  - [x] Páginas de fallback personalizadas con UI/UX
+  - [x] HOC `withErrorBoundary()` para envolver componentes
+- [x] Configurar ESLint:
+  - [x] Agregar ESLint rule: `no-console: warn`
+- [x] Documentación completa:
+  - [x] `docs/ERROR_HANDLING_GUIDE.md` (400+ líneas)
+  - [x] Ejemplos de uso para todos los casos
+  - [x] Buenas prácticas y checklist de migración
 - [ ] Agregar `finally` blocks en operaciones async:
-  - [ ] Revisar todos los `startLoading()` sin `stopLoading()` en finally
+  - [ ] Revisar todos los `startLoading()` sin `stopLoading()` en finally (~47 casos)
   - [ ] `ReservationDialog.jsx` - handlers de submit
   - [ ] `UserManagement.jsx` - operaciones CRUD
   - [ ] `BillingManagement.jsx` - actualización de facturas
-- [ ] Reemplazar `console.log` (74 encontrados):
-  - [ ] Usar logger service en desarrollo
-  - [ ] Remover logs de producción
-  - [ ] Agregar ESLint rule: `no-console: warn`
+- [ ] Migrar console.log a logger (75 ocurrencias en 27 archivos):
+  - [ ] Services: usar logger en lugar de console
+  - [ ] Components: usar logger en lugar de console
+  - [ ] Stores: usar logger en lugar de console
+
+**Implementación:**
+- ✅ Custom Errors: `src/errors/AppError.js` (8 tipos de error + helpers)
+- ✅ Logger Service: `src/services/logger/logger.js` (logger singleton)
+- ✅ Error Boundaries: `src/components/ErrorBoundary.jsx` + especializados
+- ✅ ESLint: Regla `no-console` configurada en `eslint.config.js`
+- ✅ Guía completa: `docs/ERROR_HANDLING_GUIDE.md`
+- ⚠️ **PENDIENTE**: Refactorizar código existente para usar el nuevo sistema
 
 ### 4. Fix Store Anti-Pattern
 **Impacto**: Alto | **Esfuerzo**: Medio | **Sprint**: 1
