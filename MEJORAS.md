@@ -44,8 +44,8 @@ Este documento contiene un plan detallado de mejoras prioritizadas para PisamaAp
 - [x] Configurar coverage mínimo (objetivo: 70%+)
 
 **Resultados actuales:**
-- ✅ **92 tests totales - 78 pasando (85% success rate)**
-- ✅ 14 tests con issues de mocking (a refinar)
+- ✅ **92 tests totales - 92 pasando (100% success rate)**
+- ✅ Issues de mocking corregidos con vi.hoisted()
 - ✅ Coverage configurado con threshold de 70%
 - ✅ Scripts: `npm test`, `npm run test:watch`, `npm run test:ui`, `npm run test:coverage`
 
@@ -54,18 +54,23 @@ Este documento contiene un plan detallado de mejoras prioritizadas para PisamaAp
 - ✅ 13 tests de utils/calendarUtils (100% passing)
 - ✅ 17 tests de uiStore (100% passing)
 - ✅ 6 tests de AdminRouteGuard (100% passing)
-- ⚠️ 11 tests de authStore (algunos errores de mocking)
-- ⚠️ 14 tests de calendarStore (algunos errores de mocking)
-- ⚠️ 6 tests de cancelBooking (archivo eliminado temporalmente por complejidad)
+- ✅ 13 tests de authStore (100% passing - mocking refinado)
+- ✅ 18 tests de calendarStore (100% passing - mocking refinado)
+- ⚠️ 0 tests de cancelBooking (pendiente - complejidad alta)
 
-### 2. Seguridad - Autorización Server-Side
+### 2. Seguridad - Autorización Server-Side ✅ RLS IMPLEMENTADO
 **Impacto**: Alto | **Esfuerzo**: Medio | **Sprint**: 1
 
-- [ ] Implementar Row Level Security (RLS) en Supabase:
-  - [ ] Política RLS para `reservas` (usuarios solo ven sus reservas)
-  - [ ] Política RLS para `facturas` (usuarios solo ven sus facturas)
-  - [ ] Política RLS para `user_profiles` (solo admin puede modificar roles)
-  - [ ] Política RLS para `notificaciones`
+- [x] Implementar Row Level Security (RLS) en Supabase:
+  - [x] Política RLS para `reservas` (usuarios solo ven sus reservas)
+  - [x] Política RLS para `facturas` (usuarios solo ven sus facturas)
+  - [x] Política RLS para `user_profiles` (solo admin puede modificar roles)
+  - [x] Política RLS para `notificaciones` (cola_envios)
+  - [x] Política RLS para `detalles_factura`
+  - [x] Política RLS para `preferencias_notificaciones`
+  - [x] Política RLS para `consultorios` (lectura pública, admin escritura)
+  - [x] Crear índices para optimizar políticas RLS
+  - [x] Documentar políticas y casos de uso
 - [ ] Validar rol admin en RPCs:
   - [ ] `admin_forgive_penalties` - verificar rol antes de ejecutar
   - [ ] `cancel_recurring_series_with_penalty` - verificar ownership
@@ -79,6 +84,20 @@ Este documento contiene un plan detallado de mejoras prioritizadas para PisamaAp
   - [ ] Revisar todos los `supabase.from()` calls
   - [ ] Verificar que datos sensibles no se exponen
   - [ ] Validar inputs en todos los RPCs
+
+**Implementación RLS:**
+- ✅ Migración SQL: `supabase/migrations/001_enable_row_level_security.sql`
+- ✅ Documentación: `supabase/migrations/README.md`
+- ✅ Tests de verificación: `supabase/migrations/test_rls_policies.sql`
+- ✅ Políticas por tabla:
+  - user_profiles: 5 políticas (SELECT, UPDATE por usuario + admin)
+  - reservas: 7 políticas (CRUD por usuario + admin)
+  - facturas: 5 políticas (SELECT usuario + CRUD admin)
+  - detalles_factura: 5 políticas (SELECT usuario + CRUD admin)
+  - cola_envios: 5 políticas (SELECT/UPDATE usuario + admin)
+  - preferencias_notificaciones: 4 políticas (CRUD usuario + SELECT admin)
+  - consultorios: 4 políticas (SELECT public + CRUD admin)
+- ⚠️ **PENDIENTE**: Aplicar migración en Supabase Dashboard
 
 ### 3. Manejo de Errores Consistente
 **Impacto**: Alto | **Esfuerzo**: Medio | **Sprint**: 1
