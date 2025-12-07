@@ -33,6 +33,8 @@ export default [
         'warn',
         { allowConstantExport: true },
       ],
+      // Warn about console usage - should use logger service instead
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
     },
   },
 ]

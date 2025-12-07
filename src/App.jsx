@@ -29,6 +29,9 @@ import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import AdminRouteGuard from "./components/AdminRouteGuard";
 import Ayuda from "./pages/Ayuda";
+import ErrorBoundary from "./components/ErrorBoundary";
+import { AdminErrorBoundary } from "./components/AdminErrorBoundary";
+import { logger } from "@/services/logger";
 
 function App() {
   const { user, checkSession } = useAuthStore();
@@ -41,6 +44,19 @@ function App() {
   useEffect(() => {
     checkSession();
   }, [checkSession]);
+
+  // Configure logger context when user changes
+  useEffect(() => {
+    if (user?.id) {
+      logger.setContext({
+        userId: user.id,
+        userEmail: user.email,
+        userRole: user.role,
+      });
+    } else {
+      logger.clearContext();
+    }
+  }, [user]);
 
   // --- Nuevo useEffect para gestionar el ciclo de vida del notificationStore ---
   useEffect(() => {
@@ -56,17 +72,18 @@ function App() {
   }, [clearNotifications, initializeNotifications, user?.id]);
 
   return (
-    <BrowserRouter>
-      {/* Componentes globales que se muestran en toda la aplicación */}
-      <LoadingOverlay />
-      <ErrorToast
-        type={toast?.type}
-        title={toast?.title}
-        message={toast?.message}
-        isOpen={toast?.isOpen}
-        onClose={hideToast}
-      />
-      <Routes>
+    <ErrorBoundary name="AppRoot">
+      <BrowserRouter>
+        {/* Componentes globales que se muestran en toda la aplicación */}
+        <LoadingOverlay />
+        <ErrorToast
+          type={toast?.type}
+          title={toast?.title}
+          message={toast?.message}
+          isOpen={toast?.isOpen}
+          onClose={hideToast}
+        />
+        <Routes>
         {user ? (
           // Rutas para usuario autenticado
           <>
@@ -95,31 +112,73 @@ function App() {
               />
               <Route
                 path="/admin/dashboard"
-                element={<AdminRouteGuard><AdminDashboard /></AdminRouteGuard>}
+                element={
+                  <AdminRouteGuard>
+                    <AdminErrorBoundary>
+                      <AdminDashboard />
+                    </AdminErrorBoundary>
+                  </AdminRouteGuard>
+                }
               />
               <Route
                 path="/admin/performance"
-                element={<AdminRouteGuard><PerformancePage /></AdminRouteGuard>}
+                element={
+                  <AdminRouteGuard>
+                    <AdminErrorBoundary>
+                      <PerformancePage />
+                    </AdminErrorBoundary>
+                  </AdminRouteGuard>
+                }
               />
               <Route
                 path="/admin/user-management"
-                element={<AdminRouteGuard><UserManagement /></AdminRouteGuard>}
+                element={
+                  <AdminRouteGuard>
+                    <AdminErrorBoundary>
+                      <UserManagement />
+                    </AdminErrorBoundary>
+                  </AdminRouteGuard>
+                }
               />
               <Route
                 path="/admin/reservations-management"
-                element={<AdminRouteGuard><ReservationsManagement /></AdminRouteGuard>}
+                element={
+                  <AdminRouteGuard>
+                    <AdminErrorBoundary>
+                      <ReservationsManagement />
+                    </AdminErrorBoundary>
+                  </AdminRouteGuard>
+                }
               />
               <Route
                 path="/admin/billing-management"
-                element={<AdminRouteGuard><BillingManagement /></AdminRouteGuard>}
+                element={
+                  <AdminRouteGuard>
+                    <AdminErrorBoundary>
+                      <BillingManagement />
+                    </AdminErrorBoundary>
+                  </AdminRouteGuard>
+                }
               />
               <Route
                 path="/admin/pricing-management"
-                element={<AdminRouteGuard><PricingManagement /></AdminRouteGuard>}
+                element={
+                  <AdminRouteGuard>
+                    <AdminErrorBoundary>
+                      <PricingManagement />
+                    </AdminErrorBoundary>
+                  </AdminRouteGuard>
+                }
               />
               <Route
                 path="/admin/broadcast"
-                element={<AdminRouteGuard><Broadcast /></AdminRouteGuard>}
+                element={
+                  <AdminRouteGuard>
+                    <AdminErrorBoundary>
+                      <Broadcast />
+                    </AdminErrorBoundary>
+                  </AdminRouteGuard>
+                }
               />
               <Route path="perfil" element={<Perfil />} />
               <Route path="ayuda" element={<Ayuda />} />
@@ -138,8 +197,9 @@ function App() {
             <Route path="*" element={<Error404 />} />
           </>
         )}
-      </Routes>
-    </BrowserRouter>
+        </Routes>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 
