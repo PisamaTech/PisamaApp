@@ -19,7 +19,8 @@ export const useEventStore = create((set, get) => ({
       useUIStore.getState(); // Obtiene funciones de UIStore
 
     // Optimización: Evitar cargar la misma semana repetidamente
-    if (get().loadedWeeksOfYear.includes(weekOfYearToLoad)) {
+    const weekKey = `${yearToLoad}-${weekOfYearToLoad}`;
+    if (get().loadedWeeksOfYear.includes(weekKey)) {
       return;
     }
 
@@ -54,7 +55,7 @@ export const useEventStore = create((set, get) => ({
 
       set((state) => ({
         events: [...state.events, ...formattedEvents],
-        loadedWeeksOfYear: [...state.loadedWeeksOfYear, weekOfYearToLoad], // Guarda la semana cargada
+        loadedWeeksOfYear: [...state.loadedWeeksOfYear, weekKey], // Guarda la semana cargada
       }));
       stopLoading(); // Detiene el loading global de UIStore
       return formattedEvents;
@@ -68,31 +69,39 @@ export const useEventStore = create((set, get) => ({
       return null;
     }
   },
-
   // Función para carga inicial: carga varias semanas alrededor de la semana actual
   loadInitialEvents: async () => {
     const { startLoading, stopLoading, setError, clearError } =
       useUIStore.getState(); // Obtiene funciones de UIStore
 
-    const currentWeekOfYear = dayjs().week();
-    const currentYear = dayjs().year();
+    const now = dayjs();
+    const currentWeekOfYear = now.week();
+    const currentCalendarYear = now.year();
+    const currentMonth = now.month();
+
+    // Calcular el "Año de la Semana" (ISO Week Year aproximado)
+    let yearForWeek = currentCalendarYear;
+    if (currentWeekOfYear === 1 && currentMonth === 11) {
+      yearForWeek = yearForWeek + 1;
+    } else if (currentWeekOfYear >= 52 && currentMonth === 0) {
+      yearForWeek = yearForWeek - 1;
+    }
 
     // Calcula la fecha de inicio de la semana previa
     const initialStartDate = dayjs()
-      .year(currentYear)
+      .year(yearForWeek)
       .week(currentWeekOfYear - 1)
       .startOf("week")
       .toDate();
     // Calcula la fecha de fin de la semana siguiente
     const initialEndDate = dayjs()
-      .year(currentYear)
+      .year(yearForWeek)
       .week(currentWeekOfYear + 1)
       .endOf("week")
       .toDate();
 
-    startLoading("Cargando eventos..."); // Inicia el loading global de UIStore
-    clearError(); // Limpia cualquier error previo en UIStore
-
+    startLoading("Cargando eventos..."); 
+    clearError();
     try {
       const fetchedReservations = await fetchEventsFromDatabase(
         initialStartDate,
@@ -100,21 +109,39 @@ export const useEventStore = create((set, get) => ({
       );
       const formattedEvents = fetchedReservations.map(mapReservationToEvent);
 
-      const weeksOfYearToLoad = [
+      const weeksToLoad = [
         currentWeekOfYear,
         currentWeekOfYear + 1,
         currentWeekOfYear - 1,
       ];
 
+      const loadedKeys = weeksToLoad.map((w) => {
+        const d = dayjs().year(yearForWeek).week(w);
+        
+        // Notar: si w es, por ejemplo, 53 de año anterior, dayjs(year).week(53) puede ser correcto.
+        // Pero usamos la misma logica de deteccion de año:
+        let valYear = d.year();
+        const valWeek = d.week();
+
+        // Aplicamos la misma corrección ISO para la key
+        if (valWeek === 1 && d.month() === 11) {
+          valYear = valYear + 1;
+        } else if (valWeek >= 52 && d.month() === 0) {
+          valYear = valYear - 1;
+        }
+
+        return `${valYear}-${valWeek}`;
+      });
+
       set((state) => ({
         events: [...state.events, ...formattedEvents],
-        loadedWeeksOfYear: [...state.loadedWeeksOfYear, ...weeksOfYearToLoad], // Guarda la semana cargada
+        loadedWeeksOfYear: [...state.loadedWeeksOfYear, ...loadedKeys], 
       }));
-      stopLoading(); // Detiene el loading global de UIStore
+      stopLoading(); 
       return formattedEvents;
     } catch (error) {
-      setError(error); // Setea el error en UIStore
-      stopLoading(); // Detiene el loading global de UIStore (incluso en caso de error)
+      setError(error); 
+      stopLoading(); 
       return null;
     }
   },

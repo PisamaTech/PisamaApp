@@ -46,8 +46,21 @@ export const mapEventsToReservations = (hourlyEvents) => {
 //Maneja la navegación en el calendario
 export const handleNavigate = (newDate, setCurrentDate) => {
   setCurrentDate(newDate);
-  const weekOfYearToLoad = dayjs(newDate).week();
-  const yearToLoad = dayjs(newDate).year();
+  const d = dayjs(newDate);
+  const weekOfYearToLoad = d.week();
+  let yearToLoad = d.year();
+  const month = d.month();
+
+  // Ajuste para el cambio de año (Semana ISO)
+  // Si es semana 1 pero el mes es Diciembre, pertenece al año siguiente
+  if (weekOfYearToLoad === 1 && month === 11) {
+    yearToLoad = yearToLoad + 1;
+  }
+  // Si es semana 52 o 53 pero el mes es Enero, pertenece al año anterior
+  else if (weekOfYearToLoad >= 52 && month === 0) {
+    yearToLoad = yearToLoad - 1;
+  }
+
   useEventStore.getState().fetchEventsByWeek(weekOfYearToLoad, yearToLoad); // Carga eventos de esa semana
 };
 
