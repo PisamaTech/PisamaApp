@@ -201,20 +201,22 @@ const BillingManagementPage = () => {
         </div>
         <Separator />
         {/* Filtros */}
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col md:flex-row items-center gap-4">
           {/* Filtro de Usuario (Combobox) */}
-          <UserCombobox
-            users={allUsers}
-            selectedUserId={filters.userId}
-            onSelect={(id) => handleFilterChange("userId", id)}
-          />
+          <div className="w-full md:w-auto">
+            <UserCombobox
+              users={allUsers}
+              selectedUserId={filters.userId}
+              onSelect={(id) => handleFilterChange("userId", id)}
+            />
+          </div>
 
           {/* Filtro de Estado */}
           <Select
             value={filters.status}
             onValueChange={(value) => handleFilterChange("status", value)}
           >
-            <SelectTrigger className="w-1/4">
+            <SelectTrigger className="w-full md:w-[200px]">
               <SelectValue placeholder="Filtrar por estado" />
             </SelectTrigger>
             <SelectContent>
@@ -224,11 +226,13 @@ const BillingManagementPage = () => {
             </SelectContent>
           </Select>
 
-          <Button onClick={handleApplyFilters}>Buscar</Button>
+          <Button onClick={handleApplyFilters} className="w-full md:w-auto">
+            Buscar
+          </Button>
         </div>
 
-        {/* Tabla de Facturas */}
-        <div className="border rounded-md">
+        {/* Tabla de Facturas (Desktop) */}
+        <div className="hidden md:block border rounded-md">
           <Table>
             <TableHeader>
               <TableRow>
@@ -326,6 +330,80 @@ const BillingManagementPage = () => {
               )}
             </TableBody>
           </Table>
+        </div>
+
+        {/* Vista Móvil (Tarjetas) */}
+        <div className="md:hidden space-y-4">
+          {loading ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Cargando...
+            </div>
+          ) : invoices.length > 0 ? (
+            invoices.map((invoice) => (
+              <div
+                key={invoice.id}
+                className="border rounded-lg p-4 space-y-3 shadow-sm bg-card text-card-foreground"
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-semibold">
+                      #{invoice.id}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {dayjs(invoice.periodo_inicio).format("DD/MM/YY")} -{" "}
+                      {dayjs(invoice.periodo_fin).format("DD/MM/YY")}
+                    </p>
+                  </div>
+                  <Badge
+                    variant={getStatusVariant(invoice.estado)}
+                    className="capitalize shrink-0"
+                  >
+                    {invoice.estado}
+                  </Badge>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="font-medium text-sm">
+                    {`${invoice.firstName || ""} ${
+                      invoice.lastName || ""
+                    }`.trim() || "Usuario no encontrado"}
+                  </p>
+                  <p className="text-lg font-bold">
+                    ${invoice.monto_total.toLocaleString("es-UY")}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Emitida: {dayjs(invoice.fecha_emision).format("DD/MM/YYYY")}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2 border-t mt-2">
+                   {invoice.estado === "pendiente" && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openConfirmationDialog(invoice)}
+                        className="text-green-600 hover:text-green-700 bg-green-50/50 border-green-200"
+                      >
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Marcar Pagada
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/facturas/${invoice.id}`)}
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      Ver Detalle
+                    </Button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-8 text-muted-foreground border rounded-lg">
+              No se encontraron facturas.
+            </div>
+          )}
         </div>
 
         {/* Paginación */}
