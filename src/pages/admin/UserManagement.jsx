@@ -152,11 +152,12 @@ const UserManagementPage = () => {
           placeholder="Buscar por nombre, apellido o email..."
           value={searchTerm}
           onChange={handleSearchChange}
-          className="max-w-sm"
+          className="w-full md:max-w-sm"
         />
       </div>
 
-      <div className="border rounded-md">
+      {/* Vista de Escritorio (Tabla) */}
+      <div className="hidden md:block border rounded-md">
         <Table>
           <TableHeader>
             <TableRow>
@@ -223,6 +224,80 @@ const UserManagementPage = () => {
             )}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Vista Móvil (Tarjetas) */}
+      <div className="md:hidden space-y-4">
+        {loading ? (
+          <div className="text-center py-8 text-muted-foreground">
+            Cargando...
+          </div>
+        ) : users.length > 0 ? (
+          users.map((user) => (
+            <div
+              key={user.id}
+              className="border rounded-lg p-4 space-y-3 shadow-sm bg-card text-card-foreground"
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-semibold">
+                    {user.firstName} {user.lastName}
+                  </h3>
+                  <p className="text-sm text-muted-foreground break-all">
+                    {user.email}
+                  </p>
+                </div>
+                <Badge
+                  variant={user.role === "admin" ? "default" : "secondary"}
+                  className="capitalize shrink-0 ml-2"
+                >
+                  {user.role}
+                </Badge>
+              </div>
+
+              <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-sm">
+                <div>
+                  <p className="text-muted-foreground text-xs">Teléfono</p>
+                  <p className="truncate">{user.phone || "N/A"}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs">Profesión</p>
+                  <p className="truncate">{user.profession || "N/A"}</p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-muted-foreground text-xs">
+                    Fecha de Ingreso
+                  </p>
+                  <p>{new Date(user.created_at).toLocaleDateString()}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-3 border-t mt-2">
+                <div>
+                  <p className="text-muted-foreground text-xs mb-1">
+                    Modalidad Pago
+                  </p>
+                  <Badge variant="outline" className="capitalize">
+                    {user.modalidad_pago}
+                  </Badge>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => openEditModal(user)}
+                  className="h-8"
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Editar
+                </Button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="text-center py-8 text-muted-foreground border rounded-lg">
+            No se encontraron usuarios.
+          </div>
+        )}
       </div>
 
       {/* Paginación */}
