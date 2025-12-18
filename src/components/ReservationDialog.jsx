@@ -186,11 +186,17 @@ export const ReservationDialog = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
+    <Dialog open={open} onOpenChange={onOpenChange} modal={true}>
       <DialogContent
         ref={dialogRef}
         tabIndex={-1}
         className="max-h-full overflow-y-auto max-w-[95vw] sm:max-w-[600px]"
+        onPointerDownOutside={(e) => {
+          e.preventDefault();
+        }}
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
       >
         <DialogHeader>
           <DialogTitle className="mb-3">
