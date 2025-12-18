@@ -75,7 +75,7 @@ export const ConfirmCancelDialog = ({
       modal={true}
     >
       <DialogContent
-        className="max-w-md"
+        className="max-w-[95vw] sm:max-w-md"
         // ✅ CRÍTICO: Prevenir cierre durante operación
         onPointerDownOutside={(e) => {
           if (loading) {
@@ -90,7 +90,7 @@ export const ConfirmCancelDialog = ({
       >
         <DialogHeader>
           <DialogTitle
-            className={`flex items-center gap-2 ${
+            className={`flex items-center gap-2 text-base sm:text-lg ${
               isCancelAction
                 ? "text-red-600"
                 : isRenewAction
@@ -104,23 +104,25 @@ export const ConfirmCancelDialog = ({
         </DialogHeader>
         <Separator />
         <DialogDescription />
-        <div className="space-y-8">
-          <div className="text-gray-600">{message.message}</div>
+        <div className="space-y-6 sm:space-y-8">
+          <div className="text-gray-600 text-xs sm:text-sm">{message.message}</div>
           <DialogFooter>
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={handleCancel}
-                disabled={loading}
-              >
-                Volver
-              </Button>
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full">
               <Button
                 variant={buttonVariant}
                 onClick={handleConfirm}
                 disabled={loading}
+                className="text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-auto"
               >
                 {confirmButtonText}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleCancel}
+                disabled={loading}
+                className="text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-auto"
+              >
+                Volver
               </Button>
             </div>
           </DialogFooter>
