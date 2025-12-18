@@ -431,7 +431,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
         <DialogContent
           ref={dialogRef}
           tabIndex={-1}
-          className="max-h-full overflow-y-auto"
+          className="max-h-full overflow-y-auto max-w-[95vw] sm:max-w-[600px]"
           // ✅ CRÍTICO: Prevenir cierre durante loading para mostrar el LoadingOverlay
           onPointerDownOutside={(e) => {
             if (loading) {
@@ -446,65 +446,69 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
         >
           <DialogHeader>
             <DialogTitle className="mb-3">
-              <div className="flex gap-3">
-                <CalendarClock size={20} /> Datos de la reserva
+              <div className="flex gap-2 sm:gap-3 items-center">
+                <CalendarClock size={18} className="sm:w-5 sm:h-5" />
+                <span className="text-base sm:text-lg">Datos de la reserva</span>
               </div>
             </DialogTitle>
             <Separator />
           </DialogHeader>
-          <DialogDescription>
+          <DialogDescription className="text-xs sm:text-sm">
             Aquí puede ver los detalles de la reserva seleccionada. <br />
             Si la reserva es tuya y está activa, podrás cancelarla.
           </DialogDescription>
 
-          <div className="space-y-2">
+          <div className="space-y-2 sm:space-y-3">
             {/* Campos del formulario - mantienen el mismo contenido */}
-            <div className="flex justify-between gap-4">
-              <div className="space-y-2 w-full">
-                <Label htmlFor="titular">Titular de la reserva</Label>
+            <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4">
+              <div className="space-y-1 sm:space-y-2 w-full">
+                <Label htmlFor="titular" className="text-xs sm:text-sm">Titular de la reserva</Label>
                 <Input
                   id="titular"
                   type="text"
                   value={selectedEvent.titulo || "N/A"}
                   disabled
+                  className="text-xs sm:text-sm h-8 sm:h-10"
                 />
               </div>
-              <div className="space-y-2 w-full">
-                <Label htmlFor="resourceId">Consultorio</Label>
+              <div className="space-y-1 sm:space-y-2 w-full">
+                <Label htmlFor="resourceId" className="text-xs sm:text-sm">Consultorio</Label>
                 <Input
                   id="resourceId"
                   type="text"
                   value={selectedEvent.consultorio_id || "N/A"}
                   disabled
+                  className="text-xs sm:text-sm h-8 sm:h-10"
                 />
               </div>
             </div>
 
-            <div className="flex justify-between gap-4">
-              <div className="space-y-2 w-full">
-                <Label htmlFor="dia">Día de reserva</Label>
+            <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4">
+              <div className="space-y-1 sm:space-y-2 w-full">
+                <Label htmlFor="dia" className="text-xs sm:text-sm">Día de reserva</Label>
                 <Input
                   id="dia"
                   type="text"
                   value={dayjs(selectedEvent.start_time).format("dddd")}
-                  className="capitalize"
+                  className="capitalize text-xs sm:text-sm h-8 sm:h-10"
                   disabled
                 />
               </div>
-              <div className="space-y-2 w-full">
-                <Label htmlFor="date">Fecha de reserva</Label>
+              <div className="space-y-1 sm:space-y-2 w-full">
+                <Label htmlFor="date" className="text-xs sm:text-sm">Fecha de reserva</Label>
                 <Input
                   id="date"
                   type="date"
                   value={dayjs(selectedEvent.start_time).format("YYYY-MM-DD")}
                   disabled
+                  className="text-xs sm:text-sm h-8 sm:h-10"
                 />
               </div>
             </div>
 
-            <div className="flex justify-between gap-4">
-              <div className="space-y-2 w-full">
-                <Label htmlFor="startTime">Hora de reserva</Label>
+            <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4">
+              <div className="space-y-1 sm:space-y-2 w-full">
+                <Label htmlFor="startTime" className="text-xs sm:text-sm">Hora de reserva</Label>
                 <Input
                   id="startTime"
                   type="text"
@@ -512,68 +516,71 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                     "HH:mm"
                   )} - ${dayjs(selectedEvent.end_time).format("HH:mm")}`}
                   disabled
+                  className="text-xs sm:text-sm h-8 sm:h-10"
                 />
               </div>
-              <div className="space-y-2 w-full">
-                <Label htmlFor="id">Identificador de reserva</Label>
-                <Input id="id" type="text" value={selectedEvent.id} disabled />
+              <div className="space-y-1 sm:space-y-2 w-full">
+                <Label htmlFor="id" className="text-xs sm:text-sm">Identificador de reserva</Label>
+                <Input id="id" type="text" value={selectedEvent.id} disabled className="text-xs sm:text-sm h-8 sm:h-10" />
               </div>
             </div>
 
-            <div className="flex justify-between gap-4">
-              <div className="space-y-2 w-full">
-                <Label htmlFor="tipo">Tipo de reserva</Label>
+            <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4">
+              <div className="space-y-1 sm:space-y-2 w-full">
+                <Label htmlFor="tipo" className="text-xs sm:text-sm">Tipo de reserva</Label>
                 <Input
                   id="tipo"
                   type="text"
                   value={selectedEvent.tipo_reserva}
                   disabled
-                  className={
+                  className={`text-xs sm:text-sm h-8 sm:h-10 ${
                     selectedEvent.tipo_reserva === ReservationType.FIJA
                       ? "bg-fija"
                       : "bg-eventual"
-                  }
+                  }`}
                 />
               </div>
-              <div className="space-y-2 w-full">
-                <Label htmlFor="usaCamilla">¿Utilizarás la camilla?</Label>
+              <div className="space-y-1 sm:space-y-2 w-full">
+                <Label htmlFor="usaCamilla" className="text-xs sm:text-sm">¿Utilizarás la camilla?</Label>
                 <Input
                   id="usaCamilla"
                   type="text"
                   value={selectedEvent.usaCamilla ? "Sí" : "No"}
                   disabled
+                  className="text-xs sm:text-sm h-8 sm:h-10"
                 />
               </div>
             </div>
 
-            <div className="flex justify-between gap-4">
-              <div className="space-y-2 w-full">
-                <Label htmlFor="estado">Estado de reserva</Label>
+            <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4">
+              <div className="space-y-1 sm:space-y-2 w-full">
+                <Label htmlFor="estado" className="text-xs sm:text-sm">Estado de reserva</Label>
                 <Input
                   id="estado"
                   type="text"
                   value={selectedEvent.estado}
                   disabled
-                  className={`capitalize ${
+                  className={`capitalize text-xs sm:text-sm h-8 sm:h-10 ${
                     estadoBgColor[selectedEvent.estado] || "bg-white"
                   }`}
                 />
               </div>
-              <div className="space-y-2 w-full">
-                <Label htmlFor="fechaCreacion">Fecha de creación</Label>
+              <div className="space-y-1 sm:space-y-2 w-full">
+                <Label htmlFor="fechaCreacion" className="text-xs sm:text-sm">Fecha de creación</Label>
                 <Input
                   id="fechaCreacion"
                   type="text"
                   value={dayjs(selectedEvent.created_at).format("DD/MM/YYYY")}
                   disabled
+                  className="text-xs sm:text-sm h-8 sm:h-10"
                 />
               </div>
             </div>
 
             {selectedEvent.fecha_cancelacion && (
-              <div className="flex justify-between gap-4">
-                <div className="space-y-2 w-full">
-                  <Label htmlFor="fechaCancelacion">Fecha de cancelación</Label>
+              <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4">
+                <div className="space-y-1 sm:space-y-2 w-full">
+                  <Label htmlFor="fechaCancelacion" className="text-xs sm:text-sm">Fecha de cancelación</Label>
                   <Input
                     id="fechaCancelacion"
                     type="text"
@@ -581,24 +588,26 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                       "DD/MM/YY [-] HH:mm"
                     )}
                     disabled
+                    className="text-xs sm:text-sm h-8 sm:h-10"
                   />
                 </div>
-                <div className="space-y-2 w-full">
-                  <Label htmlFor="fueReagendada">¿Fue Reagendada?</Label>
+                <div className="space-y-1 sm:space-y-2 w-full">
+                  <Label htmlFor="fueReagendada" className="text-xs sm:text-sm">¿Fue Reagendada?</Label>
                   <Input
                     id="fueReagendada"
                     type="text"
                     value={selectedEvent.fue_reagendada ? "Sí" : "No"}
                     disabled
+                    className="text-xs sm:text-sm h-8 sm:h-10"
                   />
                 </div>
               </div>
             )}
 
             {selectedEvent.recurrence_end_date && (
-              <div className="flex justify-between gap-4">
-                <div className="space-y-2 w-full">
-                  <Label htmlFor="finReservaFija">Fin de reserva fija</Label>
+              <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4">
+                <div className="space-y-1 sm:space-y-2 w-full">
+                  <Label htmlFor="finReservaFija" className="text-xs sm:text-sm">Fin de reserva fija</Label>
                   <Input
                     id="finReservaFija"
                     type="text"
@@ -606,25 +615,26 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                       "DD/MM/YYYY"
                     )}
                     disabled
+                    className="text-xs sm:text-sm h-8 sm:h-10"
                   />
                 </div>
-                <div className="space-y-2 w-full">
-                  <Label htmlFor="extenderFinReservaFija">
+                <div className="space-y-1 sm:space-y-2 w-full">
+                  <Label htmlFor="extenderFinReservaFija" className="text-xs sm:text-sm">
                     Extender fin de reserva fija
                   </Label>
                   <div className="flex items-center gap-1">
-                    <RefreshCw className="mr-2 h-4 w-4" />
+                    <RefreshCw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <span className="inline-block">
+                          <span className="inline-block w-full">
                             <Button
                               onClick={() => {
                                 setActionToConfirm("renew");
                                 setIsConfirmDialogOpen(true);
                               }}
                               variant="destructive"
-                              className="bg-orange-400 hover:bg-orange-600/50"
+                              className="bg-orange-400 hover:bg-orange-600/50 text-xs sm:text-sm h-8 sm:h-10 w-full"
                               disabled={
                                 !isOwner ||
                                 loading ||
@@ -646,7 +656,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                               dayjs(),
                               "day"
                             ) > 45)) && (
-                          <TooltipContent>
+                          <TooltipContent className="text-xs">
                             <p>
                               El botón está desactivado porque no es el usuario
                               que realizó la reserva <br />O la fecha de
@@ -665,8 +675,8 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
             )}
 
             {selectedEvent.estado === "penalizada" && (
-              <div className="space-y-2 w-full">
-                <Label htmlFor="permiteReagendamiento">
+              <div className="space-y-1 sm:space-y-2 w-full">
+                <Label htmlFor="permiteReagendamiento" className="text-xs sm:text-sm">
                   Permite reagendar hasta
                 </Label>
                 <Input
@@ -683,22 +693,23 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                       : ""
                   }`}
                   disabled
+                  className="text-xs sm:text-sm h-8 sm:h-10"
                 />
               </div>
             )}
           </div>
 
           <DialogFooter>
-            <div className="mt-4 flex justify-end gap-2">
+            <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row justify-end gap-2 w-full">
               {/* --- NUEVO BOTÓN PARA DESPENALIZAR --- */}
               {userRole === "admin" &&
                 selectedEvent.estado === ReservationStatus.PENALIZADA && (
                   <Button
                     onClick={handleForgivePenalty}
-                    className="bg-emerald-700 hover:bg-emerald-600"
+                    className="bg-emerald-700 hover:bg-emerald-600 text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-auto"
                     disabled={loading}
                   >
-                    <ShieldCheck className="mr-2 h-4 w-4" />
+                    <ShieldCheck className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                     Despenalizar Reserva
                   </Button>
                 )}
@@ -711,7 +722,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                       setIsConfirmDialogOpen(true);
                     }}
                     variant="destructive"
-                    className="ml-2 bg-fija hover:bg-fija/70"
+                    className="bg-fija hover:bg-fija/70 text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-auto"
                     disabled={!canCancel || loading}
                   >
                     Cancelar Serie Completa
@@ -725,7 +736,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                     setIsConfirmDialogOpen(true);
                   }}
                   variant="destructive"
-                  className="bg-eventual text-slate-900 hover:bg-eventual/70"
+                  className="bg-eventual text-slate-900 hover:bg-eventual/70 text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-auto"
                   disabled={!canCancel || loading}
                 >
                   Cancelar Esta Reserva

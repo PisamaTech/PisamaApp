@@ -190,15 +190,17 @@ export const ReservationDialog = ({
       <DialogContent
         ref={dialogRef}
         tabIndex={-1}
-        className="max-h-full overflow-y-auto "
+        className="max-h-full overflow-y-auto max-w-[95vw] sm:max-w-[600px]"
       >
         <DialogHeader>
           <DialogTitle className="mb-3">
-            <div className="flex gap-3">
-              <BookCheck size={20} />
-              {isReagendamiento
-                ? "Confirmar Reagendamiento"
-                : "Confirmar Reserva"}
+            <div className="flex gap-2 sm:gap-3 items-center">
+              <BookCheck size={18} className="sm:w-5 sm:h-5" />
+              <span className="text-base sm:text-lg">
+                {isReagendamiento
+                  ? "Confirmar Reagendamiento"
+                  : "Confirmar Reserva"}
+              </span>
             </div>
           </DialogTitle>
           <Separator />
@@ -206,7 +208,7 @@ export const ReservationDialog = ({
 
           {/* Información adicional si es reagendamiento */}
           {isReagendamiento && penalizedBooking && (
-            <div className="mb-4 p-3 border border-orange-400 bg-orange-50 rounded-md text-sm text-orange-700">
+            <div className="mb-3 sm:mb-4 p-2 sm:p-3 border border-orange-400 bg-orange-50 rounded-md text-xs sm:text-sm text-orange-700">
               Estás reagendando la reserva original del{" "}
               <b>
                 {dayjs(penalizedBooking.start_time).format(
@@ -220,7 +222,7 @@ export const ReservationDialog = ({
           )}
 
           {/* // Información sobre la reserva seleccionada // */}
-          <DialogDescription>
+          <DialogDescription className="text-xs sm:text-sm">
             La hora seleccionada para la reserva fue el día:
             <br />
             <b>
@@ -247,11 +249,11 @@ export const ReservationDialog = ({
         </DialogHeader>
         <Separator />
         <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {/* --- Añade el selector de usuario condicional --- */}
             {isAdminBookingMode && (
-              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md space-y-2">
-                <Label className="font-semibold text-yellow-800 ">
+              <div className="p-3 sm:p-4 bg-yellow-50 border border-yellow-200 rounded-md space-y-2">
+                <Label className="font-semibold text-yellow-800 text-xs sm:text-sm">
                   Agendando para:
                 </Label>
                 <UserCombobox
@@ -261,18 +263,18 @@ export const ReservationDialog = ({
                 />
                 {/* --- 5. Muestra el error de validación --- */}
                 {errors.selectedUserId && (
-                  <p className="text-sm text-red-500 mt-1">
+                  <p className="text-xs sm:text-sm text-red-500 mt-1">
                     {errors.selectedUserId.message}
                   </p>
                 )}
               </div>
             )}
             {/* Fecha */}
-            <div className="space-y-2">
-              <Label htmlFor="date">Fecha de reserva</Label>
-              <Input id="date" type="date" {...register("date")} required />
+            <div className="space-y-1 sm:space-y-2">
+              <Label htmlFor="date" className="text-xs sm:text-sm">Fecha de reserva</Label>
+              <Input id="date" type="date" {...register("date")} required className="text-xs sm:text-sm h-8 sm:h-10" />
               {errors.date && (
-                <p className="text-sm text-red-500">{errors.date.message}</p>
+                <p className="text-xs sm:text-sm text-red-500">{errors.date.message}</p>
               )}
             </div>
 
@@ -296,10 +298,10 @@ export const ReservationDialog = ({
               <option value="22:00">22:00</option>
               <option value="23:00">23:00</option>
             </datalist>
-            <div className="flex justify-between gap-4">
+            <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4">
               {/* Hora de inicio */}
-              <div className="space-y-2 w-full">
-                <Label htmlFor="startTime">Hora de inicio</Label>
+              <div className="space-y-1 sm:space-y-2 w-full">
+                <Label htmlFor="startTime" className="text-xs sm:text-sm">Hora de inicio</Label>
                 <Input
                   id="startTime"
                   type="time"
@@ -309,17 +311,18 @@ export const ReservationDialog = ({
                   list="horasSugeridas"
                   {...register("startTime")}
                   required
+                  className="text-xs sm:text-sm h-8 sm:h-10"
                 />
                 {errors.startTime && (
-                  <p className="text-sm text-red-500">
+                  <p className="text-xs sm:text-sm text-red-500">
                     {errors.startTime.message}
                   </p>
                 )}
               </div>
 
               {/* Hora de fin */}
-              <div className="space-y-2 w-full">
-                <Label htmlFor="endTime">Hora de finalización</Label>
+              <div className="space-y-1 sm:space-y-2 w-full">
+                <Label htmlFor="endTime" className="text-xs sm:text-sm">Hora de finalización</Label>
                 <Input
                   id="endTime"
                   type="time"
@@ -329,55 +332,56 @@ export const ReservationDialog = ({
                   list="horasSugeridas"
                   {...register("endTime")}
                   required
+                  className="text-xs sm:text-sm h-8 sm:h-10"
                 />
                 {errors.endTime && (
-                  <p className="text-sm text-red-500">
+                  <p className="text-xs sm:text-sm text-red-500">
                     {errors.endTime.message}
                   </p>
                 )}
               </div>
             </div>
             {/* Consultorio */}
-            <div className="space-y-2">
-              <Label htmlFor="resourceId">Consultorio</Label>
+            <div className="space-y-1 sm:space-y-2">
+              <Label htmlFor="resourceId" className="text-xs sm:text-sm">Consultorio</Label>
               <Select
                 onValueChange={(value) => setValue("resourceId", Number(value))}
                 defaultValue={String(
                   selectedSlot?.resourceId || selectedConsultorio
                 )}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full text-xs sm:text-sm h-8 sm:h-10">
                   <SelectValue placeholder="Selecciona un consultorio" />
                 </SelectTrigger>
                 <SelectContent>
                   {resources.map((resource) => (
-                    <SelectItem key={resource.id} value={String(resource.id)}>
+                    <SelectItem key={resource.id} value={String(resource.id)} className="text-xs sm:text-sm">
                       {resource.title}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               {errors.resourceId && (
-                <p className="text-sm text-red-500">
+                <p className="text-xs sm:text-sm text-red-500">
                   {errors.resourceId.message}
                 </p>
               )}
             </div>
 
             {/* Tipo de reserva */}
-            <div className="space-y-2">
-              <Label htmlFor="tipo">Tipo de reserva</Label>
+            <div className="space-y-1 sm:space-y-2">
+              <Label htmlFor="tipo" className="text-xs sm:text-sm">Tipo de reserva</Label>
               <Select
                 onValueChange={(value) => setValue("tipo", value)}
                 defaultValue={ReservationType.EVENTUAL}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full text-xs sm:text-sm h-8 sm:h-10">
                   <SelectValue placeholder="Selecciona un tipo de reserva" />
                 </SelectTrigger>
                 <SelectContent>
                   {[ReservationType.EVENTUAL, ReservationType.FIJA].map(
                     (tipo) => (
-                      <SelectItem key={tipo} value={tipo}>
+                      <SelectItem key={tipo} value={tipo} className="text-xs sm:text-sm">
                         {tipo}
                       </SelectItem>
                     )
@@ -385,11 +389,11 @@ export const ReservationDialog = ({
                 </SelectContent>
               </Select>
               {errors.tipo && (
-                <p className="text-sm text-red-500">{errors.tipo.message}</p>
+                <p className="text-xs sm:text-sm text-red-500">{errors.tipo.message}</p>
               )}
               {/* Mensaje condicional para reservas fijas */}
               {tipoReserva === ReservationType.FIJA && (
-                <div className="text-sm text-blue-600 mt-2">
+                <div className="text-xs sm:text-sm text-blue-600 mt-2">
                   Las reservas fijas se agendan por un plazo de 4 meses.
                   <br />
                   Se le enviará un mensaje un mes antes del vencimiento para
@@ -401,25 +405,25 @@ export const ReservationDialog = ({
               )}
             </div>
             {/* Uso de camilla */}
-            <div className="space-y-2">
-              <Label htmlFor="usaCamilla">¿Utilizarás la camilla?</Label>
+            <div className="space-y-1 sm:space-y-2">
+              <Label htmlFor="usaCamilla" className="text-xs sm:text-sm">¿Utilizarás la camilla?</Label>
               <Select
                 onValueChange={(value) => setValue("usaCamilla", value)}
                 defaultValue="No"
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full text-xs sm:text-sm h-8 sm:h-10">
                   <SelectValue placeholder="Selecciona si utilizarás camilla" />
                 </SelectTrigger>
                 <SelectContent>
                   {["No", "Sí"].map((opcion) => (
-                    <SelectItem key={opcion} value={opcion}>
+                    <SelectItem key={opcion} value={opcion} className="text-xs sm:text-sm">
                       {opcion}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               {errors.usaCamilla && (
-                <p className="text-sm text-red-500">
+                <p className="text-xs sm:text-sm text-red-500">
                   {errors.usaCamilla.message}
                 </p>
               )}
@@ -427,11 +431,11 @@ export const ReservationDialog = ({
           </div>
 
           {/* Botones */}
-          <div className="mt-4 flex justify-end gap-2">
-            <Button variant="outline" onClick={onCancel} type="button">
+          <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row justify-end gap-2 w-full">
+            <Button type="submit" className="text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-auto">Confirmar</Button>
+            <Button variant="outline" onClick={onCancel} type="button" className="text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-auto">
               Cancelar
             </Button>
-            <Button type="submit">Confirmar</Button>
           </div>
         </form>
       </DialogContent>
