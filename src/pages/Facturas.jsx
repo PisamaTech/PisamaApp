@@ -129,7 +129,7 @@ export const Facturas = () => {
           historyCurrentPage,
           itemsPerPage
         );
-        // 3. Ordenar las reservas por start_time
+        // 3. Ordenar las facturas por periodo_inicio (más recientes primero)
         data.sort((a, b) => {
           const timeA = a?.periodo_inicio
             ? new Date(a.periodo_inicio)
@@ -137,7 +137,7 @@ export const Facturas = () => {
           const timeB = b?.periodo_inicio
             ? new Date(b.periodo_inicio)
             : new Date(0);
-          return timeA - timeB;
+          return timeB - timeA; // Orden descendente (más recientes primero)
         });
         setInvoices(data);
         setTotalInvoices(count);
