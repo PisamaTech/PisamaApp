@@ -49,6 +49,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  Badge,
 } from "@/components/ui";
 import {} from "@/components/ui/button";
 import {} from "@/components/ui/label";
@@ -619,65 +620,149 @@ export const Reservas = () => {
               </p>
             )}
             {!loading && !error && reservas.length > 0 && (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Día</TableHead>
-                      <SortableTableHead
-                        label="Fecha"
-                        field="fecha"
-                        currentSortField={sortField}
-                        sortDirection={sortDirection}
-                        onSort={handleSort}
-                      />
-                      <SortableTableHead
-                        label="Hora"
-                        field="hora"
-                        currentSortField={sortField}
-                        sortDirection={sortDirection}
-                        onSort={handleSort}
-                      />
-                      <SortableTableHead
-                        label="Consultorio"
-                        field="consultorio"
-                        currentSortField={sortField}
-                        sortDirection={sortDirection}
-                        onSort={handleSort}
-                      />
-                      <SortableTableHead
-                        label="Tipo"
-                        field="tipo"
-                        currentSortField={sortField}
-                        sortDirection={sortDirection}
-                        onSort={handleSort}
-                      />
-                      <SortableTableHead
-                        label="Estado"
-                        field="estado"
-                        currentSortField={sortField}
-                        sortDirection={sortDirection}
-                        onSort={handleSort}
-                      />
-                      <TableHead>Camilla</TableHead>
-                      <TableHead>Acciones</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {sortedReservations.map((reserva) => (
-                      <ReservaRow
-                        key={reserva.id}
-                        reserva={reserva}
-                        camillaIcon={camillaIcon}
-                        handleViewDetails={handleViewDetails}
-                        openCancelModal={openCancelModal}
-                        handleReagendarClick={handleReagendarClick}
-                        ReservationStatus={ReservationStatus}
-                        ReservationType={ReservationType}
-                      />
-                    ))}
-                  </TableBody>
-                </Table>
+              <div className="border rounded-md">
+                 {/* Desktop View */}
+                 <div className="hidden md:block overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Día</TableHead>
+                          <SortableTableHead
+                            label="Fecha"
+                            field="fecha"
+                            currentSortField={sortField}
+                            sortDirection={sortDirection}
+                            onSort={handleSort}
+                          />
+                          <SortableTableHead
+                            label="Hora"
+                            field="hora"
+                            currentSortField={sortField}
+                            sortDirection={sortDirection}
+                            onSort={handleSort}
+                          />
+                          <SortableTableHead
+                            label="Consultorio"
+                            field="consultorio"
+                            currentSortField={sortField}
+                            sortDirection={sortDirection}
+                            onSort={handleSort}
+                          />
+                          <SortableTableHead
+                            label="Tipo"
+                            field="tipo"
+                            currentSortField={sortField}
+                            sortDirection={sortDirection}
+                            onSort={handleSort}
+                          />
+                          <SortableTableHead
+                            label="Estado"
+                            field="estado"
+                            currentSortField={sortField}
+                            sortDirection={sortDirection}
+                            onSort={handleSort}
+                          />
+                          <TableHead>Camilla</TableHead>
+                          <TableHead>Acciones</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {sortedReservations.map((reserva) => (
+                          <ReservaRow
+                            key={reserva.id}
+                            reserva={reserva}
+                            camillaIcon={camillaIcon}
+                            handleViewDetails={handleViewDetails}
+                            openCancelModal={openCancelModal}
+                            handleReagendarClick={handleReagendarClick}
+                            ReservationStatus={ReservationStatus}
+                            ReservationType={ReservationType}
+                          />
+                        ))}
+                      </TableBody>
+                    </Table>
+                 </div>
+
+                 {/* Mobile View */}
+                 <div className="md:hidden space-y-4 p-4">
+                    {sortedReservations.map((reserva) => {
+                       // Logic to determine if cancellable/reschedulable (similar to ReservaRow/constants)
+                       const isCancellable =
+                          reserva.estado === ReservationStatus.CONFIRMED ||
+                          reserva.estado === ReservationStatus.PENDING;
+                       // "Reagendar" usually for penalized bookings.
+                       
+                       return (
+                          <div key={reserva.id} className="bg-slate-200 text-slate-900 p-4 rounded-lg shadow-sm space-y-3 border border-slate-300">
+                             {/* Header Line */}
+                             <div className="flex justify-between items-start">
+                                <div>
+                                   <p className="font-bold text-lg text-slate-900">
+                                      {dayjs(reserva.start_time)
+                                         .locale("es")
+                                         .format("dddd DD/MM")
+                                         .replace(/^\w/, (c) => c.toUpperCase())}
+                                   </p>
+                                   <p className="text-slate-600 font-medium">
+                                      {dayjs(reserva.start_time).format("HH:mm")} hs
+                                   </p>
+                                </div>
+                                <div className="flex flex-col items-end gap-1">
+                                    <Badge variant={reserva.tipo_reserva.toLowerCase()}>
+              {reserva.tipo_reserva}
+            </Badge>
+                                    {/* Status Badge */}
+                                    <Badge variant={reserva.estado.toLowerCase()}>
+              {reserva.estado}
+            </Badge>
+                                </div>
+                             </div>
+
+                             {/* Location & Extra Info */}
+                             <div className="flex justify-between items-center text-sm text-slate-700 border-t border-slate-300 pt-2">
+                                <span className="font-medium">{reserva.consultorio_nombre || `Consultorio ${reserva.consultorio_id}`}</span>
+                                {reserva.requiere_camilla && (
+                                   <div className="flex items-center gap-1 bg-white px-2 py-0.5 rounded border border-slate-200">
+                                      <img src={camillaIcon} alt="Camilla" className="w-4 h-4 opacity-70" />
+                                      <span className="text-xs">Camilla</span>
+                                   </div>
+                                )}
+                             </div>
+
+                             {/* Actions */}
+                             <div className="grid grid-cols-1 gap-2 pt-2">
+                                <Button
+                                   variant="outline"
+                                   size="sm"
+                                   className="w-full bg-white hover:bg-slate-50 border-slate-300 text-slate-700"
+                                   onClick={() => handleViewDetails(reserva)}
+                                >
+                                   Ver Detalle
+                                </Button>
+                                
+                                {reserva.estado === ReservationStatus.PENALIZED ? (
+                                    <Button
+                                       size="sm"
+                                       className="w-full bg-blue-600 hover:bg-blue-700 text-white border-none"
+                                       onClick={() => handleReagendarClick(reserva)}
+                                    >
+                                       Reagendar
+                                    </Button>
+                                ) : isCancellable ? (
+                                    <Button
+                                       size="sm"
+                                       variant="destructive"
+                                       className="w-full"
+                                       onClick={() => openCancelModal(reserva, "single")}
+                                    >
+                                       Cancelar
+                                    </Button>
+                                ) : null}
+                             </div>
+                          </div>
+                       );
+                    })}
+                 </div>
               </div>
             )}
           </CardContent>
