@@ -19,8 +19,12 @@
 } */
 
 .rbc-header {
-  padding: 8px 0;
+  padding: 8px 4px;
   font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
 }
 
 .rbc-row.rbc-row-resource {
@@ -66,15 +70,109 @@
   color: white;
 }
 
-.rbc-time-view-resources .rbc-day-slot {
-  min-width: 78px;
+/* Prevent calendar overflow on mobile */
+.rbc-calendar {
+  min-width: 100%;
+  overflow-x: auto;
 }
+
+.rbc-time-view {
+  min-width: 100%;
+}
+
+/* Responsive resource columns */
+.rbc-time-view-resources .rbc-day-slot {
+  min-width: 70px;
+}
+
 .rbc-time-view-resources .rbc-header,
 .rbc-time-view-resources .rbc-day-bg {
-  width: 78px;
+  width: 100%;
   -webkit-box-flex: 1;
   -ms-flex: 1 1 0px;
   flex: 1 1 0;
-  -ms-flex-preferred-size: 0 px;
-  flex-basis: 0 px;
+  -ms-flex-preferred-size: 0px;
+  flex-basis: 0px;
+  min-width: 70px;
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .rbc-time-view-resources .rbc-day-slot {
+    min-width: 60px;
+  }
+
+  .rbc-time-view-resources .rbc-header,
+  .rbc-time-view-resources .rbc-day-bg {
+    min-width: 60px;
+    font-size: 11px;
+  }
+
+  .rbc-time-slot {
+    font-size: 0.75rem;
+  }
+
+  .rbc-header {
+    padding: 6px 0;
+    font-size: 10px;
+  }
+
+  .slotSelected:before {
+    content: "📆";
+    font-size: 11px;
+  }
+}
+
+/* Very small screens */
+@media (max-width: 380px) {
+  .rbc-time-view-resources .rbc-day-slot {
+    min-width: 50px;
+  }
+
+  .rbc-time-view-resources .rbc-header,
+  .rbc-time-view-resources .rbc-day-bg {
+    min-width: 40px;
+    font-size: 10px;
+  }
+
+  .rbc-time-slot {
+    font-size: 0.7rem;
+  }
+}
+
+/* Week view responsive adjustments */
+@media (max-width: 640px) {
+  .rbc-time-view .rbc-time-gutter,
+  .rbc-time-view .rbc-allday-cell {
+    min-width: 40px;
+    max-width: 40px;
+  }
+
+  .rbc-day-slot {
+    min-width: 50px;
+  }
+
+  .rbc-time-header-content {
+    min-width: 50px;
+  }
+
+  .rbc-event-content {
+    font-size: 0.7rem;
+    padding: 1px 2px;
+  }
+}
+
+@media (max-width: 380px) {
+  .rbc-time-view .rbc-time-gutter {
+    min-width: 35px;
+    max-width: 35px;
+  }
+
+  .rbc-day-slot {
+    min-width: 40px;
+  }
+
+  .rbc-time-header-content {
+    min-width: 40px;
+  }
 }

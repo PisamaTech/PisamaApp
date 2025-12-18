@@ -29,6 +29,7 @@ import { ConfirmReservationDialog } from "@/components/ConfirmReservationDialog"
 import { isSameSlot } from "@/components/calendar/calendarHelper";
 import { useCalendarState } from "@/hooks/useCalendarState";
 import CustomToolbar from "@/components/calendar/CustomToolbar";
+import { CustomResourceHeader } from "@/components/calendar/CustomResourceHeader";
 import { EventDialog } from "../components/EventDialog";
 import { useEventStore } from "../stores/calendarStore";
 import { handleNavigate } from "@/utils/calendarUtils";
@@ -112,17 +113,17 @@ export const CalendarDiario = () => {
   });
 
   return (
-    <div className="mx-auto p-4 space-y-4 w-full">
+    <div className="mx-auto p-2 sm:p-4 space-y-3 sm:space-y-4 w-full max-w-full overflow-x-hidden">
       {/* --- Indicador Visual de Reagendamiento --- */}
       {isReagendamientoMode && penalizedBookingForReagendamiento && (
         <Alert
           variant="default"
           className="mb-4 border-orange-500 text-orange-700 bg-orange-50"
         >
-          <AlertTitle className="font-bold">
+          <AlertTitle className="font-bold text-sm sm:text-base">
             Modo Reagendamiento Activo
           </AlertTitle>
-          <AlertDescription className="flex justify-between items-center flex-wrap gap-2">
+          <AlertDescription className="flex justify-between items-center flex-wrap gap-2 text-xs sm:text-sm">
             <span>
               Reagendando reserva del{" "}
               <b>
@@ -139,44 +140,48 @@ export const CalendarDiario = () => {
               className="text-orange-700 hover:text-orange-900 hover:bg-orange-100 h-auto p-1"
             >
               <XCircle className="h-4 w-4 mr-1" />
-              Salir del modo
+              <span className="hidden sm:inline">Salir del modo</span>
+              <span className="sm:hidden">Salir</span>
             </Button>
           </AlertDescription>
         </Alert>
       )}
       {/* --- Fin del Indicador Visual --- */}
-      <h1 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+      <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6 text-center">
         Disponibilidad Diaria
       </h1>
       <Separator />
-      <div className="flex items-center justify-center space-x-2 my-4">
+      <div className="flex items-center justify-center space-x-2 my-3 sm:my-4">
         <Switch
           id="my-reservations"
           checked={showOnlyMyReservations}
           onCheckedChange={setShowOnlyMyReservations}
         />
-        <Label htmlFor="my-reservations" className="cursor-pointer italic">
+        <Label
+          htmlFor="my-reservations"
+          className="cursor-pointer italic text-xs sm:text-sm"
+        >
           Mostrar solo mis reservas
         </Label>
       </div>
       {/* Leyenda de Colores de Eventos */}
-      <div className="flex justify-center items-center flex-wrap gap-x-6 gap-y-2 p-3 my-4 rounded-lg bg-slate-50 border border-slate-200">
+      <div className="flex justify-center items-center flex-wrap gap-x-4 sm:gap-x-6 gap-y-2 p-2 sm:p-3 my-3 sm:my-4 rounded-lg bg-slate-50 border border-slate-200">
         <div className="flex items-center">
           <div
-            className="w-4 h-4 rounded-sm mr-2 border border-slate-400/50"
+            className="w-3 h-3 sm:w-4 sm:h-4 rounded-sm mr-1 sm:mr-2 border border-slate-400/50"
             style={{ backgroundColor: "#5b9bd5" }}
           ></div>
-          <p className="text-sm text-slate-700">
+          <p className="text-xs sm:text-sm text-slate-700">
             <span className="font-semibold">Reservas Fijas:</span> se repiten
             todas las semanas.
           </p>
         </div>
         <div className="flex items-center">
           <div
-            className="w-4 h-4 rounded-sm mr-2 border border-slate-400/50"
+            className="w-3 h-3 sm:w-4 sm:h-4 rounded-sm mr-1 sm:mr-2 border border-slate-400/50"
             style={{ backgroundColor: "#92d050" }}
           ></div>
-          <p className="text-sm text-slate-700">
+          <p className="text-xs sm:text-sm text-slate-700">
             <span className="font-semibold">Reservas Eventuales:</span> uso
             único en esa fecha.
           </p>
@@ -186,15 +191,17 @@ export const CalendarDiario = () => {
       {!selectedSlot && (
         <Alert className="bg-blue-50 border-blue-200 text-blue-800">
           <Info className="h-4 w-4 !text-blue-800" />
-          <AlertTitle>¿Cómo reservar?</AlertTitle>
-          <AlertDescription>
+          <AlertTitle className="text-sm sm:text-base">
+            ¿Cómo reservar?
+          </AlertTitle>
+          <AlertDescription className="text-xs sm:text-sm">
             Para realizar una reserva, selecciona un horario disponible y luego
             haz clic nuevamente sobre él o en el botón flotante (+) para
             confirmar.
           </AlertDescription>
         </Alert>
       )}
-      <div className="h-[800px] bg-white rounded-lg shadow-lg">
+      <div className="h-full bg-white rounded-lg shadow-lg overflow-x-auto">
         <Calendar
           localizer={localizer}
           events={filteredEvents}
@@ -218,6 +225,7 @@ export const CalendarDiario = () => {
           components={{
             event: CustomEventComponent,
             toolbar: CustomToolbar,
+            resourceHeader: CustomResourceHeader,
           }}
           onSelectSlot={handleSelectSlot}
           onSelectEvent={handleSelectEvent}
@@ -237,7 +245,7 @@ export const CalendarDiario = () => {
         />
       )}
       <ConfirmReservationDialog
-        key={isConfirmDialogOpen ? 'confirm-open' : 'confirm-closed'}
+        key={isConfirmDialogOpen ? "confirm-open" : "confirm-closed"}
         open={isConfirmDialogOpen}
         onOpenChange={(isOpen) => {
           setIsConfirmDialogOpen(isOpen);
@@ -259,11 +267,11 @@ export const CalendarDiario = () => {
       {/* Botón Flotante para Nueva Reserva */}
       <Button
         onClick={handleNewReservationClick}
-        className="fixed bottom-8 right-8 z-50 h-16 w-16 rounded-full shadow-lg"
+        className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50 h-12 w-12 sm:h-16 sm:w-16 rounded-full shadow-lg"
         size="icon"
         aria-label="Agendar nueva reserva"
       >
-        <Plus className="h-8 w-8" />
+        <Plus className="h-6 w-6 sm:h-8 sm:w-8" />
       </Button>
     </div>
   );

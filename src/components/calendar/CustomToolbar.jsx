@@ -31,43 +31,43 @@ const CustomToolbar = (toolbar) => {
   };
 
   return (
-    <div className="rbc-toolbar flex flex-col md:flex-row items-center justify-between gap-4 py-2">
+    <div className="rbc-toolbar flex flex-col sm:flex-row items-center justify-between gap-3 py-2 px-2">
       {/* Botones de navegación */}
-      <span className="rbc-btn-group">
-        <Button variant="outline" onClick={goToBack}>
+      <span className="rbc-btn-group flex gap-1">
+        <Button variant="outline" onClick={goToBack} size="sm" className="h-9 px-2 sm:px-4">
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <Button variant="outline" onClick={goToToday}>
+        <Button variant="outline" onClick={goToToday} size="sm" className="h-9 px-2 sm:px-4">
           Hoy
         </Button>
-        <Button variant="outline" onClick={goToNext}>
+        <Button variant="outline" onClick={goToNext} size="sm" className="h-9 px-2 sm:px-4">
           <ChevronRight className="h-4 w-4" />
         </Button>
       </span>
 
       {/* Etiqueta (mes y año) */}
-      <span className="rbc-toolbar-label">{label}</span>
+      <span className="rbc-toolbar-label text-sm sm:text-base text-center">{label}</span>
 
       {/* DatePicker (usando Popover) */}
       <div className="flex items-center gap-2">
-        <p className="text-sm ">Cambiar fecha: </p>
+        <p className="text-xs sm:text-sm hidden sm:inline">Cambiar fecha: </p>
         <span className="rbc-btn-group">
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant={"outline"}
-                className="w-32 justify-start text-left font-normal"
+                size="sm"
+                className="w-auto sm:w-32 h-9 justify-start text-left font-normal px-2 sm:px-4"
               >
-                {" "}
-                <div className="flex items-center justify-center gap-3">
-                  <CalendarSync size={32} strokeWidth={2} />{" "}
-                  <span>{dayjs(date).format("DD/MM/YYYY")}</span>
+                <div className="flex items-center justify-center gap-1 sm:gap-3">
+                  <CalendarSync size={20} strokeWidth={2} className="sm:w-8 sm:h-8" />
+                  <span className="text-xs sm:text-sm">{dayjs(date).format("DD/MM/YYYY")}</span>
                 </div>
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
+            <PopoverContent className="w-auto p-0" align="end">
               <Calendar
-                mode="single" // Selección de una sola fecha
+                mode="single"
                 selected={date}
                 onSelect={handleDateChange}
                 initialFocus

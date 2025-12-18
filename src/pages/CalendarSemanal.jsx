@@ -29,6 +29,7 @@ import {
   eventPropGetter,
 } from "@/components/calendar/CustomEventComponent";
 import CustomToolbar from "@/components/calendar/CustomToolbar";
+import { CustomDayHeader } from "@/components/calendar/CustomDayHeader";
 import { useCalendarState } from "@/hooks/useCalendarState";
 import { isSameSlot } from "@/components/calendar/calendarHelper";
 import { ReservationDialog } from "@/components/ReservationDialog";
@@ -132,17 +133,17 @@ export const CalendarSemanal = () => {
   }, [events, selectedConsultorio, showOnlyMyReservations, userId]);
 
   return (
-    <div className="mx-auto p-4 space-y-4 w-full">
+    <div className="mx-auto p-2 sm:p-4 space-y-3 sm:space-y-4 w-full max-w-full overflow-x-hidden">
       {/* --- Indicador Visual de Reagendamiento --- */}
       {isReagendamientoMode && penalizedBookingForReagendamiento && (
         <Alert
           variant="default"
           className="mb-4 border-orange-500 text-orange-700 bg-orange-50"
         >
-          <AlertTitle className="font-bold">
+          <AlertTitle className="font-bold text-sm sm:text-base">
             Modo Reagendamiento Activo
           </AlertTitle>
-          <AlertDescription className="flex justify-between items-center flex-wrap gap-2">
+          <AlertDescription className="flex justify-between items-center flex-wrap gap-2 text-xs sm:text-sm">
             <span>
               Reagendando reserva del{" "}
               <b>
@@ -159,17 +160,18 @@ export const CalendarSemanal = () => {
               className="text-orange-700 hover:text-orange-900 hover:bg-orange-100 h-auto p-1"
             >
               <XCircle className="h-4 w-4 mr-1" />
-              Salir del modo
+              <span className="hidden sm:inline">Salir del modo</span>
+              <span className="sm:hidden">Salir</span>
             </Button>
           </AlertDescription>
         </Alert>
       )}
-      <h1 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+      <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6 text-center">
         Disponibilidad Semanal
       </h1>
       {/* --- 3. Añadir el Interruptor de Modo Admin --- */}
       {isAdmin && (
-        <div className="flex items-center space-x-2 bg-yellow-100 border border-yellow-300 p-3 rounded-md">
+        <div className="flex items-center space-x-2 bg-yellow-100 border border-yellow-300 p-2 sm:p-3 rounded-md">
           <Switch
             id="admin-booking-mode"
             checked={isAdminBookingMode}
@@ -177,24 +179,24 @@ export const CalendarSemanal = () => {
           />
           <Label
             htmlFor="admin-booking-mode"
-            className="font-semibold text-yellow-800"
+            className="font-semibold text-yellow-800 text-xs sm:text-sm"
           >
             Modo Administrador: Agendar para otro usuario
           </Label>
         </div>
       )}
       <Separator />
-      <div className="flex justify-center items-center">
+      <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-0">
         <img
           src={flecha}
           alt="flecha indicadora de selección"
-          className="w-7 h-6 mr-3"
+          className="w-6 h-5 sm:w-7 sm:h-6 sm:mr-3 hidden sm:block"
         />
-        <Label htmlFor="consultorio" className="mr-3">
+        <Label htmlFor="consultorio" className="text-xs sm:text-sm sm:mr-3">
           Selecciona un consultorio:
         </Label>
         <Select onValueChange={handleConsultorioChange}>
-          <SelectTrigger className="w-[220px]">
+          <SelectTrigger className="w-full sm:w-[220px] max-w-xs">
             <SelectValue placeholder="Selecciona un consultorio" />
           </SelectTrigger>
           <SelectContent>
@@ -206,7 +208,7 @@ export const CalendarSemanal = () => {
           </SelectContent>
         </Select>
       </div>
-      <div className="flex items-center justify-center space-x-2 my-4">
+      <div className="flex items-center justify-center space-x-2 my-3 sm:my-4">
         <Switch
           id="my-reservations-semanal"
           checked={showOnlyMyReservations}
@@ -214,30 +216,30 @@ export const CalendarSemanal = () => {
         />
         <Label
           htmlFor="my-reservations-semanal"
-          className="cursor-pointer italic"
+          className="cursor-pointer italic text-xs sm:text-sm"
         >
           Mostrar solo mis reservas
         </Label>
       </div>
 
       {/* Leyenda de Colores de Eventos */}
-      <div className="flex justify-center items-center flex-wrap gap-x-6 gap-y-2 p-3 my-4 rounded-lg bg-slate-50 border border-slate-200">
+      <div className="flex justify-center items-center flex-wrap gap-x-4 sm:gap-x-6 gap-y-2 p-2 sm:p-3 my-3 sm:my-4 rounded-lg bg-slate-50 border border-slate-200">
         <div className="flex items-center">
           <div
-            className="w-4 h-4 rounded-sm mr-2 border border-slate-400/50"
+            className="w-3 h-3 sm:w-4 sm:h-4 rounded-sm mr-1 sm:mr-2 border border-slate-400/50"
             style={{ backgroundColor: "#5b9bd5" }}
           ></div>
-          <p className="text-sm text-slate-700">
+          <p className="text-xs sm:text-sm text-slate-700">
             <span className="font-semibold">Reservas Fijas:</span> se repiten
             todas las semanas.
           </p>
         </div>
         <div className="flex items-center">
           <div
-            className="w-4 h-4 rounded-sm mr-2 border border-slate-400/50"
+            className="w-3 h-3 sm:w-4 sm:h-4 rounded-sm mr-1 sm:mr-2 border border-slate-400/50"
             style={{ backgroundColor: "#92d050" }}
           ></div>
-          <p className="text-sm text-slate-700">
+          <p className="text-xs sm:text-sm text-slate-700">
             <span className="font-semibold">Reservas Eventuales:</span> uso
             único en esa fecha.
           </p>
@@ -248,8 +250,10 @@ export const CalendarSemanal = () => {
       {!selectedSlot && (
         <Alert className="bg-blue-50 border-blue-200 text-blue-800">
           <Info className="h-4 w-4 !text-blue-800" />
-          <AlertTitle>¿Cómo reservar?</AlertTitle>
-          <AlertDescription>
+          <AlertTitle className="text-sm sm:text-base">
+            ¿Cómo reservar?
+          </AlertTitle>
+          <AlertDescription className="text-xs sm:text-sm">
             Para realizar una reserva, selecciona un horario disponible y luego
             haz clic nuevamente sobre él o en el botón flotante (+) para
             confirmar.
@@ -260,7 +264,7 @@ export const CalendarSemanal = () => {
       <Separator className="mb-4" />
       <div className="h-2"></div>
 
-      <div className="h-[800px] bg-white rounded-lg shadow-lg">
+      <div className="h-[800px] bg-white rounded-lg shadow-lg overflow-x-auto">
         {/* Calendario */}
         <Calendar
           localizer={localizer}
@@ -280,6 +284,9 @@ export const CalendarSemanal = () => {
           components={{
             event: CustomEventComponent,
             toolbar: CustomToolbar,
+            week: {
+              header: CustomDayHeader,
+            },
           }}
           selectable={true}
           longPressThreshold={20}
@@ -305,7 +312,7 @@ export const CalendarSemanal = () => {
         />
       )}
       <ConfirmReservationDialog
-        key={isConfirmDialogOpen ? 'confirm-open' : 'confirm-closed'}
+        key={isConfirmDialogOpen ? "confirm-open" : "confirm-closed"}
         open={isConfirmDialogOpen}
         onOpenChange={(isOpen) => {
           setIsConfirmDialogOpen(isOpen);
@@ -327,11 +334,11 @@ export const CalendarSemanal = () => {
       {/* Botón Flotante para Nueva Reserva */}
       <Button
         onClick={handleNewReservationClick}
-        className="fixed bottom-8 right-8 z-50 h-16 w-16 rounded-full shadow-lg"
+        className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50 h-12 w-12 sm:h-16 sm:w-16 rounded-full shadow-lg"
         size="icon"
         aria-label="Agendar nueva reserva"
       >
-        <Plus className="h-8 w-8" />
+        <Plus className="h-6 w-6 sm:h-8 sm:w-8" />
       </Button>
     </div>
   );
