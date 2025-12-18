@@ -202,49 +202,101 @@ export const Facturas = () => {
             </p>
           )}
           {!loading && !error && invoices.length > 0 && (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Período</TableHead>
-                    <TableHead>Fecha de Emisión</TableHead>
-                    <TableHead>Monto Total</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead>Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {invoices.map((factura) => (
-                    <TableRow key={factura.id}>
-                      <TableCell className="font-medium">
-                        {dayjs(factura.periodo_inicio).format("DD/MM/YY")} -{" "}
-                        {dayjs(factura.periodo_fin).format("DD/MM/YY")}
-                      </TableCell>
-                      <TableCell>
-                        {dayjs(factura.fecha_emision).format("DD/MM/YYYY")}
-                      </TableCell>
-                      <TableCell>
-                        ${factura.monto_total.toLocaleString("es-UY")}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getStatusVariant(factura.estado)}>
-                          {factura.estado.charAt(0).toUpperCase() +
-                            factura.estado.slice(1)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => navigate(`/facturas/${factura.id}`)}
-                        >
-                          Ver Detalle
-                        </Button>
-                      </TableCell>
+            <div className="border rounded-md">
+              {/* Desktop View */}
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Período</TableHead>
+                      <TableHead>Fecha de Emisión</TableHead>
+                      <TableHead>Monto Total</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead>Acciones</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {invoices.map((factura) => (
+                      <TableRow key={factura.id}>
+                        <TableCell className="font-medium">
+                          {dayjs(factura.periodo_inicio).format("DD/MM/YY")} -{" "}
+                          {dayjs(factura.periodo_fin).format("DD/MM/YY")}
+                        </TableCell>
+                        <TableCell>
+                          {dayjs(factura.fecha_emision).format("DD/MM/YYYY")}
+                        </TableCell>
+                        <TableCell>
+                          ${factura.monto_total.toLocaleString("es-UY")}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={getStatusVariant(factura.estado)}>
+                            {factura.estado.charAt(0).toUpperCase() +
+                              factura.estado.slice(1)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => navigate(`/facturas/${factura.id}`)}
+                          >
+                            Ver Detalle
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile View */}
+              <div className="md:hidden space-y-4 p-4">
+                {invoices.map((factura) => (
+                  <div
+                    key={factura.id}
+                    className="border rounded-lg p-4 space-y-3 shadow-sm bg-card text-card-foreground"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">
+                          Período
+                        </p>
+                        <p className="font-semibold">
+                          {dayjs(factura.periodo_inicio).format("DD/MM/YY")} -{" "}
+                          {dayjs(factura.periodo_fin).format("DD/MM/YY")}
+                        </p>
+                      </div>
+                      <Badge variant={getStatusVariant(factura.estado)}>
+                        {factura.estado.charAt(0).toUpperCase() +
+                          factura.estado.slice(1)}
+                      </Badge>
+                    </div>
+
+                    <div className="flex justify-between items-end">
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">
+                          Monto Total
+                        </p>
+                        <p className="text-xl font-bold">
+                          ${factura.monto_total.toLocaleString("es-UY")}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                         <p className="text-xs text-muted-foreground mb-1">Emisión</p>
+                         <p className="text-sm">{dayjs(factura.fecha_emision).format("DD/MM/YY")}</p>
+                      </div>
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => navigate(`/facturas/${factura.id}`)}
+                    >
+                      Ver Detalle
+                    </Button>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </CardContent>
@@ -319,45 +371,77 @@ export const Facturas = () => {
               {/* Nueva Tabla de Detalle para Vista Previa */}
               <div className="space-y-2">
                 <h4 className="font-semibold">Detalle de Actividad en Curso</h4>
-                <div className="overflow-x-auto border rounded-md">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Día</TableHead>
-                        <TableHead>Fecha</TableHead>
-                        <TableHead>Hora</TableHead>
-                        <TableHead>Consultorio</TableHead>
-                        <TableHead>Costo</TableHead>
-                        <TableHead>Estado</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {previewPaginatedBookings.map((reserva) => (
-                        <TableRow key={reserva.reserva_id}>
-                          <TableCell>
-                            {dayjs(reserva.start_time)
-                              .format("dddd")
-                              .replace(/^\w/, (c) => c.toUpperCase())}
-                          </TableCell>
-                          <TableCell>
-                            {dayjs(reserva.start_time).format("DD/MM/YYYY")}
-                          </TableCell>
-                          <TableCell>
-                            {dayjs(reserva.start_time).format("HH:mm")}
-                          </TableCell>
-                          <TableCell>{reserva.consultorio_nombre}</TableCell>
-                          <TableCell>
-                            ${reserva.costo_calculado.toLocaleString("es-UY")}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={reserva.estado.toLowerCase()}>
-                              {reserva.estado}
-                            </Badge>
-                          </TableCell>
+                <div className="border rounded-md">
+                   {/* Desktop View */}
+                  <div className="hidden md:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Día</TableHead>
+                          <TableHead>Fecha</TableHead>
+                          <TableHead>Hora</TableHead>
+                          <TableHead>Consultorio</TableHead>
+                          <TableHead>Costo</TableHead>
+                          <TableHead>Estado</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {previewPaginatedBookings.map((reserva) => (
+                          <TableRow key={reserva.reserva_id}>
+                            <TableCell>
+                              {dayjs(reserva.start_time)
+                                .format("dddd")
+                                .replace(/^\w/, (c) => c.toUpperCase())}
+                            </TableCell>
+                            <TableCell>
+                              {dayjs(reserva.start_time).format("DD/MM/YYYY")}
+                            </TableCell>
+                            <TableCell>
+                              {dayjs(reserva.start_time).format("HH:mm")}
+                            </TableCell>
+                            <TableCell>{reserva.consultorio_nombre}</TableCell>
+                            <TableCell>
+                              ${reserva.costo_calculado.toLocaleString("es-UY")}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={reserva.estado.toLowerCase()}>
+                                {reserva.estado}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Mobile View */}
+                  <div className="md:hidden space-y-3 p-3">
+                    {previewPaginatedBookings.map((reserva) => (
+                      <div
+                        key={reserva.reserva_id}
+                        className="flex justify-between items-start p-3 border rounded bg-card shadow-sm"
+                      >
+                        <div>
+                          <p className="font-semibold text-sm">
+                            {dayjs(reserva.start_time)
+                                .format("dddd DD/MM")
+                                .replace(/^\w/, (c) => c.toUpperCase())}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {dayjs(reserva.start_time).format("HH:mm")} hs - {reserva.consultorio_nombre}
+                          </p>
+                          <Badge variant={reserva.estado.toLowerCase()} className="mt-1 text-[10px] h-5 px-1.5">
+                                {reserva.estado}
+                          </Badge>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-bold">
+                            ${reserva.costo_calculado.toLocaleString("es-UY")}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Paginación para la Tabla de Vista Previa */}
