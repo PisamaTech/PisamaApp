@@ -342,47 +342,47 @@ const BillingManagementPage = () => {
             invoices.map((invoice) => (
               <div
                 key={invoice.id}
-                className="border rounded-lg p-4 space-y-3 shadow-sm bg-card text-card-foreground"
+                className="bg-slate-200 text-slate-900 p-4 rounded-lg shadow-sm space-y-3 border border-slate-300"
               >
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="font-semibold">
+                    <h3 className="font-bold text-lg text-slate-900">
                       #{invoice.id}
                     </h3>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-slate-600 font-medium">
                       {dayjs(invoice.periodo_inicio).format("DD/MM/YY")} -{" "}
                       {dayjs(invoice.periodo_fin).format("DD/MM/YY")}
                     </p>
                   </div>
                   <Badge
                     variant={getStatusVariant(invoice.estado)}
-                    className="capitalize shrink-0"
+                    className="capitalize shrink-0 shadow-sm"
                   >
                     {invoice.estado}
                   </Badge>
                 </div>
 
-                <div className="space-y-1">
-                  <p className="font-medium text-sm">
+                <div className="space-y-1 border-t border-slate-300 pt-3">
+                  <p className="font-medium text-slate-700">
                     {`${invoice.firstName || ""} ${
                       invoice.lastName || ""
                     }`.trim() || "Usuario no encontrado"}
                   </p>
-                  <p className="text-lg font-bold">
+                  <p className="text-2xl font-bold text-slate-900">
                     ${invoice.monto_total.toLocaleString("es-UY")}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-slate-500 uppercase font-semibold">
                     Emitida: {dayjs(invoice.fecha_emision).format("DD/MM/YYYY")}
                   </p>
                 </div>
 
-                <div className="flex items-center justify-end gap-2 pt-2 border-t mt-2">
+                <div className="grid grid-cols-1 gap-2 pt-2 border-t border-slate-300">
                    {invoice.estado === "pendiente" && (
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => openConfirmationDialog(invoice)}
-                        className="text-green-600 hover:text-green-700 bg-green-50/50 border-green-200"
+                        className="w-full bg-white hover:bg-green-50 text-green-700 border-slate-300 shadow-sm"
                       >
                         <CheckCircle className="h-4 w-4 mr-2" />
                         Marcar Pagada
@@ -391,6 +391,7 @@ const BillingManagementPage = () => {
                     <Button
                       variant="outline"
                       size="sm"
+                      className="w-full bg-white hover:bg-slate-50 border-slate-300 text-slate-700 shadow-sm"
                       onClick={() => navigate(`/facturas/${invoice.id}`)}
                     >
                       <Eye className="h-4 w-4 mr-2" />

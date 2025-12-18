@@ -375,36 +375,36 @@ const Dashboard = () => {
                 {upcomingBookings.map((reserva) => (
                   <div
                     key={reserva.id}
-                    className="border rounded-lg p-4 space-y-3 shadow-sm bg-card text-card-foreground"
+                    className="bg-slate-200 text-slate-900 p-4 rounded-lg shadow-sm space-y-3 border border-slate-300"
                   >
                     <div className="flex justify-between items-start">
                       <div>
-                        <h4 className="font-semibold">
+                        <h4 className="font-bold text-lg text-slate-900">
                           {dayjs(reserva.start_time)
                             .locale("es")
                             .format("dddd DD [de] MMMM")
                             .replace(/^\w/, (c) => c.toUpperCase())}
                         </h4>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-slate-600 font-medium">
                           {dayjs(reserva.start_time).format("HH:mm")} hs
                         </p>
                       </div>
-                      <Badge variant={reserva.tipo_reserva.toLowerCase()}>
+                      <Badge variant={reserva.tipo_reserva.toLowerCase()} className="shadow-sm">
                         {reserva.tipo_reserva}
                       </Badge>
                     </div>
-                    <div className="text-sm">
-                       <p className="text-muted-foreground">
+                    <div className="text-sm text-slate-700 border-t border-slate-300 pt-2">
+                       <p className="font-medium">
                           Consultorio {reserva.consultorio_id}
                        </p>
                     </div>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-full"
+                      className="w-full bg-white hover:bg-slate-50 border-slate-300 text-slate-700 shadow-sm"
                       onClick={() => handleViewDetails(reserva)}
                     >
-                      Ver Detalles
+                      Ver Detalle
                     </Button>
                   </div>
                 ))}
@@ -507,28 +507,28 @@ const Dashboard = () => {
                   {reschedulableBookings.map((reserva) => (
                     <div
                       key={reserva.id}
-                      className="border rounded-lg p-4 space-y-3 shadow-sm bg-card text-card-foreground"
+                      className="bg-slate-200 text-slate-900 p-4 rounded-lg shadow-sm space-y-3 border border-slate-300"
                     >
                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Reserva Original</p>
-                          <p className="font-medium">
-                              {dayjs(reserva.start_time).format("ddd DD/MM/YY - HH:mm")}
+                          <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">Reserva Original</p>
+                          <p className="font-bold text-slate-900">
+                              {dayjs(reserva.start_time).format("ddd DD/MM/YY - HH:mm")} hs
                           </p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-sm text-slate-600 font-medium">
                               Consultorio {reserva.consultorio_id}
                           </p>
                        </div>
                        
-                       <div className="bg-red-50 p-2 rounded text-red-700 text-sm">
+                       <div className="bg-red-50 p-2 rounded border border-red-200 text-red-700 text-sm shadow-sm">
                           <span className="font-bold">Vence: </span>
                           {dayjs(reserva.permite_reagendar_hasta).format("DD/MM/YYYY")}
-                          <span className="block text-xs mt-1">
+                          <span className="block text-xs mt-1 font-medium italic">
                              (Faltan {dayjs(reserva.permite_reagendar_hasta).diff(dayjs(), "day")} días)
                           </span>
                        </div>
 
                        <Button
-                          className="w-full"
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
                           size="sm"
                            onClick={() => handleReagendarClick(reserva)}
                         >
@@ -597,16 +597,16 @@ const Dashboard = () => {
                    {/* Mobile View */}
                   <div className="md:hidden space-y-3 p-3">
                      {pendingInvoices.map((invoice) => (
-                        <div key={invoice.id} className="flex justify-between items-center p-3 border rounded bg-card shadow-sm">
+                        <div key={invoice.id} className="flex justify-between items-center p-4 bg-slate-200 text-slate-900 rounded-lg shadow-sm border border-slate-300">
                            <div>
-                              <p className="text-xs text-muted-foreground">Período</p>
-                              <p className="text-sm font-medium">
+                              <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">Período</p>
+                              <p className="text-sm font-bold text-slate-900">
                                  {dayjs(invoice.periodo_inicio).format("DD/MM/YY")} - {dayjs(invoice.periodo_fin).format("DD/MM/YY")}
                               </p>
                            </div>
                            <div className="text-right">
-                              <p className="text-xs text-muted-foreground">Monto</p>
-                              <p className="text-lg font-bold">
+                              <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">Monto</p>
+                              <p className="text-xl font-black text-slate-900">
                                  ${invoice.monto_total.toFixed(0).toLocaleString("es-UY")}
                               </p>
                            </div>

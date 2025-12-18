@@ -236,48 +236,48 @@ const UserManagementPage = () => {
           users.map((user) => (
             <div
               key={user.id}
-              className="border rounded-lg p-4 space-y-3 shadow-sm bg-card text-card-foreground"
+              className="bg-slate-200 text-slate-900 p-4 rounded-lg shadow-sm space-y-3 border border-slate-300"
             >
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="font-semibold">
+                  <h3 className="font-bold text-lg text-slate-900">
                     {user.firstName} {user.lastName}
                   </h3>
-                  <p className="text-sm text-muted-foreground break-all">
+                  <p className="text-sm text-slate-600 font-medium break-all">
                     {user.email}
                   </p>
                 </div>
                 <Badge
                   variant={user.role === "admin" ? "default" : "secondary"}
-                  className="capitalize shrink-0 ml-2"
+                  className="capitalize shrink-0 ml-2 shadow-sm"
                 >
                   {user.role}
                 </Badge>
               </div>
 
-              <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-sm">
+              <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-sm text-slate-700 border-t border-slate-300 pt-3">
                 <div>
-                  <p className="text-muted-foreground text-xs">Teléfono</p>
-                  <p className="truncate">{user.phone || "N/A"}</p>
+                  <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Teléfono</p>
+                  <p className="font-medium truncate">{user.phone || "N/A"}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-xs">Profesión</p>
-                  <p className="truncate">{user.profession || "N/A"}</p>
+                  <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Profesión</p>
+                  <p className="font-medium truncate">{user.profession || "N/A"}</p>
                 </div>
                 <div className="col-span-2">
-                  <p className="text-muted-foreground text-xs">
+                  <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">
                     Fecha de Ingreso
                   </p>
-                  <p>{new Date(user.created_at).toLocaleDateString()}</p>
+                  <p className="font-medium">{new Date(user.created_at).toLocaleDateString()}</p>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-3 border-t mt-2">
+              <div className="flex items-center justify-between pt-3 border-t border-slate-300 mt-2">
                 <div>
-                  <p className="text-muted-foreground text-xs mb-1">
+                  <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
                     Modalidad Pago
                   </p>
-                  <Badge variant="outline" className="capitalize">
+                  <Badge variant="outline" className="capitalize bg-white border-slate-300 text-slate-700">
                     {user.modalidad_pago}
                   </Badge>
                 </div>
@@ -285,7 +285,7 @@ const UserManagementPage = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => openEditModal(user)}
-                  className="h-8"
+                  className="bg-white hover:bg-slate-50 border-slate-300 text-slate-700 shadow-sm"
                 >
                   <Edit className="h-4 w-4 mr-2" />
                   Editar

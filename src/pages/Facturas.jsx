@@ -254,42 +254,42 @@ export const Facturas = () => {
                 {invoices.map((factura) => (
                   <div
                     key={factura.id}
-                    className="border rounded-lg p-4 space-y-3 shadow-sm bg-card text-card-foreground"
+                    className="bg-slate-200 text-slate-900 p-4 rounded-lg shadow-sm space-y-3 border border-slate-300"
                   >
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="text-xs text-muted-foreground mb-1">
+                        <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
                           Período
                         </p>
-                        <p className="font-semibold">
+                        <p className="font-bold text-slate-900">
                           {dayjs(factura.periodo_inicio).format("DD/MM/YY")} -{" "}
                           {dayjs(factura.periodo_fin).format("DD/MM/YY")}
                         </p>
                       </div>
-                      <Badge variant={getStatusVariant(factura.estado)}>
+                      <Badge variant={getStatusVariant(factura.estado)} className="shadow-sm">
                         {factura.estado.charAt(0).toUpperCase() +
                           factura.estado.slice(1)}
                       </Badge>
                     </div>
 
-                    <div className="flex justify-between items-end">
+                    <div className="flex justify-between items-end border-t border-slate-300 pt-3">
                       <div>
-                        <p className="text-xs text-muted-foreground mb-1">
+                        <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
                           Monto Total
                         </p>
-                        <p className="text-xl font-bold">
+                        <p className="text-xl font-black text-slate-900">
                           ${factura.monto_total.toLocaleString("es-UY")}
                         </p>
                       </div>
                       <div className="text-right">
-                         <p className="text-xs text-muted-foreground mb-1">Emisión</p>
-                         <p className="text-sm">{dayjs(factura.fecha_emision).format("DD/MM/YY")}</p>
+                         <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">Emisión</p>
+                         <p className="text-sm font-medium text-slate-700">{dayjs(factura.fecha_emision).format("DD/MM/YY")}</p>
                       </div>
                     </div>
 
                     <Button
                       variant="outline"
-                      className="w-full"
+                      className="w-full bg-white hover:bg-slate-50 border-slate-300 text-slate-700 shadow-sm"
                       onClick={() => navigate(`/facturas/${factura.id}`)}
                     >
                       Ver Detalle
@@ -419,23 +419,23 @@ export const Facturas = () => {
                     {previewPaginatedBookings.map((reserva) => (
                       <div
                         key={reserva.reserva_id}
-                        className="flex justify-between items-start p-3 border rounded bg-card shadow-sm"
+                        className="flex justify-between items-start p-4 bg-slate-200 text-slate-900 rounded-lg shadow-sm border border-slate-300"
                       >
                         <div>
-                          <p className="font-semibold text-sm">
+                          <p className="font-bold text-sm text-slate-900 uppercase">
                             {dayjs(reserva.start_time)
-                                .format("dddd DD/MM")
+                                .format("ddd DD/MM")
                                 .replace(/^\w/, (c) => c.toUpperCase())}
                           </p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-xs text-slate-600 font-medium">
                             {dayjs(reserva.start_time).format("HH:mm")} hs - {reserva.consultorio_nombre}
                           </p>
-                          <Badge variant={reserva.estado.toLowerCase()} className="mt-1 text-[10px] h-5 px-1.5">
+                          <Badge variant={reserva.estado.toLowerCase()} className="mt-2 text-[10px] h-5 px-1.5 shadow-sm">
                                 {reserva.estado}
                           </Badge>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-bold">
+                          <p className="text-sm font-black text-slate-900">
                             ${reserva.costo_calculado.toLocaleString("es-UY")}
                           </p>
                         </div>

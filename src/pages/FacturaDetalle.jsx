@@ -336,33 +336,33 @@ export const FacturaDetalle = () => {
                         const rowClassName = m_useFirstColor ? color1 : color2;
 
                         return (
-                           <div key={detalle.id} className={`p-4 rounded-lg shadow-sm border ${rowClassName}`}>
-                              <div className="flex justify-between items-start mb-2">
+                           <div key={detalle.id} className={`p-4 rounded-lg shadow-sm border border-slate-300/50 space-y-3 ${rowClassName} text-slate-900 font-medium`}>
+                              <div className="flex justify-between items-start">
                                  <div>
-                                    <p className="font-bold text-sm">
+                                    <p className="font-bold text-lg text-slate-900">
                                        {dayjs(detalle.reservas.start_time)
                                           .locale("es")
                                           .format("dddd DD/MM")
                                           .replace(/^\w/, (c) => c.toUpperCase())}
                                     </p>
-                                    <p className="text-xs text-muted-foreground">
-                                       {dayjs(detalle.reservas.start_time).format("HH:mm")} hs - {detalle.reservas.consultorios.nombre}
+                                    <p className="text-slate-600 font-semibold text-xs uppercase tracking-tight">
+                                       {dayjs(detalle.reservas.start_time).format("HH:mm")} hs — {detalle.reservas.consultorios.nombre}
                                     </p>
                                  </div>
-                                 <Badge variant={detalle.reservas.tipo_reserva.toLowerCase()}>
+                                 <Badge variant={detalle.reservas.tipo_reserva.toLowerCase()} className="shadow-sm">
                                     {detalle.reservas.tipo_reserva}
                                  </Badge>
                               </div>
                               
-                              <div className="flex justify-between items-center text-sm border-t pt-2 border-black/10">
-                                 <div className="text-muted-foreground text-xs">
+                              <div className="flex justify-between items-center text-sm border-t pt-3 border-black/10">
+                                 <div className="text-muted-foreground text-xs font-semibold uppercase font-sans">
                                      {detalle.descuento_aplicado_hora > 0 && (
                                         <span className="text-red-600 block">
-                                           Desc: -${detalle.descuento_aplicado_hora.toLocaleString("de-DE")}
+                                           AHORRO: -${detalle.descuento_aplicado_hora.toLocaleString("de-DE")}
                                         </span>
                                      )}
                                  </div>
-                                 <div className="font-bold text-base">
+                                 <div className="font-black text-xl text-slate-900">
                                      ${detalle.costo_calculado.toLocaleString("es-UY")}
                                  </div>
                               </div>
