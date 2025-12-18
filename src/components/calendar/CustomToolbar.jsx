@@ -31,7 +31,7 @@ const CustomToolbar = (toolbar) => {
   };
 
   return (
-    <div className="rbc-toolbar flex items-center justify-between">
+    <div className="rbc-toolbar flex flex-col md:flex-row items-center justify-between gap-4 py-2">
       {/* Botones de navegación */}
       <span className="rbc-btn-group">
         <Button variant="outline" onClick={goToBack}>
