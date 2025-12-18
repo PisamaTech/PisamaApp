@@ -231,83 +231,146 @@ export const FacturaDetalle = () => {
           {/* Tabla de Detalle */}
           <div>
             <h3 className="text-lg font-semibold mb-2">Reservas Incluidas</h3>
-            <div className="overflow-x-auto border rounded-md">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Día</TableHead>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Hora</TableHead>
-                    <TableHead>Consultorio</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Descuento</TableHead>
-                    <TableHead>Costo Final</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {detalles.map((detalle, index) => {
-                    // 1. Obtener el número de la semana para la reserva actual
-                    const currentWeekNumber = dayjs(
-                      detalle.reservas.start_time
-                    ).isoWeek();
+            <div className="border rounded-md">
+              {/* Desktop View */}
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Día</TableHead>
+                      <TableHead>Fecha</TableHead>
+                      <TableHead>Hora</TableHead>
+                      <TableHead>Consultorio</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Descuento</TableHead>
+                      <TableHead>Costo Final</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {detalles.map((detalle, index) => {
+                      // 1. Obtener el número de la semana para la reserva actual
+                      const currentWeekNumber = dayjs(
+                        detalle.reservas.start_time
+                      ).isoWeek();
 
-                    // 2. Comprobar si la semana ha cambiado
-                    // Se activa en la primera fila (index === 0) o cuando la semana cambia
-                    if (index === 0) {
-                      // Iniciamos con el primer elemento usando el primer color
-                      lastWeekNumber = currentWeekNumber;
-                      useFirstColor = true;
-                    } else if (currentWeekNumber !== lastWeekNumber) {
-                      // Si la semana es diferente a la anterior, invertimos el color
-                      useFirstColor = !useFirstColor;
-                      // Y actualizamos la última semana vista
-                      lastWeekNumber = currentWeekNumber;
-                    }
+                      // 2. Comprobar si la semana ha cambiado
+                      if (index === 0) {
+                        lastWeekNumber = currentWeekNumber;
+                        useFirstColor = true;
+                      } else if (currentWeekNumber !== lastWeekNumber) {
+                        useFirstColor = !useFirstColor;
+                        lastWeekNumber = currentWeekNumber;
+                      }
 
-                    // 3. Determinar la clase de color
-                    const rowClassName = useFirstColor ? color1 : color2;
-                    return (
-                      <TableRow key={detalle.id} className={rowClassName}>
-                        <TableCell>
-                          {dayjs(detalle.reservas.start_time)
-                            .locale("es")
-                            .format("dddd")
-                            .replace(/^\w/, (c) => c.toUpperCase())}
-                        </TableCell>
-                        <TableCell>
-                          {dayjs(detalle.reservas.start_time).format(
-                            "DD/MM/YYYY"
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {`${dayjs(detalle.reservas.start_time).format(
-                            "HH:mm"
-                          )}`}
-                        </TableCell>
-                        <TableCell>
-                          {detalle.reservas.consultorios.nombre}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={detalle.reservas.tipo_reserva.toLowerCase()}
-                          >
-                            {detalle.reservas.tipo_reserva}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-red-600">
-                          -$
-                          {detalle.descuento_aplicado_hora.toLocaleString(
-                            "de-DE"
-                          )}
-                        </TableCell>
-                        <TableCell className="text-c font-medium">
-                          ${detalle.costo_calculado.toLocaleString("es-UY")}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+                      const rowClassName = useFirstColor ? color1 : color2;
+                      return (
+                        <TableRow key={detalle.id} className={rowClassName}>
+                          <TableCell>
+                            {dayjs(detalle.reservas.start_time)
+                              .locale("es")
+                              .format("dddd")
+                              .replace(/^\w/, (c) => c.toUpperCase())}
+                          </TableCell>
+                          <TableCell>
+                            {dayjs(detalle.reservas.start_time).format(
+                              "DD/MM/YYYY"
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {`${dayjs(detalle.reservas.start_time).format(
+                              "HH:mm"
+                            )}`}
+                          </TableCell>
+                          <TableCell>
+                            {detalle.reservas.consultorios.nombre}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={detalle.reservas.tipo_reserva.toLowerCase()}
+                            >
+                              {detalle.reservas.tipo_reserva}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-red-600">
+                            -$
+                            {detalle.descuento_aplicado_hora.toLocaleString(
+                              "de-DE"
+                            )}
+                          </TableCell>
+                          <TableCell className="text-c font-medium">
+                            ${detalle.costo_calculado.toLocaleString("es-UY")}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+
+               {/* Mobile View */}
+               <div className="md:hidden space-y-2 p-2">
+                   {/* Resetear variables para el map del móvil si es necesario, 
+                       pero como React re-renderiza, las variables let fuera del map se reinician en cada render del componente. 
+                       IMPORTANTE: Las variables let lastWeekNumber y useFirstColor están definidas en el cuerpo del componente, 
+                       por lo que se comparten. Al renderizar AMBOS maps (aunque uno esté oculto), las variables se modificarían dos veces.
+                       NECESITAMOS reiniciar las variables antes de este segundo map o usar lógica independiente.
+                       
+                       Lo mejor es usar un bloque IIFE o simplemente resetearlas aquí manualmente ya que sabemos que el componente se ejecuta secuencialmente.
+                   */}
+                   {(() => {
+                      // Reiniciamos las variables de control de color para el renderizado móvil
+                      let m_lastWeekNumber = null;
+                      let m_useFirstColor = true;
+
+                      return detalles.map((detalle, index) => {
+                        const currentWeekNumber = dayjs(detalle.reservas.start_time).isoWeek();
+
+                        if (index === 0) {
+                           m_lastWeekNumber = currentWeekNumber;
+                           m_useFirstColor = true;
+                        } else if (currentWeekNumber !== m_lastWeekNumber) {
+                           m_useFirstColor = !m_useFirstColor;
+                           m_lastWeekNumber = currentWeekNumber;
+                        }
+                        
+                        const rowClassName = m_useFirstColor ? color1 : color2;
+
+                        return (
+                           <div key={detalle.id} className={`p-4 rounded-lg shadow-sm border ${rowClassName}`}>
+                              <div className="flex justify-between items-start mb-2">
+                                 <div>
+                                    <p className="font-bold text-sm">
+                                       {dayjs(detalle.reservas.start_time)
+                                          .locale("es")
+                                          .format("dddd DD/MM")
+                                          .replace(/^\w/, (c) => c.toUpperCase())}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                       {dayjs(detalle.reservas.start_time).format("HH:mm")} hs - {detalle.reservas.consultorios.nombre}
+                                    </p>
+                                 </div>
+                                 <Badge variant={detalle.reservas.tipo_reserva.toLowerCase()}>
+                                    {detalle.reservas.tipo_reserva}
+                                 </Badge>
+                              </div>
+                              
+                              <div className="flex justify-between items-center text-sm border-t pt-2 border-black/10">
+                                 <div className="text-muted-foreground text-xs">
+                                     {detalle.descuento_aplicado_hora > 0 && (
+                                        <span className="text-red-600 block">
+                                           Desc: -${detalle.descuento_aplicado_hora.toLocaleString("de-DE")}
+                                        </span>
+                                     )}
+                                 </div>
+                                 <div className="font-bold text-base">
+                                     ${detalle.costo_calculado.toLocaleString("es-UY")}
+                                 </div>
+                              </div>
+                           </div>
+                        );
+                      });
+                   })()}
+               </div>
             </div>
           </div>
         </CardContent>

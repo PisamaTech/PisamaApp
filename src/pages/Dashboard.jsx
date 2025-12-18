@@ -282,7 +282,7 @@ const Dashboard = () => {
               {expiringSeries.map((serie) => (
                 <div
                   key={serie.recurrence_id}
-                  className="flex items-center justify-between p-3 bg-white rounded-md shadow-sm"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-white rounded-md shadow-sm"
                 >
                   <div>
                     <p className="text-sm font-semibold">{serie.title}</p>
@@ -293,6 +293,7 @@ const Dashboard = () => {
                   </div>
                   <Button
                     size="sm"
+                    className="w-full sm:w-auto"
                     onClick={() => openConfirmationModal(serie, "renewSeries")}
                   >
                     Renovar
@@ -422,7 +423,7 @@ const Dashboard = () => {
         </CardContent>
         {/* --- CardFooter con los botones de acción --- */}
         {upcomingBookings.length > 0 && (
-          <CardFooter className="flex justify-end gap-2 pt-4">
+          <CardFooter className="flex justify-center gap-2 pt-4 flex-wrap">
             <Button variant="outline" onClick={() => navigate("/reservas")}>
               Ver Todas Tus Reservas
             </Button>
