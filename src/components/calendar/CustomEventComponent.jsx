@@ -11,14 +11,14 @@ export const CustomEventComponent = ({ event }) => {
   return (
     <div className="flex flex-col h-full text-primary">
       {/* Parte superior: start - end centrado */}
-      <div className="hidden xl:block text-center text-[12px] py-0.5">
+      <div className="hidden xl:block text-center text-[10px] sm:text-[11px] lg:text-[12px] py-0.5">
         {startTime} - {endTime}
       </div>
-      {/* Siguiente línea: ícono a la izquierda y título a la derecha */}
-      <div className="flex justify-between items-center overflow-hidden">
-        <span className="text-sm font-bold pt-1">{titulo}</span>
+      {/* Contenedor principal: columna en móvil, fila en pantallas grandes */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center overflow-hidden gap-0.5">
+        <span className="text-[10px] sm:text-xs lg:text-sm font-bold pt-0.5 sm:pt-1 leading-tight">{titulo}</span>
         {usaCamilla && (
-          <img src={camillaIcon} alt="Icono de Camilla" className="w-6 h-7" />
+          <img src={camillaIcon} alt="Icono de Camilla" className="w-4 h-5 sm:w-5 sm:h-6 lg:w-6 lg:h-7 flex-shrink-0" />
         )}
       </div>
     </div>

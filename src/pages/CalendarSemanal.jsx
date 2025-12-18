@@ -133,7 +133,7 @@ export const CalendarSemanal = () => {
   }, [events, selectedConsultorio, showOnlyMyReservations, userId]);
 
   return (
-    <div className="mx-auto p-2 sm:p-4 space-y-3 sm:space-y-4 w-full max-w-full overflow-x-hidden">
+    <div className="mx-auto p-2 sm:p-4 lg:p-6 space-y-3 sm:space-y-4 w-full max-w-full lg:max-w-7xl overflow-x-hidden">
       {/* --- Indicador Visual de Reagendamiento --- */}
       {isReagendamientoMode && penalizedBookingForReagendamiento && (
         <Alert
@@ -264,7 +264,7 @@ export const CalendarSemanal = () => {
       <Separator className="mb-4" />
       <div className="h-2"></div>
 
-      <div className="h-[800px] bg-white rounded-lg shadow-lg overflow-x-auto">
+      <div className="h-[900px] bg-white rounded-lg shadow-lg overflow-x-hidden">
         {/* Calendario */}
         <Calendar
           localizer={localizer}
