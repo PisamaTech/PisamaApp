@@ -317,54 +317,97 @@ const Dashboard = () => {
         </CardHeader>
         <CardContent>
           {upcomingBookings.length > 0 ? (
-            <div className="overflow-x-auto border rounded-md">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Día</TableHead>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Hora</TableHead>
-                    <TableHead>Consultorio</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {upcomingBookings.map((reserva) => (
-                    <TableRow key={reserva.id}>
-                      <TableCell>
-                        {dayjs(reserva.start_time)
-                          .locale("es")
-                          .format("dddd")
-                          .replace(/^\w/, (c) => c.toUpperCase())}
-                      </TableCell>
-                      <TableCell>
-                        {dayjs(reserva.start_time).format("DD/MM/YYYY")}
-                      </TableCell>
-                      <TableCell>
-                        {dayjs(reserva.start_time).format("HH:mm")}
-                      </TableCell>
-                      <TableCell>
-                        Consultorio {reserva.consultorio_id}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={reserva.tipo_reserva.toLowerCase()}>
-                          {reserva.tipo_reserva}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewDetails(reserva)}
-                        >
-                          Ver Detalles
-                        </Button>
-                      </TableCell>
+            <div className="border rounded-md">
+              {/* Desktop View */}
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Día</TableHead>
+                      <TableHead>Fecha</TableHead>
+                      <TableHead>Hora</TableHead>
+                      <TableHead>Consultorio</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Acciones</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {upcomingBookings.map((reserva) => (
+                      <TableRow key={reserva.id}>
+                        <TableCell>
+                          {dayjs(reserva.start_time)
+                            .locale("es")
+                            .format("dddd")
+                            .replace(/^\w/, (c) => c.toUpperCase())}
+                        </TableCell>
+                        <TableCell>
+                          {dayjs(reserva.start_time).format("DD/MM/YYYY")}
+                        </TableCell>
+                        <TableCell>
+                          {dayjs(reserva.start_time).format("HH:mm")}
+                        </TableCell>
+                        <TableCell>
+                          Consultorio {reserva.consultorio_id}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={reserva.tipo_reserva.toLowerCase()}>
+                            {reserva.tipo_reserva}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewDetails(reserva)}
+                          >
+                            Ver Detalles
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile View */}
+              <div className="md:hidden space-y-4 p-4">
+                {upcomingBookings.map((reserva) => (
+                  <div
+                    key={reserva.id}
+                    className="border rounded-lg p-4 space-y-3 shadow-sm bg-card text-card-foreground"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-semibold">
+                          {dayjs(reserva.start_time)
+                            .locale("es")
+                            .format("dddd DD [de] MMMM")
+                            .replace(/^\w/, (c) => c.toUpperCase())}
+                        </h4>
+                        <p className="text-sm text-muted-foreground">
+                          {dayjs(reserva.start_time).format("HH:mm")} hs
+                        </p>
+                      </div>
+                      <Badge variant={reserva.tipo_reserva.toLowerCase()}>
+                        {reserva.tipo_reserva}
+                      </Badge>
+                    </div>
+                    <div className="text-sm">
+                       <p className="text-muted-foreground">
+                          Consultorio {reserva.consultorio_id}
+                       </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => handleViewDetails(reserva)}
+                    >
+                      Ver Detalles
+                    </Button>
+                  </div>
+                ))}
+              </div>
             </div>
           ) : (
             <div className="text-center py-10">
@@ -406,55 +449,93 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             {reschedulableBookings.length > 0 ? (
-              <div className="overflow-x-auto border rounded-md">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Reserva Original</TableHead>
-                      <TableHead>Vence el</TableHead>
-                      <TableHead>Acción</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {reschedulableBookings.map((reserva) => (
-                      <TableRow key={reserva.id}>
-                        <TableCell>
-                          <div className="font-medium">
-                            {dayjs(reserva.start_time).format(
-                              "ddd DD/MM/YY - HH:mm"
-                            )}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            Consultorio {reserva.consultorio_id}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="font-medium text-red-600">
-                            {dayjs(reserva.permite_reagendar_hasta).format(
-                              "DD/MM/YYYY"
-                            )}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            (Faltan{" "}
-                            {dayjs(reserva.permite_reagendar_hasta).diff(
-                              dayjs(),
-                              "day"
-                            )}{" "}
-                            días)
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            size="sm"
-                            onClick={() => handleReagendarClick(reserva)}
-                          >
-                            Reagendar
-                          </Button>
-                        </TableCell>
+              <div className="border rounded-md">
+                {/* Desktop View */}
+                <div className="hidden md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Reserva Original</TableHead>
+                        <TableHead>Vence el</TableHead>
+                        <TableHead>Acción</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {reschedulableBookings.map((reserva) => (
+                        <TableRow key={reserva.id}>
+                          <TableCell>
+                            <div className="font-medium">
+                              {dayjs(reserva.start_time).format(
+                                "ddd DD/MM/YY - HH:mm"
+                              )}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              Consultorio {reserva.consultorio_id}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium text-red-600">
+                              {dayjs(reserva.permite_reagendar_hasta).format(
+                                "DD/MM/YYYY"
+                              )}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              (Faltan{" "}
+                              {dayjs(reserva.permite_reagendar_hasta).diff(
+                                dayjs(),
+                                "day"
+                              )}{" "}
+                              días)
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              size="sm"
+                              onClick={() => handleReagendarClick(reserva)}
+                            >
+                              Reagendar
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                 {/* Mobile View */}
+                 <div className="md:hidden space-y-4 p-4">
+                  {reschedulableBookings.map((reserva) => (
+                    <div
+                      key={reserva.id}
+                      className="border rounded-lg p-4 space-y-3 shadow-sm bg-card text-card-foreground"
+                    >
+                       <div>
+                          <p className="text-xs text-muted-foreground mb-1">Reserva Original</p>
+                          <p className="font-medium">
+                              {dayjs(reserva.start_time).format("ddd DD/MM/YY - HH:mm")}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                              Consultorio {reserva.consultorio_id}
+                          </p>
+                       </div>
+                       
+                       <div className="bg-red-50 p-2 rounded text-red-700 text-sm">
+                          <span className="font-bold">Vence: </span>
+                          {dayjs(reserva.permite_reagendar_hasta).format("DD/MM/YYYY")}
+                          <span className="block text-xs mt-1">
+                             (Faltan {dayjs(reserva.permite_reagendar_hasta).diff(dayjs(), "day")} días)
+                          </span>
+                       </div>
+
+                       <Button
+                          className="w-full"
+                          size="sm"
+                           onClick={() => handleReagendarClick(reserva)}
+                        >
+                          Reagendar Ahora
+                        </Button>
+                    </div>
+                  ))}
+                 </div>
               </div>
             ) : (
               <div className="text-center py-10">
@@ -485,30 +566,52 @@ const Dashboard = () => {
               </h4>
               {pendingInvoices.length > 0 ? (
                 <div className="border rounded-md">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Período</TableHead>
-                        <TableHead className="text-right">Monto</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {pendingInvoices.map((invoice) => (
-                        <TableRow key={invoice.id}>
-                          <TableCell className="font-medium">
-                            {dayjs(invoice.periodo_inicio).format("DD/MM/YY")} -{" "}
-                            {dayjs(invoice.periodo_fin).format("DD/MM/YY")}
-                          </TableCell>
-                          <TableCell className="text-right font-bold">
-                            $
-                            {invoice.monto_total
-                              .toFixed(0)
-                              .toLocaleString("es-UY")}
-                          </TableCell>
+                  {/* Desktop View */}
+                  <div className="hidden md:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Período</TableHead>
+                          <TableHead className="text-right">Monto</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {pendingInvoices.map((invoice) => (
+                          <TableRow key={invoice.id}>
+                            <TableCell className="font-medium">
+                              {dayjs(invoice.periodo_inicio).format("DD/MM/YY")} -{" "}
+                              {dayjs(invoice.periodo_fin).format("DD/MM/YY")}
+                            </TableCell>
+                            <TableCell className="text-right font-bold">
+                              $
+                              {invoice.monto_total
+                                .toFixed(0)
+                                .toLocaleString("es-UY")}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                   {/* Mobile View */}
+                  <div className="md:hidden space-y-3 p-3">
+                     {pendingInvoices.map((invoice) => (
+                        <div key={invoice.id} className="flex justify-between items-center p-3 border rounded bg-card shadow-sm">
+                           <div>
+                              <p className="text-xs text-muted-foreground">Período</p>
+                              <p className="text-sm font-medium">
+                                 {dayjs(invoice.periodo_inicio).format("DD/MM/YY")} - {dayjs(invoice.periodo_fin).format("DD/MM/YY")}
+                              </p>
+                           </div>
+                           <div className="text-right">
+                              <p className="text-xs text-muted-foreground">Monto</p>
+                              <p className="text-lg font-bold">
+                                 ${invoice.monto_total.toFixed(0).toLocaleString("es-UY")}
+                              </p>
+                           </div>
+                        </div>
+                     ))}
+                  </div>
                 </div>
               ) : (
                 <p className="text-sm text-center text-muted-foreground py-4">
