@@ -220,16 +220,16 @@ const ReservationsManagementPage = () => {
   console.log(reservations);
 
   return (
-    <div className="container mx-auto p-4 md:p-8 space-y-6">
+    <div className="container mx-auto p-2 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-6 max-w-full lg:max-w-7xl">
       <div className="space-y-1">
-        <h1 className="text-3xl font-bold">Búsqueda de Reservas</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Búsqueda de Reservas</h1>
+        <p className="text-muted-foreground text-xs sm:text-sm">
           Encuentra cualquier reserva en el sistema con filtros avanzados.
         </p>
       </div>
       <Separator />
       {/* Filtros */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2 items-center">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2 sm:gap-3 items-center">
         <UserCombobox
           users={allUsers}
           selectedUserId={filters.userId}
@@ -271,14 +271,14 @@ const ReservationsManagementPage = () => {
             ))}
           </SelectContent>
         </Select>
-        <div className="flex gap-2">
-          <Button onClick={handleApplyFilters} className="w-full">
+        <div className="flex gap-2 sm:col-span-2 lg:col-span-1">
+          <Button onClick={handleApplyFilters} className="w-full text-xs sm:text-sm h-9 sm:h-10">
             Buscar
           </Button>
           <Button
             onClick={handleResetFilters}
             variant="outline"
-            className="w-full"
+            className="w-full text-xs sm:text-sm h-9 sm:h-10"
           >
             Limpiar
           </Button>
@@ -286,11 +286,11 @@ const ReservationsManagementPage = () => {
       </div>
 
       {/* Tabla de Reservas */}
-      <div className="border rounded-md">
+      <div className="border rounded-md overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Día</TableHead>
+              <TableHead className="text-xs sm:text-sm hidden md:table-cell">Día</TableHead>
               <SortableTableHead
                 label="Fecha y Hora"
                 field="start_time"
@@ -311,6 +311,7 @@ const ReservationsManagementPage = () => {
                 currentSortField={sortField}
                 sortDirection={sortDirection}
                 onSort={handleSort}
+                className="hidden lg:table-cell"
               />
               <SortableTableHead
                 label="Estado"
@@ -325,66 +326,68 @@ const ReservationsManagementPage = () => {
                 currentSortField={sortField}
                 sortDirection={sortDirection}
                 onSort={handleSort}
+                className="hidden sm:table-cell"
               />
-              <TableHead>Camilla</TableHead>
+              <TableHead className="text-xs sm:text-sm hidden xl:table-cell">Camilla</TableHead>
               <SortableTableHead
                 label="Fecha de Creación"
                 field="created_at"
                 currentSortField={sortField}
                 sortDirection={sortDirection}
                 onSort={handleSort}
+                className="hidden xl:table-cell"
               />
-              <TableHead className="text-right">Acciones</TableHead>
+              <TableHead className="text-right text-xs sm:text-sm">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
+                <TableCell colSpan={9} className="h-24 text-center text-xs sm:text-sm">
                   Cargando reservas...
                 </TableCell>
               </TableRow>
             ) : sortedReservations.length > 0 ? (
               sortedReservations.map((reserva) => (
                 <TableRow key={reserva.id}>
-                  <TableCell>
+                  <TableCell className="text-xs sm:text-sm hidden md:table-cell">
                     {dayjs(reserva.start_time)
                       .locale("es")
                       .format("dddd")
                       .replace(/^\w/, (c) => c.toUpperCase())}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-xs sm:text-sm">
                     {dayjs(reserva.start_time).format("DD/MM/YY [-] HH:mm")}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-xs sm:text-sm">
                     {`${reserva.usuario_firstname || ""} ${
                       reserva.usuario_lastname || ""
                     }`.trim() || "N/A"}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-xs sm:text-sm hidden lg:table-cell">
                     {reserva.consultorio_nombre ||
                       `ID: ${reserva.consultorio_id}`}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={reserva.estado} className="capitalize">
+                    <Badge variant={reserva.estado} className="capitalize text-xs">
                       {reserva.estado}
                     </Badge>
                   </TableCell>
-                  <TableCell>
-                    <Badge variant={reserva.tipo_reserva.toLowerCase()}>
+                  <TableCell className="hidden sm:table-cell">
+                    <Badge variant={reserva.tipo_reserva.toLowerCase()} className="text-xs">
                       {reserva.tipo_reserva}
                     </Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden xl:table-cell">
                     {reserva.usaCamilla && camillaIcon && (
                       <img
                         src={camillaIcon}
                         alt="Icono de Camilla"
-                        className="w-5 h-6"
+                        className="w-4 h-5 sm:w-5 sm:h-6"
                       />
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-xs sm:text-sm hidden xl:table-cell">
                     {dayjs(reserva.created_at).format("DD/MM/YY [-] HH:mm")}
                   </TableCell>
                   <TableCell className="text-right">
@@ -392,15 +395,16 @@ const ReservationsManagementPage = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => handleViewDetails(reserva)}
+                      className="text-xs h-8"
                     >
-                      Ver Detalles
+                      Ver
                     </Button>
                   </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
+                <TableCell colSpan={9} className="h-24 text-center text-xs sm:text-sm">
                   No se encontraron reservas.
                 </TableCell>
               </TableRow>
@@ -411,18 +415,19 @@ const ReservationsManagementPage = () => {
 
       {/* Paginación */}
       {!loading && totalPages > 1 && (
-        <div className="flex justify-center pt-4">
+        <div className="flex justify-center pt-2 sm:pt-4">
           <Pagination>
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious
                   onClick={handlePreviousPage}
                   aria-disabled={currentPage === 1}
-                  className={
+                  className={cn(
+                    "text-xs sm:text-sm h-8 sm:h-9",
                     currentPage === 1
                       ? "pointer-events-none opacity-50 cursor-not-allowed"
                       : "cursor-pointer"
-                  }
+                  )}
                 />
               </PaginationItem>
 
@@ -430,7 +435,7 @@ const ReservationsManagementPage = () => {
               <PaginationItem>
                 <PaginationLink
                   isActive
-                  className="w-auto min-w-0 px-2 py-1 text-sm"
+                  className="w-auto min-w-0 px-2 py-1 text-xs sm:text-sm"
                 >
                   {currentPage} de {totalPages}
                 </PaginationLink>
@@ -441,11 +446,12 @@ const ReservationsManagementPage = () => {
                 <PaginationNext
                   onClick={handleNextPage}
                   aria-disabled={currentPage === totalPages}
-                  className={
+                  className={cn(
+                    "text-xs sm:text-sm h-8 sm:h-9",
                     currentPage === totalPages
                       ? "pointer-events-none opacity-50 cursor-not-allowed"
                       : "cursor-pointer"
-                  }
+                  )}
                 />
               </PaginationItem>
             </PaginationContent>
@@ -472,24 +478,28 @@ function SortableTableHead({
   currentSortField,
   sortDirection,
   onSort,
+  className = "",
 }) {
   const isActive = currentSortField === field;
 
   return (
     <TableHead
-      className="cursor-pointer select-none hover:bg-muted/50 transition-colors"
+      className={cn(
+        "cursor-pointer select-none hover:bg-muted/50 transition-colors text-xs sm:text-sm",
+        className
+      )}
       onClick={() => onSort(field)}
     >
       <div className="flex items-center gap-1">
         <span>{label}</span>
         {isActive ? (
           sortDirection === "asc" ? (
-            <ArrowUp className="h-4 w-4" />
+            <ArrowUp className="h-3 w-3 sm:h-4 sm:w-4" />
           ) : (
-            <ArrowDown className="h-4 w-4" />
+            <ArrowDown className="h-3 w-3 sm:h-4 sm:w-4" />
           )
         ) : (
-          <ArrowUpDown className="h-4 w-4 opacity-50" />
+          <ArrowUpDown className="h-3 w-3 sm:h-4 sm:w-4 opacity-50" />
         )}
       </div>
     </TableHead>
@@ -504,17 +514,17 @@ function DateRangePicker({ date, onDateChange }) {
           id="date"
           variant={"outline"}
           className={cn(
-            "w-full justify-start text-left font-normal whitespace-normal",
+            "w-full justify-start text-left font-normal whitespace-normal text-xs sm:text-sm h-9 sm:h-10",
             !date && "text-muted-foreground"
           )}
         >
-          <CalendarIcon className="mr-2 h-4 w-4" />
+          <CalendarIcon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
           {date?.from ? (
             date.to ? (
-              <>
+              <span className="truncate">
                 {format(date.from, "dd/MM/yyyy", { locale: es })} -{" "}
                 {format(date.to, "dd/MM/yyyy", { locale: es })}
-              </>
+              </span>
             ) : (
               format(date.from, "dd/MM/yyyy")
             )
@@ -530,8 +540,9 @@ function DateRangePicker({ date, onDateChange }) {
           defaultMonth={date?.from}
           selected={date}
           onSelect={onDateChange}
-          numberOfMonths={2}
+          numberOfMonths={1}
           locale={es}
+          className="sm:block"
         />
       </PopoverContent>
     </Popover>
