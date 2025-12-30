@@ -43,7 +43,7 @@ export const fetchEventsFromDatabase = async (startDate, endDate) => {
     return data;
   } catch (error) {
     console.error("Error al cargar reservas desde la base de datos:", error);
-    return error;
+    return [];  // Retornar array vacío en lugar del error
   }
 };
 

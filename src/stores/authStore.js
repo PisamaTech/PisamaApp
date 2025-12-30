@@ -3,6 +3,16 @@ import { persist } from "zustand/middleware"; // Importa el middleware persist
 import { supabase } from "../supabase/supabase.config.js";
 import { useUIStore } from "./uiStore";
 
+// Capitaliza la primera letra de cada palabra en un string
+const capitalizeWords = (str) => {
+  if (!str) return str;
+  return str
+    .toLowerCase()
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
+
 export const useAuthStore = create(
   persist(
     (set) => ({
@@ -101,14 +111,18 @@ export const useAuthStore = create(
         clearError();
 
         try {
+          // Capitalizar nombres antes de guardar
+          const formattedFirstName = capitalizeWords(firstName);
+          const formattedLastName = capitalizeWords(lastName);
+
           const { data: authData, error: authError } =
             await supabase.auth.signUp({
               email,
               password,
               options: {
                 data: {
-                  firstName,
-                  lastName,
+                  firstName: formattedFirstName,
+                  lastName: formattedLastName,
                   phone,
                   profession,
                 },

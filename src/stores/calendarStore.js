@@ -16,7 +16,7 @@ export const useEventStore = create((set, get) => ({
   // Función para cargar eventos por semana del año
   fetchEventsByWeek: async (weekOfYearToLoad, yearToLoad) => {
     const { startLoading, stopLoading, setError, clearError } =
-      useUIStore.getState(); // Obtiene funciones de UIStore
+      useUIStore.getState();
 
     // Optimización: Evitar cargar la misma semana repetidamente
     const weekKey = `${yearToLoad}-${weekOfYearToLoad}`;
@@ -28,16 +28,12 @@ export const useEventStore = create((set, get) => ({
     clearError(); // Limpia cualquier error previo en UIStore
 
     // Calcula el rango de fechas para la semana del año
-    const startDateOfWeek = dayjs()
-      .year(yearToLoad)
-      .week(weekOfYearToLoad)
-      .startOf("week")
-      .toDate();
-    const endDateOfWeek = dayjs()
-      .year(yearToLoad)
-      .week(weekOfYearToLoad)
-      .endOf("week")
-      .toDate();
+    // Usamos el 4 de enero del año como referencia (siempre está en la semana 1 ISO)
+    // y luego sumamos las semanas necesarias
+    const jan4 = dayjs(`${yearToLoad}-01-04`);
+    const targetWeek = jan4.week(weekOfYearToLoad);
+    const startDateOfWeek = targetWeek.startOf("week").toDate();
+    const endDateOfWeek = targetWeek.endOf("week").toDate();
 
     try {
       const fetchedReservations = await fetchEventsFromDatabase(
@@ -72,33 +68,14 @@ export const useEventStore = create((set, get) => ({
   // Función para carga inicial: carga varias semanas alrededor de la semana actual
   loadInitialEvents: async () => {
     const { startLoading, stopLoading, setError, clearError } =
-      useUIStore.getState(); // Obtiene funciones de UIStore
+      useUIStore.getState();
 
     const now = dayjs();
-    const currentWeekOfYear = now.week();
-    const currentCalendarYear = now.year();
-    const currentMonth = now.month();
 
-    // Calcular el "Año de la Semana" (ISO Week Year aproximado)
-    let yearForWeek = currentCalendarYear;
-    if (currentWeekOfYear === 1 && currentMonth === 11) {
-      yearForWeek = yearForWeek + 1;
-    } else if (currentWeekOfYear >= 52 && currentMonth === 0) {
-      yearForWeek = yearForWeek - 1;
-    }
-
-    // Calcula la fecha de inicio de la semana previa
-    const initialStartDate = dayjs()
-      .year(yearForWeek)
-      .week(currentWeekOfYear - 1)
-      .startOf("week")
-      .toDate();
-    // Calcula la fecha de fin de la semana siguiente
-    const initialEndDate = dayjs()
-      .year(yearForWeek)
-      .week(currentWeekOfYear + 1)
-      .endOf("week")
-      .toDate();
+    // Usar la fecha actual como referencia y calcular semana anterior y siguiente
+    // Esto evita problemas con el cambio de año
+    const initialStartDate = now.subtract(1, "week").startOf("week").toDate();
+    const initialEndDate = now.add(1, "week").endOf("week").toDate();
 
     startLoading("Cargando eventos..."); 
     clearError();
@@ -109,28 +86,15 @@ export const useEventStore = create((set, get) => ({
       );
       const formattedEvents = fetchedReservations.map(mapReservationToEvent);
 
-      const weeksToLoad = [
-        currentWeekOfYear,
-        currentWeekOfYear + 1,
-        currentWeekOfYear - 1,
+      // Generar las keys de las semanas cargadas usando las fechas reales
+      const weeksLoaded = [
+        now.subtract(1, "week"),
+        now,
+        now.add(1, "week"),
       ];
 
-      const loadedKeys = weeksToLoad.map((w) => {
-        const d = dayjs().year(yearForWeek).week(w);
-        
-        // Notar: si w es, por ejemplo, 53 de año anterior, dayjs(year).week(53) puede ser correcto.
-        // Pero usamos la misma logica de deteccion de año:
-        let valYear = d.year();
-        const valWeek = d.week();
-
-        // Aplicamos la misma corrección ISO para la key
-        if (valWeek === 1 && d.month() === 11) {
-          valYear = valYear + 1;
-        } else if (valWeek >= 52 && d.month() === 0) {
-          valYear = valYear - 1;
-        }
-
-        return `${valYear}-${valWeek}`;
+      const loadedKeys = weeksLoaded.map((d) => {
+        return `${d.year()}-${d.week()}`;
       });
 
       set((state) => ({

@@ -1,5 +1,15 @@
 import { supabase } from "@/supabase";
 
+// Capitaliza la primera letra de cada palabra en un string
+const capitalizeWords = (str) => {
+  if (!str) return str;
+  return str
+    .toLowerCase()
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
+
 /**
  * Actualiza los datos del perfil de un usuario en la tabla 'user_profiles'.
  * @param {string} userId - El ID del usuario a actualizar.
@@ -7,9 +17,18 @@ import { supabase } from "@/supabase";
  * @returns {Promise<object>} El perfil actualizado.
  */
 export const updateUserProfile = async (userId, profileData) => {
+  // Capitalizar nombres si están presentes
+  const formattedData = { ...profileData };
+  if (formattedData.firstName) {
+    formattedData.firstName = capitalizeWords(formattedData.firstName);
+  }
+  if (formattedData.lastName) {
+    formattedData.lastName = capitalizeWords(formattedData.lastName);
+  }
+
   const { data, error } = await supabase
     .from("user_profiles")
-    .update(profileData)
+    .update(formattedData)
     .eq("id", userId)
     .select()
     .single(); // Devuelve el objeto actualizado
