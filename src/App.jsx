@@ -25,6 +25,7 @@ import LoadingOverlay from "./components/LoadingOverlay";
 import { useEffect } from "react";
 import { useUIStore } from "@/stores/uiStore";
 import ErrorToast from "./components/ErrorToast";
+import ErrorBoundary from "./components/ErrorBoundary";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import AdminRouteGuard from "./components/AdminRouteGuard";
@@ -56,17 +57,18 @@ function App() {
   }, [clearNotifications, initializeNotifications, user?.id]);
 
   return (
-    <BrowserRouter>
-      {/* Componentes globales que se muestran en toda la aplicación */}
-      <LoadingOverlay />
-      <ErrorToast
-        type={toast?.type}
-        title={toast?.title}
-        message={toast?.message}
-        isOpen={toast?.isOpen}
-        onClose={hideToast}
-      />
-      <Routes>
+    <ErrorBoundary>
+      <BrowserRouter>
+        {/* Componentes globales que se muestran en toda la aplicación */}
+        <LoadingOverlay />
+        <ErrorToast
+          type={toast?.type}
+          title={toast?.title}
+          message={toast?.message}
+          isOpen={toast?.isOpen}
+          onClose={hideToast}
+        />
+        <Routes>
         {user ? (
           // Rutas para usuario autenticado
           <>
@@ -138,8 +140,9 @@ function App() {
             <Route path="*" element={<Error404 />} />
           </>
         )}
-      </Routes>
-    </BrowserRouter>
+        </Routes>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 
