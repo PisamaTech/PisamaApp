@@ -12,10 +12,12 @@ import {
   Error404,
   FacturaDetalle,
 } from "./pages";
+import PaymentHistory from "./pages/PaymentHistory";
 import AdminDashboard from "./pages/admin/Dashboard";
 import UserManagement from "./pages/admin/UserManagement";
 import ReservationsManagement from "./pages/admin/ReservationsManagement";
 import BillingManagement from "./pages/admin/BillingManagement";
+import PaymentManagement from "./pages/admin/PaymentManagement";
 import PricingManagement from "./pages/admin/PricingManagement";
 import Broadcast from "./pages/admin/Broadcast";
 import PerformancePage from "./pages/admin/Performance";
@@ -91,6 +93,7 @@ function App() {
               <Route path="/reservas" element={<Reservas />} />
               <Route path="/facturas" element={<Facturas />} />
               <Route path="/facturas/:id" element={<FacturaDetalle />} />
+              <Route path="/pagos" element={<PaymentHistory />} />
               <Route
                 path="/admin"
                 element={<Navigate to="/admin/dashboard" replace />}
@@ -114,6 +117,10 @@ function App() {
               <Route
                 path="/admin/billing-management"
                 element={<AdminRouteGuard><BillingManagement /></AdminRouteGuard>}
+              />
+              <Route
+                path="/admin/payment-management"
+                element={<AdminRouteGuard><PaymentManagement /></AdminRouteGuard>}
               />
               <Route
                 path="/admin/pricing-management"

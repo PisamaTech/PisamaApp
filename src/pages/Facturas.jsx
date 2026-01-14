@@ -8,6 +8,11 @@ import {
   fetchUserInvoices,
   fetchCurrentPeriodPreview,
 } from "@/services/billingService"; // Importa tus nuevas funciones de servicio
+import { fetchUserPayments, fetchUserBalance } from "@/services/paymentService";
+import {
+  formatPaymentType,
+  getPaymentTypeBadgeVariant,
+} from "@/utils/paymentHelpers";
 // --- Importaciones de Componentes Shadcn UI ---
 import {
   Badge,
@@ -57,11 +62,17 @@ export const Facturas = () => {
     start: null,
     end: null,
   });
+  const [recentPayments, setRecentPayments] = useState([]);
+  const [userBalance, setUserBalance] = useState(null);
 
-  // Estados de Paginación para el historial
+  // Estados de Paginación para el historial de facturas
   const [historyCurrentPage, setHistoryCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10); // Fijo por ahora
+  const [itemsPerPage] = useState(5); // Reducido a 5 para mostrar en la card
   const [totalInvoices, setTotalInvoices] = useState(0);
+
+  // Estados de Paginación para el historial de pagos
+  const [paymentsCurrentPage, setPaymentsCurrentPage] = useState(1);
+  const [totalPayments, setTotalPayments] = useState(0);
 
   // Estados de Paginación para la VISTA PREVIA
   const [previewCurrentPage, setPreviewCurrentPage] = useState(1);
@@ -69,6 +80,11 @@ export const Facturas = () => {
   const totalHistoryPages = useMemo(
     () => Math.ceil(totalInvoices / itemsPerPage),
     [totalInvoices, itemsPerPage]
+  );
+
+  const totalPaymentPages = useMemo(
+    () => Math.ceil(totalPayments / itemsPerPage),
+    [totalPayments, itemsPerPage]
   );
 
   // --- Lógica de Paginación para la VISTA PREVIA ---
@@ -120,6 +136,27 @@ export const Facturas = () => {
         setIsLoadingPreview(false);
       }
 
+      // Cargar balance del usuario
+      try {
+        const balance = await fetchUserBalance(userId);
+        setUserBalance(balance);
+      } catch (err) {
+        console.error("Error al cargar balance:", err);
+      }
+
+      // Cargar pagos paginados
+      try {
+        const { data: payments, count } = await fetchUserPayments(
+          userId,
+          paymentsCurrentPage,
+          itemsPerPage
+        );
+        setRecentPayments(payments);
+        setTotalPayments(count);
+      } catch (err) {
+        console.error("Error al cargar pagos:", err);
+      }
+
       // Cargar historial de facturas
       clearError();
       startLoading("Cargando facturas...");
@@ -149,13 +186,18 @@ export const Facturas = () => {
     };
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, historyCurrentPage, profile]); // Se vuelve a cargar si cambia el usuario o la página del historial
+  }, [userId, historyCurrentPage, paymentsCurrentPage, profile]); // Se vuelve a cargar si cambia el usuario o las páginas
 
-  // --- Funciones de paginación (ahora específicas) ---
+  // --- Funciones de paginación ---
   const handleHistoryPrevPage = () =>
     setHistoryCurrentPage((p) => Math.max(p - 1, 1));
   const handleHistoryNextPage = () =>
     setHistoryCurrentPage((p) => Math.min(p + 1, totalHistoryPages));
+
+  const handlePaymentsPrevPage = () =>
+    setPaymentsCurrentPage((p) => Math.max(p - 1, 1));
+  const handlePaymentsNextPage = () =>
+    setPaymentsCurrentPage((p) => Math.min(p + 1, totalPaymentPages));
 
   const handlePreviewPrevPage = () =>
     setPreviewCurrentPage((p) => Math.max(p - 1, 1));
@@ -180,127 +222,346 @@ export const Facturas = () => {
       </h1>
       <Separator />
 
-      {/* --- Sección de Historial de Facturas--- */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl">Historial de Facturas</CardTitle>
-          <Separator />
-          <CardDescription className="py-2">
-            Aquí puedes ver y descargar tus facturas anteriores.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading && <p className="text-center">Cargando historial...</p>}
-          {error && (
-            <p className="text-center text-red-500">
-              Error al cargar el historial: {error?.message}
-            </p>
-          )}
-          {!loading && !error && invoices.length === 0 && (
-            <p className="text-center text-gray-500 py-4">
-              No tienes facturas generadas.
-            </p>
-          )}
-          {!loading && !error && invoices.length > 0 && (
-            <div className="border rounded-md">
-              {/* Desktop View */}
-              <div className="hidden md:block">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Período</TableHead>
-                      <TableHead>Fecha de Emisión</TableHead>
-                      <TableHead>Monto Total</TableHead>
-                      <TableHead>Estado</TableHead>
-                      <TableHead>Acciones</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+      {/* --- Tarjetas de Resumen: Ingresos, Egresos, Balance --- */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Ingresos (Total Pagos) */}
+        <Card className="shadow-md">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Total Ingresos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {userBalance ? (
+              <div className="space-y-1">
+                <p className="text-3xl font-bold text-green-600">
+                  ${userBalance.total_pagos?.toLocaleString("es-UY") || 0}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Pagos recibidos
+                </p>
+              </div>
+            ) : (
+              <Skeleton className="h-10 w-full" />
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Egresos (Total Facturado) */}
+        <Card className="shadow-md">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Total Egresos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {userBalance ? (
+              <div className="space-y-1">
+                <p className="text-3xl font-bold text-red-600">
+                  ${userBalance.total_facturado?.toLocaleString("es-UY") || 0}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Monto facturado
+                </p>
+              </div>
+            ) : (
+              <Skeleton className="h-10 w-full" />
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Balance */}
+        <Card className="shadow-md">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Balance
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {userBalance ? (
+              <div className="space-y-1">
+                <p
+                  className={`text-3xl font-bold ${
+                    userBalance.saldo_disponible >= 0
+                      ? "text-green-600"
+                      : "text-orange-600"
+                  }`}
+                >
+                  ${Math.abs(userBalance.saldo_disponible || 0).toLocaleString("es-UY")}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {userBalance.saldo_disponible >= 0
+                    ? "Saldo a favor"
+                    : "Pendiente de pago"}
+                </p>
+              </div>
+            ) : (
+              <Skeleton className="h-10 w-full" />
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* --- Sección de Historiales: Pagos y Facturas (2 columnas en desktop) --- */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Columna Izquierda: Historial de Pagos */}
+        <Card className="shadow-md">
+          <CardHeader>
+            <CardTitle className="text-xl">Historial de Pagos</CardTitle>
+            <Separator />
+            <CardDescription className="py-2">
+              Últimos pagos registrados.{" "}
+              <button
+                onClick={() => navigate("/pagos")}
+                className="text-primary hover:underline font-medium"
+              >
+                Ver todos
+              </button>
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {recentPayments.length === 0 ? (
+              <p className="text-center text-gray-500 py-4">
+                No hay pagos registrados aún.
+              </p>
+            ) : (
+              <>
+                <div className="border rounded-md">
+                  {/* Desktop View */}
+                  <div className="hidden md:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Fecha</TableHead>
+                          <TableHead className="text-right">Monto</TableHead>
+                          <TableHead>Tipo</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {recentPayments.map((payment) => (
+                          <TableRow key={payment.id}>
+                            <TableCell>
+                              {new Date(payment.fecha_pago).toLocaleDateString(
+                                "es-UY",
+                                {
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                  year: "numeric",
+                                }
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right font-medium text-green-600">
+                              ${parseFloat(payment.monto).toLocaleString("es-UY")}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant={getPaymentTypeBadgeVariant(payment.tipo)}
+                              >
+                                {formatPaymentType(payment.tipo)}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Mobile View */}
+                  <div className="md:hidden space-y-3 p-4">
+                    {recentPayments.map((payment) => (
+                      <div
+                        key={payment.id}
+                        className="flex justify-between items-center p-4 bg-slate-200 text-slate-900 rounded-lg shadow-sm border border-slate-300"
+                      >
+                        <div>
+                          <p className="font-bold text-sm text-slate-900">
+                            {new Date(payment.fecha_pago).toLocaleDateString(
+                              "es-UY",
+                              {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                              }
+                            )}
+                          </p>
+                          <Badge
+                            variant={getPaymentTypeBadgeVariant(payment.tipo)}
+                            className="mt-1 text-[10px] h-5 px-1.5 shadow-sm"
+                          >
+                            {formatPaymentType(payment.tipo)}
+                          </Badge>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-black text-green-600">
+                            ${parseFloat(payment.monto).toLocaleString("es-UY")}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Paginación de Pagos */}
+                {totalPaymentPages > 1 && (
+                  <div className="flex justify-center pt-4">
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            onClick={handlePaymentsPrevPage}
+                            aria-disabled={paymentsCurrentPage === 1}
+                          />
+                        </PaginationItem>
+                        <PaginationItem>
+                          <PaginationLink isActive className="min-w-[80px] px-4">
+                            {paymentsCurrentPage} de {totalPaymentPages}
+                          </PaginationLink>
+                        </PaginationItem>
+                        <PaginationItem>
+                          <PaginationNext
+                            onClick={handlePaymentsNextPage}
+                            aria-disabled={paymentsCurrentPage === totalPaymentPages}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Columna Derecha: Historial de Facturas */}
+        <Card className="shadow-md">
+          <CardHeader>
+            <CardTitle className="text-xl">Historial de Facturas</CardTitle>
+            <Separator />
+            <CardDescription className="py-2">
+              Facturas anteriores generadas.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loading && <p className="text-center">Cargando historial...</p>}
+            {error && (
+              <p className="text-center text-red-500">
+                Error al cargar el historial: {error?.message}
+              </p>
+            )}
+            {!loading && !error && invoices.length === 0 && (
+              <p className="text-center text-gray-500 py-4">
+                No tienes facturas generadas.
+              </p>
+            )}
+            {!loading && !error && invoices.length > 0 && (
+              <>
+                <div className="border rounded-md">
+                  {/* Desktop View */}
+                  <div className="hidden md:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Período</TableHead>
+                          <TableHead>Monto</TableHead>
+                          <TableHead>Estado</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {invoices.map((factura) => (
+                          <TableRow
+                            key={factura.id}
+                            className="cursor-pointer hover:bg-muted/50"
+                            onClick={() => navigate(`/facturas/${factura.id}`)}
+                          >
+                            <TableCell className="font-medium">
+                              {dayjs(factura.periodo_inicio).format("DD/MM/YY")} -{" "}
+                              {dayjs(factura.periodo_fin).format("DD/MM/YY")}
+                            </TableCell>
+                            <TableCell>
+                              ${factura.monto_total.toLocaleString("es-UY")}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={getStatusVariant(factura.estado)}>
+                                {factura.estado.charAt(0).toUpperCase() +
+                                  factura.estado.slice(1)}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Mobile View */}
+                  <div className="md:hidden space-y-3 p-4">
                     {invoices.map((factura) => (
-                      <TableRow key={factura.id}>
-                        <TableCell className="font-medium">
-                          {dayjs(factura.periodo_inicio).format("DD/MM/YY")} -{" "}
-                          {dayjs(factura.periodo_fin).format("DD/MM/YY")}
-                        </TableCell>
-                        <TableCell>
-                          {dayjs(factura.fecha_emision).format("DD/MM/YYYY")}
-                        </TableCell>
-                        <TableCell>
-                          ${factura.monto_total.toLocaleString("es-UY")}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={getStatusVariant(factura.estado)}>
+                      <div
+                        key={factura.id}
+                        onClick={() => navigate(`/facturas/${factura.id}`)}
+                        className="bg-slate-200 text-slate-900 p-4 rounded-lg shadow-sm space-y-3 border border-slate-300 cursor-pointer hover:bg-slate-300 transition-colors"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
+                              Período
+                            </p>
+                            <p className="font-bold text-slate-900">
+                              {dayjs(factura.periodo_inicio).format("DD/MM/YY")} -{" "}
+                              {dayjs(factura.periodo_fin).format("DD/MM/YY")}
+                            </p>
+                          </div>
+                          <Badge variant={getStatusVariant(factura.estado)} className="shadow-sm">
                             {factura.estado.charAt(0).toUpperCase() +
                               factura.estado.slice(1)}
                           </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => navigate(`/facturas/${factura.id}`)}
-                          >
-                            Ver Detalle
-                          </Button>
-                        </TableCell>
-                      </TableRow>
+                        </div>
+
+                        <div className="flex justify-between items-end border-t border-slate-300 pt-3">
+                          <div>
+                            <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
+                              Monto Total
+                            </p>
+                            <p className="text-xl font-black text-slate-900">
+                              ${factura.monto_total.toLocaleString("es-UY")}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     ))}
-                  </TableBody>
-                </Table>
-              </div>
-
-              {/* Mobile View */}
-              <div className="md:hidden space-y-4 p-4">
-                {invoices.map((factura) => (
-                  <div
-                    key={factura.id}
-                    className="bg-slate-200 text-slate-900 p-4 rounded-lg shadow-sm space-y-3 border border-slate-300"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
-                          Período
-                        </p>
-                        <p className="font-bold text-slate-900">
-                          {dayjs(factura.periodo_inicio).format("DD/MM/YY")} -{" "}
-                          {dayjs(factura.periodo_fin).format("DD/MM/YY")}
-                        </p>
-                      </div>
-                      <Badge variant={getStatusVariant(factura.estado)} className="shadow-sm">
-                        {factura.estado.charAt(0).toUpperCase() +
-                          factura.estado.slice(1)}
-                      </Badge>
-                    </div>
-
-                    <div className="flex justify-between items-end border-t border-slate-300 pt-3">
-                      <div>
-                        <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
-                          Monto Total
-                        </p>
-                        <p className="text-xl font-black text-slate-900">
-                          ${factura.monto_total.toLocaleString("es-UY")}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                         <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">Emisión</p>
-                         <p className="text-sm font-medium text-slate-700">{dayjs(factura.fecha_emision).format("DD/MM/YY")}</p>
-                      </div>
-                    </div>
-
-                    <Button
-                      variant="outline"
-                      className="w-full bg-white hover:bg-slate-50 border-slate-300 text-slate-700 shadow-sm"
-                      onClick={() => navigate(`/facturas/${factura.id}`)}
-                    >
-                      Ver Detalle
-                    </Button>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                </div>
+
+                {/* Paginación de Facturas */}
+                {totalHistoryPages > 1 && (
+                  <div className="flex justify-center pt-4">
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            onClick={handleHistoryPrevPage}
+                            aria-disabled={historyCurrentPage === 1}
+                          />
+                        </PaginationItem>
+                        <PaginationItem>
+                          <PaginationLink isActive className="min-w-[80px] px-4">
+                            {historyCurrentPage} de {totalHistoryPages}
+                          </PaginationLink>
+                        </PaginationItem>
+                        <PaginationItem>
+                          <PaginationNext
+                            onClick={handleHistoryNextPage}
+                            aria-disabled={historyCurrentPage === totalHistoryPages}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* --- Sección de Facturación en Curso --- */}
       <Card>
@@ -456,7 +717,7 @@ export const Facturas = () => {
                           />
                         </PaginationItem>
                         <PaginationItem>
-                          <PaginationLink isActive className="w-14">
+                          <PaginationLink isActive className="min-w-[80px] px-4">
                             {previewCurrentPage} de {totalPreviewPages}
                           </PaginationLink>
                         </PaginationItem>
@@ -481,33 +742,6 @@ export const Facturas = () => {
           )}
         </CardContent>
       </Card>
-
-      {/* --- Controles de Paginación para el Historial --- */}
-      {!loading && !error && totalHistoryPages > 1 && (
-        <div className="flex justify-center pt-4">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={handleHistoryPrevPage}
-                  aria-disabled={historyCurrentPage === 1}
-                />
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationLink isActive>
-                  {historyCurrentPage} de {totalHistoryPages}
-                </PaginationLink>
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationNext
-                  onClick={handleHistoryNextPage}
-                  aria-disabled={historyCurrentPage === totalHistoryPages}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
-      )}
     </div>
   );
 };

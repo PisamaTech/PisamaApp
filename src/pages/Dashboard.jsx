@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuthStore } from "@/stores/authStore";
 import { useUIStore } from "@/stores/uiStore";
 import { fetchDashboardData } from "@/services/dashboardService"; // Importa la función agregadora
+import { fetchUserBalance } from "@/services/paymentService";
 import { renewAndValidateSeries } from "@/supabase";
 import { useEventStore } from "@/stores/calendarStore";
 import { ConfirmCancelDialog } from "@/components";
@@ -60,6 +61,9 @@ const Dashboard = () => {
   // --- Estado para almacenar todos los datos del dashboard ---
   const [dashboardData, setDashboardData] = useState(null);
 
+  // --- Estado para el balance del usuario ---
+  const [userBalance, setUserBalance] = useState(null);
+
   // --- useEffect para cargar todos los datos al montar ---
   useEffect(() => {
     const loadDashboardData = async () => {
@@ -70,6 +74,10 @@ const Dashboard = () => {
       try {
         const data = await fetchDashboardData(profile.id, profile);
         setDashboardData(data);
+
+        // Cargar balance del usuario
+        const balance = await fetchUserBalance(profile.id);
+        setUserBalance(balance);
       } catch (err) {
         console.error("Fallo al cargar datos del dashboard:", err);
         setError(err); // Setea el error en el store global
@@ -389,14 +397,17 @@ const Dashboard = () => {
                           {dayjs(reserva.start_time).format("HH:mm")} hs
                         </p>
                       </div>
-                      <Badge variant={reserva.tipo_reserva.toLowerCase()} className="shadow-sm">
+                      <Badge
+                        variant={reserva.tipo_reserva.toLowerCase()}
+                        className="shadow-sm"
+                      >
                         {reserva.tipo_reserva}
                       </Badge>
                     </div>
                     <div className="text-sm text-slate-700 border-t border-slate-300 pt-2">
-                       <p className="font-medium">
-                          Consultorio {reserva.consultorio_id}
-                       </p>
+                      <p className="font-medium">
+                        Consultorio {reserva.consultorio_id}
+                      </p>
                     </div>
                     <Button
                       variant="outline"
@@ -502,41 +513,53 @@ const Dashboard = () => {
                     </TableBody>
                   </Table>
                 </div>
-                 {/* Mobile View */}
-                 <div className="md:hidden space-y-4 p-4">
+                {/* Mobile View */}
+                <div className="md:hidden space-y-4 p-4">
                   {reschedulableBookings.map((reserva) => (
                     <div
                       key={reserva.id}
                       className="bg-slate-200 text-slate-900 p-4 rounded-lg shadow-sm space-y-3 border border-slate-300"
                     >
-                       <div>
-                          <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">Reserva Original</p>
-                          <p className="font-bold text-slate-900">
-                              {dayjs(reserva.start_time).format("ddd DD/MM/YY - HH:mm")} hs
-                          </p>
-                          <p className="text-sm text-slate-600 font-medium">
-                              Consultorio {reserva.consultorio_id}
-                          </p>
-                       </div>
-                       
-                       <div className="bg-red-50 p-2 rounded border border-red-200 text-red-700 text-sm shadow-sm">
-                          <span className="font-bold">Vence: </span>
-                          {dayjs(reserva.permite_reagendar_hasta).format("DD/MM/YYYY")}
-                          <span className="block text-xs mt-1 font-medium italic">
-                             (Faltan {dayjs(reserva.permite_reagendar_hasta).diff(dayjs(), "day")} días)
-                          </span>
-                       </div>
+                      <div>
+                        <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
+                          Reserva Original
+                        </p>
+                        <p className="font-bold text-slate-900">
+                          {dayjs(reserva.start_time).format(
+                            "ddd DD/MM/YY - HH:mm"
+                          )}{" "}
+                          hs
+                        </p>
+                        <p className="text-sm text-slate-600 font-medium">
+                          Consultorio {reserva.consultorio_id}
+                        </p>
+                      </div>
 
-                       <Button
-                          className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
-                          size="sm"
-                           onClick={() => handleReagendarClick(reserva)}
-                        >
-                          Reagendar Ahora
-                        </Button>
+                      <div className="bg-red-50 p-2 rounded border border-red-200 text-red-700 text-sm shadow-sm">
+                        <span className="font-bold">Vence: </span>
+                        {dayjs(reserva.permite_reagendar_hasta).format(
+                          "DD/MM/YYYY"
+                        )}
+                        <span className="block text-xs mt-1 font-medium italic">
+                          (Faltan{" "}
+                          {dayjs(reserva.permite_reagendar_hasta).diff(
+                            dayjs(),
+                            "day"
+                          )}{" "}
+                          días)
+                        </span>
+                      </div>
+
+                      <Button
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+                        size="sm"
+                        onClick={() => handleReagendarClick(reserva)}
+                      >
+                        Reagendar Ahora
+                      </Button>
                     </div>
                   ))}
-                 </div>
+                </div>
               </div>
             ) : (
               <div className="text-center py-10">
@@ -580,8 +603,8 @@ const Dashboard = () => {
                         {pendingInvoices.map((invoice) => (
                           <TableRow key={invoice.id}>
                             <TableCell className="font-medium">
-                              {dayjs(invoice.periodo_inicio).format("DD/MM/YY")} -{" "}
-                              {dayjs(invoice.periodo_fin).format("DD/MM/YY")}
+                              {dayjs(invoice.periodo_inicio).format("DD/MM/YY")}{" "}
+                              - {dayjs(invoice.periodo_fin).format("DD/MM/YY")}
                             </TableCell>
                             <TableCell className="text-right font-bold">
                               $
@@ -594,24 +617,35 @@ const Dashboard = () => {
                       </TableBody>
                     </Table>
                   </div>
-                   {/* Mobile View */}
+                  {/* Mobile View */}
                   <div className="md:hidden space-y-3 p-3">
-                     {pendingInvoices.map((invoice) => (
-                        <div key={invoice.id} className="flex justify-between items-center p-4 bg-slate-200 text-slate-900 rounded-lg shadow-sm border border-slate-300">
-                           <div>
-                              <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">Período</p>
-                              <p className="text-sm font-bold text-slate-900">
-                                 {dayjs(invoice.periodo_inicio).format("DD/MM/YY")} - {dayjs(invoice.periodo_fin).format("DD/MM/YY")}
-                              </p>
-                           </div>
-                           <div className="text-right">
-                              <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">Monto</p>
-                              <p className="text-xl font-black text-slate-900">
-                                 ${invoice.monto_total.toFixed(0).toLocaleString("es-UY")}
-                              </p>
-                           </div>
+                    {pendingInvoices.map((invoice) => (
+                      <div
+                        key={invoice.id}
+                        className="flex justify-between items-center p-4 bg-slate-200 text-slate-900 rounded-lg shadow-sm border border-slate-300"
+                      >
+                        <div>
+                          <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">
+                            Período
+                          </p>
+                          <p className="text-sm font-bold text-slate-900">
+                            {dayjs(invoice.periodo_inicio).format("DD/MM/YY")} -{" "}
+                            {dayjs(invoice.periodo_fin).format("DD/MM/YY")}
+                          </p>
                         </div>
-                     ))}
+                        <div className="text-right">
+                          <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">
+                            Monto
+                          </p>
+                          <p className="text-xl font-black text-slate-900">
+                            $
+                            {invoice.monto_total
+                              .toFixed(0)
+                              .toLocaleString("es-UY")}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               ) : (
@@ -641,11 +675,58 @@ const Dashboard = () => {
                 </p>
               )}
             </div>
+
+            <Separator />
+
+            {/* Saldo de Cuenta */}
+            <div>
+              <h4 className="text-md font-semibold mb-2">Saldo de Cuenta</h4>
+              {userBalance ? (
+                <div className="space-y-2">
+                  <div className="flex justify-between items-baseline p-4 bg-green-50 rounded-lg border border-green-200">
+                    <span className="text-green-700 font-medium">
+                      Saldo a favor:
+                    </span>
+                    <span className="text-2xl font-bold text-green-600">
+                      $
+                      {(userBalance.saldo_disponible > 0
+                        ? userBalance.saldo_disponible
+                        : 0
+                      ).toLocaleString("es-UY")}
+                    </span>
+                  </div>
+                  {userBalance.saldo_facturas_pendientes > 0 && (
+                    <div className="flex justify-between items-baseline p-3 bg-orange-50 rounded-lg border border-orange-200">
+                      <span className="text-orange-700 text-sm">
+                        Pendiente de pago:
+                      </span>
+                      <span className="text-lg font-bold text-orange-600">
+                        $
+                        {userBalance.saldo_facturas_pendientes.toLocaleString(
+                          "es-UY"
+                        )}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-center text-muted-foreground py-4">
+                  Cargando saldo...
+                </p>
+              )}
+            </div>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="flex-col gap-2">
             <Button className="w-full" onClick={() => navigate("/facturas")}>
               Ir a Facturación Detallada
               <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+            <Button
+              className="w-full"
+              variant="outline"
+              onClick={() => navigate("/pagos")}
+            >
+              Ver Historial de Pagos
             </Button>
           </CardFooter>
         </Card>
