@@ -35,7 +35,7 @@ export const menuItems = [
     icon: List,
   },
   {
-    title: "Facturas",
+    title: "Facturación",
     url: "/facturas",
     icon: Wallet,
   },

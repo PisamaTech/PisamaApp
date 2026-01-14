@@ -147,13 +147,17 @@ const UserManagementPage = () => {
         </p>
       </div>
       <Separator />
-      <div className="flex items-center">
+      <div className="flex items-center justify-between">
         <Input
           placeholder="Buscar por nombre, apellido o email..."
           value={searchTerm}
           onChange={handleSearchChange}
           className="w-full md:max-w-sm"
         />
+        <div className="hidden md:block text-sm text-gray-500">
+          Total de usuarios:{" "}
+          <span className="font-medium text-gray-900">{totalUsers}</span>
+        </div>
       </div>
 
       {/* Vista de Escritorio (Tabla) */}
@@ -257,18 +261,26 @@ const UserManagementPage = () => {
 
               <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-sm text-slate-700 border-t border-slate-300 pt-3">
                 <div>
-                  <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Teléfono</p>
+                  <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                    Teléfono
+                  </p>
                   <p className="font-medium truncate">{user.phone || "N/A"}</p>
                 </div>
                 <div>
-                  <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Profesión</p>
-                  <p className="font-medium truncate">{user.profession || "N/A"}</p>
+                  <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                    Profesión
+                  </p>
+                  <p className="font-medium truncate">
+                    {user.profession || "N/A"}
+                  </p>
                 </div>
                 <div className="col-span-2">
                   <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">
                     Fecha de Ingreso
                   </p>
-                  <p className="font-medium">{new Date(user.created_at).toLocaleDateString()}</p>
+                  <p className="font-medium">
+                    {new Date(user.created_at).toLocaleDateString()}
+                  </p>
                 </div>
               </div>
 
@@ -277,7 +289,10 @@ const UserManagementPage = () => {
                   <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
                     Modalidad Pago
                   </p>
-                  <Badge variant="outline" className="capitalize bg-white border-slate-300 text-slate-700">
+                  <Badge
+                    variant="outline"
+                    className="capitalize bg-white border-slate-300 text-slate-700"
+                  >
                     {user.modalidad_pago}
                   </Badge>
                 </div>
