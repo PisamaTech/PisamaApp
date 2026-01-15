@@ -11,6 +11,7 @@ import {
   DollarSign,
   Send,
   TrendingUp,
+  CreditCard,
 } from "lucide-react";
 
 export const menuItems = [
@@ -77,6 +78,11 @@ export const menuItems = [
         title: "Facturación",
         url: "/admin/billing-management",
         icon: Wallet,
+      },
+      {
+        title: "Pagos",
+        url: "/admin/payment-management",
+        icon: CreditCard,
       },
       {
         title: "Precios",

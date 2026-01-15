@@ -35,6 +35,57 @@ export const fetchUserPayments = async (
 };
 
 /**
+ * Obtiene el total de pagos procesados de un usuario (consulta simple).
+ *
+ * @param {string} userId - El ID del usuario.
+ * @returns {Promise<number>} El total de pagos procesados.
+ */
+export const fetchUserTotalPayments = async (userId) => {
+  try {
+    const { data, error } = await supabase
+      .from("pagos")
+      .select("monto")
+      .eq("usuario_id", userId)
+      .eq("estado", "procesado");
+
+    if (error) throw error;
+
+    // Sumar todos los montos
+    const total = data.reduce((sum, pago) => sum + Number(pago.monto), 0);
+
+    return total;
+  } catch (error) {
+    console.error("Error al obtener el total de pagos:", error);
+    throw new Error(`No se pudo obtener el total de pagos: ${error.message}`);
+  }
+};
+
+/**
+ * Obtiene el total facturado de un usuario (consulta simple).
+ *
+ * @param {string} userId - El ID del usuario.
+ * @returns {Promise<number>} El total facturado.
+ */
+export const fetchUserTotalInvoiced = async (userId) => {
+  try {
+    const { data, error } = await supabase
+      .from("facturas")
+      .select("monto_total")
+      .eq("usuario_id", userId);
+
+    if (error) throw error;
+
+    // Sumar todos los montos totales
+    const total = data.reduce((sum, factura) => sum + Number(factura.monto_total), 0);
+
+    return total;
+  } catch (error) {
+    console.error("Error al obtener el total facturado:", error);
+    throw new Error(`No se pudo obtener el total facturado: ${error.message}`);
+  }
+};
+
+/**
  * Obtiene el balance actual de un usuario (pagos vs facturas).
  * Utiliza la función RPC get_user_balance de la base de datos.
  *

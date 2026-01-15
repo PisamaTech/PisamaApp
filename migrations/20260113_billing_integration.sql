@@ -202,9 +202,13 @@ as $$
 begin
   return query
   select
-    coalesce(sum(pg.monto), 0) - coalesce(sum(f.monto_total - f.saldo_pendiente), 0) as saldo_disponible,
+    -- Saldo disponible = Total pagos - Total facturado
+    coalesce(sum(pg.monto), 0) - coalesce(sum(f.monto_total), 0) as saldo_disponible,
+    -- Total de todos los pagos procesados
     coalesce(sum(pg.monto), 0) as total_pagos,
-    coalesce(sum(f.monto_total - f.saldo_pendiente), 0) as total_facturado,
+    -- Total de todas las facturas emitidas (sin importar si están pagadas)
+    coalesce(sum(f.monto_total), 0) as total_facturado,
+    -- Suma de saldos pendientes de todas las facturas
     coalesce(sum(f.saldo_pendiente), 0) as saldo_facturas_pendientes
   from (select p_user_id as uid) u
   left join public.pagos pg on pg.usuario_id = u.uid and pg.estado = 'procesado'

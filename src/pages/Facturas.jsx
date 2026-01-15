@@ -2,13 +2,18 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import "dayjs/locale/es";
+import { DollarSign, CreditCard, TrendingUp, TrendingDown } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import { useUIStore } from "@/stores/uiStore";
 import {
   fetchUserInvoices,
   fetchCurrentPeriodPreview,
 } from "@/services/billingService"; // Importa tus nuevas funciones de servicio
-import { fetchUserPayments, fetchUserBalance } from "@/services/paymentService";
+import {
+  fetchUserPayments,
+  fetchUserTotalPayments,
+  fetchUserTotalInvoiced,
+} from "@/services/paymentService";
 import {
   formatPaymentType,
   getPaymentTypeBadgeVariant,
@@ -63,7 +68,8 @@ export const Facturas = () => {
     end: null,
   });
   const [recentPayments, setRecentPayments] = useState([]);
-  const [userBalance, setUserBalance] = useState(null);
+  const [totalPagosUsuario, setTotalPagosUsuario] = useState(0);
+  const [totalFacturadoUsuario, setTotalFacturadoUsuario] = useState(0);
 
   // Estados de Paginación para el historial de facturas
   const [historyCurrentPage, setHistoryCurrentPage] = useState(1);
@@ -136,12 +142,20 @@ export const Facturas = () => {
         setIsLoadingPreview(false);
       }
 
-      // Cargar balance del usuario
+      // Cargar total de pagos del usuario
       try {
-        const balance = await fetchUserBalance(userId);
-        setUserBalance(balance);
+        const totalPagos = await fetchUserTotalPayments(userId);
+        setTotalPagosUsuario(totalPagos);
       } catch (err) {
-        console.error("Error al cargar balance:", err);
+        console.error("Error al cargar total de pagos:", err);
+      }
+
+      // Cargar total facturado del usuario
+      try {
+        const totalFacturado = await fetchUserTotalInvoiced(userId);
+        setTotalFacturadoUsuario(totalFacturado);
+      } catch (err) {
+        console.error("Error al cargar total facturado:", err);
       }
 
       // Cargar pagos paginados
@@ -222,82 +236,84 @@ export const Facturas = () => {
       </h1>
       <Separator />
 
-      {/* --- Tarjetas de Resumen: Ingresos, Egresos, Balance --- */}
+      {/* --- Tarjetas de Resumen: Pagos, Gastos y Balance --- */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Ingresos (Total Pagos) */}
+        {/* Total de Pagos */}
         <Card className="shadow-md">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Ingresos
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total de Pagos
+              </CardTitle>
+              <DollarSign className="h-5 w-5 text-green-600" />
+            </div>
           </CardHeader>
           <CardContent>
-            {userBalance ? (
-              <div className="space-y-1">
-                <p className="text-3xl font-bold text-green-600">
-                  ${userBalance.total_pagos?.toLocaleString("es-UY") || 0}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Pagos recibidos
-                </p>
-              </div>
-            ) : (
-              <Skeleton className="h-10 w-full" />
-            )}
+            <div className="space-y-1">
+              <p className="text-3xl font-bold text-green-600">
+                ${totalPagosUsuario.toLocaleString("es-UY")}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Pagos realizados
+              </p>
+            </div>
           </CardContent>
         </Card>
 
-        {/* Egresos (Total Facturado) */}
+        {/* Total de Gastos */}
         <Card className="shadow-md">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Egresos
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total de Gastos
+              </CardTitle>
+              <CreditCard className="h-5 w-5 text-red-600" />
+            </div>
           </CardHeader>
           <CardContent>
-            {userBalance ? (
-              <div className="space-y-1">
-                <p className="text-3xl font-bold text-red-600">
-                  ${userBalance.total_facturado?.toLocaleString("es-UY") || 0}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Monto facturado
-                </p>
-              </div>
-            ) : (
-              <Skeleton className="h-10 w-full" />
-            )}
+            <div className="space-y-1">
+              <p className="text-3xl font-bold text-red-600">
+                ${totalFacturadoUsuario.toLocaleString("es-UY")}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Monto facturado
+              </p>
+            </div>
           </CardContent>
         </Card>
 
         {/* Balance */}
         <Card className="shadow-md">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Balance
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Balance
+              </CardTitle>
+              {totalPagosUsuario - totalFacturadoUsuario >= 0 ? (
+                <TrendingUp className="h-5 w-5 text-blue-600" />
+              ) : (
+                <TrendingDown className="h-5 w-5 text-orange-600" />
+              )}
+            </div>
           </CardHeader>
           <CardContent>
-            {userBalance ? (
-              <div className="space-y-1">
-                <p
-                  className={`text-3xl font-bold ${
-                    userBalance.saldo_disponible >= 0
-                      ? "text-green-600"
-                      : "text-orange-600"
-                  }`}
-                >
-                  ${Math.abs(userBalance.saldo_disponible || 0).toLocaleString("es-UY")}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {userBalance.saldo_disponible >= 0
-                    ? "Saldo a favor"
-                    : "Pendiente de pago"}
-                </p>
-              </div>
-            ) : (
-              <Skeleton className="h-10 w-full" />
-            )}
+            <div className="space-y-1">
+              <p
+                className={`text-3xl font-bold ${
+                  totalPagosUsuario - totalFacturadoUsuario >= 0
+                    ? "text-blue-600"
+                    : "text-orange-600"
+                }`}
+              >
+                {totalPagosUsuario - totalFacturadoUsuario >= 0 ? "+" : "-"}$
+                {Math.abs(totalPagosUsuario - totalFacturadoUsuario).toLocaleString("es-UY")}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {totalPagosUsuario - totalFacturadoUsuario >= 0
+                  ? "Saldo a favor"
+                  : "Pendiente de pago"}
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
