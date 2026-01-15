@@ -56,6 +56,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { UserCombobox } from "@/components/admin/UserCombobox";
 import { Separator } from "@/components/ui";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const PaymentManagementPage = () => {
   const { loading, startLoading, stopLoading, showToast } = useUIStore();
@@ -288,17 +289,25 @@ const PaymentManagementPage = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <TooltipProvider>
+      <div className="container mx-auto p-4 md:p-8 space-y-6">
+        {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold">Gestión de Pagos</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-bold tracking-tight">Gestión de Pagos</h1>
+          <p className="text-muted-foreground mt-2">
             Administra pagos manuales y facturas históricas
           </p>
         </div>
-        <div className="flex gap-2">
-          <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+
+        <Separator />
+
+        {/* Botones de Acción */}
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Dialog
+            open={isPaymentDialogOpen}
+            onOpenChange={setIsPaymentDialogOpen}
+            modal={false}
+          >
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
@@ -309,7 +318,8 @@ const PaymentManagementPage = () => {
               <DialogHeader>
                 <DialogTitle>Crear Pago Manual</DialogTitle>
                 <DialogDescription>
-                  Registra un pago manual (efectivo, descuento especial, ajuste de saldo)
+                  Registra un pago manual (efectivo, descuento especial, ajuste
+                  de saldo)
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
@@ -317,11 +327,10 @@ const PaymentManagementPage = () => {
                   <Label htmlFor="payment-user">Usuario *</Label>
                   <UserCombobox
                     users={allUsers}
-                    value={paymentForm.userId}
-                    onValueChange={(value) =>
+                    selectedUserId={paymentForm.userId}
+                    onSelect={(value) =>
                       setPaymentForm({ ...paymentForm, userId: value })
                     }
-                    placeholder="Selecciona un usuario"
                   />
                 </div>
                 <div className="space-y-2">
@@ -382,7 +391,11 @@ const PaymentManagementPage = () => {
             </DialogContent>
           </Dialog>
 
-          <Dialog open={isInvoiceDialogOpen} onOpenChange={setIsInvoiceDialogOpen}>
+          <Dialog
+            open={isInvoiceDialogOpen}
+            onOpenChange={setIsInvoiceDialogOpen}
+            modal={false}
+          >
             <DialogTrigger asChild>
               <Button variant="outline">
                 <FileText className="mr-2 h-4 w-4" />
@@ -393,7 +406,8 @@ const PaymentManagementPage = () => {
               <DialogHeader>
                 <DialogTitle>Crear Factura Histórica</DialogTitle>
                 <DialogDescription>
-                  Registra una factura de deuda previa a la implementación de la app
+                  Registra una factura de deuda previa a la implementación de la
+                  app
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
@@ -401,11 +415,10 @@ const PaymentManagementPage = () => {
                   <Label htmlFor="invoice-user">Usuario *</Label>
                   <UserCombobox
                     users={allUsers}
-                    value={invoiceForm.userId}
-                    onValueChange={(value) =>
+                    selectedUserId={invoiceForm.userId}
+                    onSelect={(value) =>
                       setInvoiceForm({ ...invoiceForm, userId: value })
                     }
-                    placeholder="Selecciona un usuario"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -446,7 +459,10 @@ const PaymentManagementPage = () => {
                     placeholder="3500"
                     value={invoiceForm.montoTotal}
                     onChange={(e) =>
-                      setInvoiceForm({ ...invoiceForm, montoTotal: e.target.value })
+                      setInvoiceForm({
+                        ...invoiceForm,
+                        montoTotal: e.target.value,
+                      })
                     }
                   />
                 </div>
@@ -493,76 +509,65 @@ const PaymentManagementPage = () => {
             </DialogContent>
           </Dialog>
         </div>
-      </div>
 
-      <Separator />
+        {/* Filtros */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Filtros</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1">
+                <Label>Usuario</Label>
+                <UserCombobox
+                  users={allUsers}
+                  selectedUserId={filters.userId}
+                  onSelect={(value) =>
+                    setFilters({ ...filters, userId: value })
+                  }
+                />
+              </div>
+              <div className="w-full md:w-48">
+                <Label>Tipo de Pago</Label>
+                <Select
+                  value={filters.tipo}
+                  onValueChange={(value) =>
+                    setFilters({ ...filters, tipo: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos</SelectItem>
+                    {PAYMENT_TYPES.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex gap-2 items-end">
+                <Button onClick={handleApplyFilters}>Buscar</Button>
+                <Button onClick={handleClearFilters} variant="outline">
+                  Limpiar
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* Filtros */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filtros</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label>Usuario</Label>
-              <UserCombobox
-                users={allUsers}
-                value={filters.userId}
-                onValueChange={(value) =>
-                  setFilters({ ...filters, userId: value })
-                }
-                placeholder="Todos los usuarios"
-                allowAll
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Tipo de Pago</Label>
-              <Select
-                value={filters.tipo}
-                onValueChange={(value) => setFilters({ ...filters, tipo: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos</SelectItem>
-                  {PAYMENT_TYPES.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-end gap-2">
-              <Button onClick={handleApplyFilters} className="flex-1">
-                Aplicar
-              </Button>
-              <Button
-                onClick={handleClearFilters}
-                variant="outline"
-                className="flex-1"
-              >
-                Limpiar
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Tabla de Pagos */}
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            Pagos Registrados ({totalPayments})
-          </CardTitle>
-          <p className="text-sm text-muted-foreground">
-            {payments.length > 0
-              ? `Mostrando ${payments.length} pagos de la página ${currentPage} de ${totalPages}`
-              : "No se encontraron pagos"}
-          </p>
-        </CardHeader>
+        {/* Tabla de Pagos */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Pagos Registrados ({totalPayments})</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              {payments.length > 0
+                ? `Mostrando ${payments.length} pagos de la página ${currentPage} de ${totalPages}`
+                : "No se encontraron pagos"}
+            </p>
+          </CardHeader>
         <CardContent>
           {loading ? (
             <p className="text-center py-8">Cargando pagos...</p>
@@ -598,7 +603,9 @@ const PaymentManagementPage = () => {
                           ${payment.monto.toLocaleString("es-UY")}
                         </TableCell>
                         <TableCell>
-                          <Badge variant={getPaymentTypeBadgeVariant(payment.tipo)}>
+                          <Badge
+                            variant={getPaymentTypeBadgeVariant(payment.tipo)}
+                          >
                             {formatPaymentType(payment.tipo)}
                           </Badge>
                         </TableCell>
@@ -623,7 +630,9 @@ const PaymentManagementPage = () => {
                         <p className="font-bold">
                           {payment.firstName} {payment.lastName}
                         </p>
-                        <p className="text-sm text-slate-600">{payment.email}</p>
+                        <p className="text-sm text-slate-600">
+                          {payment.email}
+                        </p>
                         <p className="text-xs text-slate-500 mt-1">
                           {dayjs(payment.fecha_pago).format("DD/MM/YYYY HH:mm")}
                         </p>
@@ -652,46 +661,47 @@ const PaymentManagementPage = () => {
               No hay pagos registrados
             </p>
           )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Pagination */}
-      {!loading && totalPages > 1 && (
-        <div className="flex justify-center pt-4">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={handlePreviousPage}
-                  aria-disabled={currentPage === 1}
-                  className={
-                    currentPage === 1
-                      ? "pointer-events-none opacity-50"
-                      : "cursor-pointer"
-                  }
-                />
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationLink isActive className="w-14">
-                  {currentPage} de {totalPages}
-                </PaginationLink>
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationNext
-                  onClick={handleNextPage}
-                  aria-disabled={currentPage === totalPages}
-                  className={
-                    currentPage === totalPages
-                      ? "pointer-events-none opacity-50"
-                      : "cursor-pointer"
-                  }
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
-      )}
-    </div>
+        {/* Pagination */}
+        {!loading && totalPages > 1 && (
+          <div className="flex justify-center">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={handlePreviousPage}
+                    aria-disabled={currentPage === 1}
+                    className={
+                      currentPage === 1
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationLink isActive className="w-14">
+                    {currentPage} de {totalPages}
+                  </PaginationLink>
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={handleNextPage}
+                    aria-disabled={currentPage === totalPages}
+                    className={
+                      currentPage === totalPages
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
+      </div>
+    </TooltipProvider>
   );
 };
 

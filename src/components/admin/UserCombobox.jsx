@@ -28,7 +28,12 @@ export const UserCombobox = ({ users, selectedUserId, onSelect }) => {
   const selectedUser = users.find((user) => user.id === selectedUserId);
   const displayValue = selectedUser
     ? `${selectedUser.firstName} ${selectedUser.lastName}`
-    : "Todos los usuarios";
+    : "Selecciona un usuario";
+
+  const handleSelectUser = (userId) => {
+    onSelect(userId);
+    setOpen(false);
+  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -43,17 +48,22 @@ export const UserCombobox = ({ users, selectedUserId, onSelect }) => {
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[250px] p-0">
-        <Command>
-          <CommandInput placeholder="Buscar usuario..." />
+      <PopoverContent
+        className="w-[300px] p-0 !z-[100]"
+        align="start"
+        sideOffset={5}
+      >
+        <Command shouldFilter={true}>
+          <CommandInput
+            placeholder="Buscar usuario..."
+            className="h-9"
+          />
           <CommandEmpty>No se encontró ningún usuario.</CommandEmpty>
           <CommandGroup className="max-h-72 overflow-y-auto">
             {/* Opción para seleccionar "Todos" */}
             <CommandItem
-              onSelect={() => {
-                onSelect("todos");
-                setOpen(false);
-              }}
+              value="todos-los-usuarios"
+              onSelect={() => handleSelectUser("todos")}
             >
               <Check
                 className={cn(
@@ -68,11 +78,8 @@ export const UserCombobox = ({ users, selectedUserId, onSelect }) => {
             {users.map((user) => (
               <CommandItem
                 key={user.id}
-                value={`${user.firstName} ${user.lastName} ${user.email}`} // El valor para la búsqueda
-                onSelect={() => {
-                  onSelect(user.id);
-                  setOpen(false);
-                }}
+                value={`${user.firstName} ${user.lastName} ${user.email}`}
+                onSelect={() => handleSelectUser(user.id)}
               >
                 <Check
                   className={cn(
@@ -80,7 +87,10 @@ export const UserCombobox = ({ users, selectedUserId, onSelect }) => {
                     selectedUserId === user.id ? "opacity-100" : "opacity-0"
                   )}
                 />
-                {user.firstName} {user.lastName}
+                <div className="flex flex-col">
+                  <span>{user.firstName} {user.lastName}</span>
+                  <span className="text-xs text-muted-foreground">{user.email}</span>
+                </div>
               </CommandItem>
             ))}
           </CommandGroup>
