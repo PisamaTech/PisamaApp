@@ -1,8 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
 import "dayjs/locale/es";
 import { DollarSign, CreditCard, TrendingUp, TrendingDown } from "lucide-react";
+
+dayjs.extend(utc);
 import { useAuthStore } from "@/stores/authStore";
 import { useUIStore } from "@/stores/uiStore";
 import {
@@ -351,20 +354,14 @@ export const Facturas = () => {
                           <TableHead>Fecha</TableHead>
                           <TableHead className="text-right">Monto</TableHead>
                           <TableHead>Tipo</TableHead>
+                          <TableHead>Cuenta</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {recentPayments.map((payment) => (
                           <TableRow key={payment.id}>
                             <TableCell>
-                              {new Date(payment.fecha_pago).toLocaleDateString(
-                                "es-UY",
-                                {
-                                  day: "2-digit",
-                                  month: "2-digit",
-                                  year: "numeric",
-                                }
-                              )}
+                              {dayjs.utc(payment.fecha_pago).format("DD/MM/YYYY")}
                             </TableCell>
                             <TableCell className="text-right font-medium text-green-600">
                               ${parseFloat(payment.monto).toLocaleString("es-UY")}
@@ -375,6 +372,9 @@ export const Facturas = () => {
                               >
                                 {formatPaymentType(payment.tipo)}
                               </Badge>
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
+                              {payment.nota || "-"}
                             </TableCell>
                           </TableRow>
                         ))}
@@ -387,31 +387,36 @@ export const Facturas = () => {
                     {recentPayments.map((payment) => (
                       <div
                         key={payment.id}
-                        className="flex justify-between items-center p-4 bg-slate-200 text-slate-900 rounded-lg shadow-sm border border-slate-300"
+                        className="p-4 bg-slate-200 text-slate-900 rounded-lg shadow-sm border border-slate-300 space-y-2"
                       >
-                        <div>
-                          <p className="font-bold text-sm text-slate-900">
-                            {new Date(payment.fecha_pago).toLocaleDateString(
-                              "es-UY",
-                              {
-                                day: "2-digit",
-                                month: "2-digit",
-                                year: "numeric",
-                              }
-                            )}
-                          </p>
-                          <Badge
-                            variant={getPaymentTypeBadgeVariant(payment.tipo)}
-                            className="mt-1 text-[10px] h-5 px-1.5 shadow-sm"
-                          >
-                            {formatPaymentType(payment.tipo)}
-                          </Badge>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-bold text-sm text-slate-900">
+                              {dayjs.utc(payment.fecha_pago).format("DD/MM/YYYY")}
+                            </p>
+                            <Badge
+                              variant={getPaymentTypeBadgeVariant(payment.tipo)}
+                              className="mt-1 text-[10px] h-5 px-1.5 shadow-sm"
+                            >
+                              {formatPaymentType(payment.tipo)}
+                            </Badge>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-lg font-black text-green-600">
+                              ${parseFloat(payment.monto).toLocaleString("es-UY")}
+                            </p>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-lg font-black text-green-600">
-                            ${parseFloat(payment.monto).toLocaleString("es-UY")}
-                          </p>
-                        </div>
+                        {payment.nota && (
+                          <div className="pt-2 border-t border-slate-300">
+                            <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">
+                              Cuenta
+                            </p>
+                            <p className="text-sm text-slate-700 truncate">
+                              {payment.nota}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
