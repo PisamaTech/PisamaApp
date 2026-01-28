@@ -88,12 +88,12 @@ export const Facturas = () => {
 
   const totalHistoryPages = useMemo(
     () => Math.ceil(totalInvoices / itemsPerPage),
-    [totalInvoices, itemsPerPage]
+    [totalInvoices, itemsPerPage],
   );
 
   const totalPaymentPages = useMemo(
     () => Math.ceil(totalPayments / itemsPerPage),
-    [totalPayments, itemsPerPage]
+    [totalPayments, itemsPerPage],
   );
 
   // --- Lógica de Paginación para la VISTA PREVIA ---
@@ -107,7 +107,7 @@ export const Facturas = () => {
   const totalPreviewPages = useMemo(() => {
     if (!currentPeriodData?.calculatedBookings) return 0;
     return Math.ceil(
-      currentPeriodData.calculatedBookings.length / itemsPerPage
+      currentPeriodData.calculatedBookings.length / itemsPerPage,
     );
   }, [currentPeriodData, itemsPerPage]);
 
@@ -166,7 +166,7 @@ export const Facturas = () => {
         const { data: payments, count } = await fetchUserPayments(
           userId,
           paymentsCurrentPage,
-          itemsPerPage
+          itemsPerPage,
         );
         setRecentPayments(payments);
         setTotalPayments(count);
@@ -181,7 +181,7 @@ export const Facturas = () => {
         const { data, count } = await fetchUserInvoices(
           userId,
           historyCurrentPage,
-          itemsPerPage
+          itemsPerPage,
         );
         // 3. Ordenar las facturas por periodo_inicio (más recientes primero)
         data.sort((a, b) => {
@@ -256,9 +256,7 @@ export const Facturas = () => {
               <p className="text-3xl font-bold text-green-600">
                 ${totalPagosUsuario.toLocaleString("es-UY")}
               </p>
-              <p className="text-xs text-muted-foreground">
-                Pagos realizados
-              </p>
+              <p className="text-xs text-muted-foreground">Pagos realizados</p>
             </div>
           </CardContent>
         </Card>
@@ -278,9 +276,7 @@ export const Facturas = () => {
               <p className="text-3xl font-bold text-red-600">
                 ${totalFacturadoUsuario.toLocaleString("es-UY")}
               </p>
-              <p className="text-xs text-muted-foreground">
-                Monto facturado
-              </p>
+              <p className="text-xs text-muted-foreground">Monto facturado</p>
             </div>
           </CardContent>
         </Card>
@@ -309,7 +305,9 @@ export const Facturas = () => {
                 }`}
               >
                 {totalPagosUsuario - totalFacturadoUsuario >= 0 ? "+" : "-"}$
-                {Math.abs(totalPagosUsuario - totalFacturadoUsuario).toLocaleString("es-UY")}
+                {Math.abs(
+                  totalPagosUsuario - totalFacturadoUsuario,
+                ).toLocaleString("es-UY")}
               </p>
               <p className="text-xs text-muted-foreground">
                 {totalPagosUsuario - totalFacturadoUsuario >= 0
@@ -321,139 +319,9 @@ export const Facturas = () => {
         </Card>
       </div>
 
-      {/* --- Sección de Historiales: Pagos y Facturas (2 columnas en desktop) --- */}
+      {/* --- Sección de Historiales: Facturas y Pagos (2 columnas en desktop) --- */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Columna Izquierda: Historial de Pagos */}
-        <Card className="shadow-md">
-          <CardHeader>
-            <CardTitle className="text-xl">Historial de Pagos</CardTitle>
-            <Separator />
-            <CardDescription className="py-2">
-              Últimos pagos registrados.{" "}
-              <button
-                onClick={() => navigate("/pagos")}
-                className="text-primary hover:underline font-medium"
-              >
-                Ver todos
-              </button>
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {recentPayments.length === 0 ? (
-              <p className="text-center text-gray-500 py-4">
-                No hay pagos registrados aún.
-              </p>
-            ) : (
-              <>
-                <div className="border rounded-md">
-                  {/* Desktop View */}
-                  <div className="hidden md:block">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Fecha</TableHead>
-                          <TableHead className="text-right">Monto</TableHead>
-                          <TableHead>Tipo</TableHead>
-                          <TableHead>Cuenta</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {recentPayments.map((payment) => (
-                          <TableRow key={payment.id}>
-                            <TableCell>
-                              {dayjs.utc(payment.fecha_pago).format("DD/MM/YYYY")}
-                            </TableCell>
-                            <TableCell className="text-right font-medium text-green-600">
-                              ${parseFloat(payment.monto).toLocaleString("es-UY")}
-                            </TableCell>
-                            <TableCell>
-                              <Badge
-                                variant={getPaymentTypeBadgeVariant(payment.tipo)}
-                              >
-                                {formatPaymentType(payment.tipo)}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
-                              {payment.nota || "-"}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-
-                  {/* Mobile View */}
-                  <div className="md:hidden space-y-3 p-4">
-                    {recentPayments.map((payment) => (
-                      <div
-                        key={payment.id}
-                        className="p-4 bg-slate-200 text-slate-900 rounded-lg shadow-sm border border-slate-300 space-y-2"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="font-bold text-sm text-slate-900">
-                              {dayjs.utc(payment.fecha_pago).format("DD/MM/YYYY")}
-                            </p>
-                            <Badge
-                              variant={getPaymentTypeBadgeVariant(payment.tipo)}
-                              className="mt-1 text-[10px] h-5 px-1.5 shadow-sm"
-                            >
-                              {formatPaymentType(payment.tipo)}
-                            </Badge>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-lg font-black text-green-600">
-                              ${parseFloat(payment.monto).toLocaleString("es-UY")}
-                            </p>
-                          </div>
-                        </div>
-                        {payment.nota && (
-                          <div className="pt-2 border-t border-slate-300">
-                            <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">
-                              Cuenta
-                            </p>
-                            <p className="text-sm text-slate-700 truncate">
-                              {payment.nota}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Paginación de Pagos */}
-                {totalPaymentPages > 1 && (
-                  <div className="flex justify-center pt-4">
-                    <Pagination>
-                      <PaginationContent>
-                        <PaginationItem>
-                          <PaginationPrevious
-                            onClick={handlePaymentsPrevPage}
-                            aria-disabled={paymentsCurrentPage === 1}
-                          />
-                        </PaginationItem>
-                        <PaginationItem>
-                          <PaginationLink isActive className="min-w-[80px] px-4">
-                            {paymentsCurrentPage} de {totalPaymentPages}
-                          </PaginationLink>
-                        </PaginationItem>
-                        <PaginationItem>
-                          <PaginationNext
-                            onClick={handlePaymentsNextPage}
-                            aria-disabled={paymentsCurrentPage === totalPaymentPages}
-                          />
-                        </PaginationItem>
-                      </PaginationContent>
-                    </Pagination>
-                  </div>
-                )}
-              </>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Columna Derecha: Historial de Facturas */}
+        {/* Columna Izquierda: Historial de Facturas */}
         <Card className="shadow-md">
           <CardHeader>
             <CardTitle className="text-xl">Historial de Facturas</CardTitle>
@@ -495,8 +363,8 @@ export const Facturas = () => {
                             onClick={() => navigate(`/facturas/${factura.id}`)}
                           >
                             <TableCell className="font-medium">
-                              {dayjs(factura.periodo_inicio).format("DD/MM/YY")} -{" "}
-                              {dayjs(factura.periodo_fin).format("DD/MM/YY")}
+                              {dayjs(factura.periodo_inicio).format("DD/MM/YY")}{" "}
+                              - {dayjs(factura.periodo_fin).format("DD/MM/YY")}
                             </TableCell>
                             <TableCell>
                               ${factura.monto_total.toLocaleString("es-UY")}
@@ -527,11 +395,14 @@ export const Facturas = () => {
                               Período
                             </p>
                             <p className="font-bold text-slate-900">
-                              {dayjs(factura.periodo_inicio).format("DD/MM/YY")} -{" "}
-                              {dayjs(factura.periodo_fin).format("DD/MM/YY")}
+                              {dayjs(factura.periodo_inicio).format("DD/MM/YY")}{" "}
+                              - {dayjs(factura.periodo_fin).format("DD/MM/YY")}
                             </p>
                           </div>
-                          <Badge variant={getStatusVariant(factura.estado)} className="shadow-sm">
+                          <Badge
+                            variant={getStatusVariant(factura.estado)}
+                            className="shadow-sm"
+                          >
                             {factura.estado.charAt(0).toUpperCase() +
                               factura.estado.slice(1)}
                           </Badge>
@@ -564,14 +435,166 @@ export const Facturas = () => {
                           />
                         </PaginationItem>
                         <PaginationItem>
-                          <PaginationLink isActive className="min-w-[80px] px-4">
+                          <PaginationLink
+                            isActive
+                            className="min-w-[80px] px-4"
+                          >
                             {historyCurrentPage} de {totalHistoryPages}
                           </PaginationLink>
                         </PaginationItem>
                         <PaginationItem>
                           <PaginationNext
                             onClick={handleHistoryNextPage}
-                            aria-disabled={historyCurrentPage === totalHistoryPages}
+                            aria-disabled={
+                              historyCurrentPage === totalHistoryPages
+                            }
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Columna Derecha: Historial de Pagos */}
+        <Card className="shadow-md">
+          <CardHeader>
+            <CardTitle className="text-xl">Historial de Pagos</CardTitle>
+            <Separator />
+            <CardDescription className="py-2">
+              Últimos pagos registrados.{" "}
+              <button
+                onClick={() => navigate("/pagos")}
+                className="text-primary hover:underline font-medium"
+              >
+                Ver todos
+              </button>
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {recentPayments.length === 0 ? (
+              <p className="text-center text-gray-500 py-4">
+                No hay pagos registrados aún.
+              </p>
+            ) : (
+              <>
+                <div className="border rounded-md">
+                  {/* Desktop View */}
+                  <div className="hidden md:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Fecha</TableHead>
+                          <TableHead className="text-right">Monto</TableHead>
+                          <TableHead>Tipo</TableHead>
+                          <TableHead>Cuenta</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {recentPayments.map((payment) => (
+                          <TableRow key={payment.id}>
+                            <TableCell>
+                              {dayjs
+                                .utc(payment.fecha_pago)
+                                .format("DD/MM/YYYY")}
+                            </TableCell>
+                            <TableCell className="text-right font-medium text-green-600">
+                              $
+                              {parseFloat(payment.monto).toLocaleString(
+                                "es-UY",
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant={getPaymentTypeBadgeVariant(
+                                  payment.tipo,
+                                )}
+                              >
+                                {formatPaymentType(payment.tipo)}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
+                              {payment.nota || "-"}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Mobile View */}
+                  <div className="md:hidden space-y-3 p-4">
+                    {recentPayments.map((payment) => (
+                      <div
+                        key={payment.id}
+                        className="p-4 bg-slate-200 text-slate-900 rounded-lg shadow-sm border border-slate-300 space-y-2"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-bold text-sm text-slate-900">
+                              {dayjs
+                                .utc(payment.fecha_pago)
+                                .format("DD/MM/YYYY")}
+                            </p>
+                            <Badge
+                              variant={getPaymentTypeBadgeVariant(payment.tipo)}
+                              className="mt-1 text-[10px] h-5 px-1.5 shadow-sm"
+                            >
+                              {formatPaymentType(payment.tipo)}
+                            </Badge>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-lg font-black text-green-600">
+                              $
+                              {parseFloat(payment.monto).toLocaleString(
+                                "es-UY",
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                        {payment.nota && (
+                          <div className="pt-2 border-t border-slate-300">
+                            <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">
+                              Cuenta
+                            </p>
+                            <p className="text-sm text-slate-700 truncate">
+                              {payment.nota}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Paginación de Pagos */}
+                {totalPaymentPages > 1 && (
+                  <div className="flex justify-center pt-4">
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            onClick={handlePaymentsPrevPage}
+                            aria-disabled={paymentsCurrentPage === 1}
+                          />
+                        </PaginationItem>
+                        <PaginationItem>
+                          <PaginationLink
+                            isActive
+                            className="min-w-[80px] px-4"
+                          >
+                            {paymentsCurrentPage} de {totalPaymentPages}
+                          </PaginationLink>
+                        </PaginationItem>
+                        <PaginationItem>
+                          <PaginationNext
+                            onClick={handlePaymentsNextPage}
+                            aria-disabled={
+                              paymentsCurrentPage === totalPaymentPages
+                            }
                           />
                         </PaginationItem>
                       </PaginationContent>
@@ -654,7 +677,7 @@ export const Facturas = () => {
               <div className="space-y-2">
                 <h4 className="font-semibold">Detalle de Actividad en Curso</h4>
                 <div className="border rounded-md">
-                   {/* Desktop View */}
+                  {/* Desktop View */}
                   <div className="hidden md:block">
                     <Table>
                       <TableHeader>
@@ -706,14 +729,18 @@ export const Facturas = () => {
                         <div>
                           <p className="font-bold text-sm text-slate-900 uppercase">
                             {dayjs(reserva.start_time)
-                                .format("ddd DD/MM")
-                                .replace(/^\w/, (c) => c.toUpperCase())}
+                              .format("ddd DD/MM")
+                              .replace(/^\w/, (c) => c.toUpperCase())}
                           </p>
                           <p className="text-xs text-slate-600 font-medium">
-                            {dayjs(reserva.start_time).format("HH:mm")} hs - {reserva.consultorio_nombre}
+                            {dayjs(reserva.start_time).format("HH:mm")} hs -{" "}
+                            {reserva.consultorio_nombre}
                           </p>
-                          <Badge variant={reserva.estado.toLowerCase()} className="mt-2 text-[10px] h-5 px-1.5 shadow-sm">
-                                {reserva.estado}
+                          <Badge
+                            variant={reserva.estado.toLowerCase()}
+                            className="mt-2 text-[10px] h-5 px-1.5 shadow-sm"
+                          >
+                            {reserva.estado}
                           </Badge>
                         </div>
                         <div className="text-right">
@@ -738,7 +765,10 @@ export const Facturas = () => {
                           />
                         </PaginationItem>
                         <PaginationItem>
-                          <PaginationLink isActive className="min-w-[80px] px-4">
+                          <PaginationLink
+                            isActive
+                            className="min-w-[80px] px-4"
+                          >
                             {previewCurrentPage} de {totalPreviewPages}
                           </PaginationLink>
                         </PaginationItem>

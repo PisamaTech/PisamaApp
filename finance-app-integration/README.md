@@ -92,7 +92,7 @@ Asegúrate de que `.env.local` esté en tu `.gitignore`:
 ### Uso Básico: Envío Individual
 
 ```tsx
-import { SendToPisamaButton } from '@/components/SendToPisamaButton';
+import { SendToPisamaButton } from "@/components/SendToPisamaButton";
 
 export default function TransactionRow({ transaction }) {
   return (
@@ -111,11 +111,11 @@ export default function TransactionRow({ transaction }) {
             description: transaction.description,
           }}
           onSuccess={(result) => {
-            console.log('Pago enviado exitosamente:', result);
+            console.log("Pago enviado exitosamente:", result);
             // Actualizar UI, marcar como enviado, etc.
           }}
           onError={(error) => {
-            console.error('Error al enviar pago:', error);
+            console.error("Error al enviar pago:", error);
             // Mostrar toast de error, etc.
           }}
         />
@@ -128,12 +128,12 @@ export default function TransactionRow({ transaction }) {
 ### Uso Avanzado: Envío en Lote
 
 ```tsx
-import { SendBatchToPisama } from '@/components/SendToPisamaButton';
+import { SendBatchToPisama } from "@/components/SendToPisamaButton";
 
 export default function WeeklyPaymentsPage({ payments }) {
   // Filtrar solo pagos de "Espacio Pisama (Pago)"
   const pisamaPayments = payments.filter(
-    (p) => p.category === 'Espacio Pisama (Pago)'
+    (p) => p.category === "Espacio Pisama (Pago)",
   );
 
   return (
@@ -144,9 +144,11 @@ export default function WeeklyPaymentsPage({ payments }) {
       <SendBatchToPisama
         transactions={pisamaPayments}
         onComplete={(results) => {
-          console.log('Envío completo:', results);
+          console.log("Envío completo:", results);
           // results = { success: 10, errors: 0, duplicates: 2 }
-          alert(`Enviados: ${results.success}, Duplicados: ${results.duplicates}, Errores: ${results.errors}`);
+          alert(
+            `Enviados: ${results.success}, Duplicados: ${results.duplicates}, Errores: ${results.errors}`,
+          );
         }}
       />
     </div>
@@ -157,7 +159,7 @@ export default function WeeklyPaymentsPage({ payments }) {
 ### Uso Programático (sin UI)
 
 ```tsx
-import { sendPaymentToPisama, getErrorMessage } from '@/lib/pisama-integration';
+import { sendPaymentToPisama, getErrorMessage } from "@/lib/pisama-integration";
 
 export async function sendWeeklyPayments() {
   const payments = await getWeeklyPaymentsFromDB();
@@ -169,14 +171,14 @@ export async function sendWeeklyPayments() {
       fullName: payment.user_name,
       amount: payment.amount,
       paymentDate: payment.date,
-      note: 'Pago semanal automático',
+      note: "Pago semanal automático",
     });
 
     if (result.success) {
-      console.log('✓ Enviado:', payment.id);
+      console.log("✓ Enviado:", payment.id);
       await markAsSentInDB(payment.id);
     } else {
-      console.error('✗ Error:', getErrorMessage(result));
+      console.error("✗ Error:", getErrorMessage(result));
       await logErrorInDB(payment.id, result.error);
     }
   }
@@ -207,22 +209,24 @@ export async function sendWeeklyPayments() {
 
 ```typescript
 interface PaymentData {
-  transactionId: string;  // ID único (idempotencia)
-  email: string;          // Email del usuario
-  fullName: string;       // Nombre completo (fuzzy matching)
-  amount: number;         // Monto del pago
-  paymentDate?: string;   // Fecha ISO 8601 (opcional)
-  note?: string;          // Nota adicional (opcional)
+  transactionId: string; // ID único (idempotencia)
+  email: string; // Email del usuario
+  fullName: string; // Nombre completo (fuzzy matching)
+  amount: number; // Monto del pago
+  paymentDate?: string; // Fecha ISO 8601 (opcional)
+  note?: string; // Nota adicional (opcional)
 }
 
-type PaymentResult = {
-  success: true;
-  data: PaymentSuccessResponse;
-} | {
-  success: false;
-  error: PaymentErrorResponse;
-  statusCode: number;
-};
+type PaymentResult =
+  | {
+      success: true;
+      data: PaymentSuccessResponse;
+    }
+  | {
+      success: false;
+      error: PaymentErrorResponse;
+      statusCode: number;
+    };
 ```
 
 ### `SendToPisamaButton.tsx` (Componente UI)
@@ -236,8 +240,8 @@ interface SendToPisamaButtonProps {
   onError?: (error: PaymentResult) => void;
   disabled?: boolean;
   buttonText?: string;
-  variant?: 'primary' | 'secondary' | 'outline';
-  size?: 'sm' | 'md' | 'lg';
+  variant?: "primary" | "secondary" | "outline";
+  size?: "sm" | "md" | "lg";
   className?: string;
 }
 ```
@@ -274,16 +278,16 @@ curl -X POST https://tgetexpttsvcgsheaybu.supabase.co/functions/v1/receive-payme
 Crea un archivo `app/api/test-pisama/route.ts`:
 
 ```typescript
-import { sendPaymentToPisama } from '@/lib/pisama-integration';
-import { NextResponse } from 'next/server';
+import { sendPaymentToPisama } from "@/lib/pisama-integration";
+import { NextResponse } from "next/server";
 
 export async function POST() {
   const result = await sendPaymentToPisama({
     transactionId: `test_${Date.now()}`,
-    email: 'titantelo@gmail.com',
-    fullName: 'Gastón Campo',
+    email: "titantelo@gmail.com",
+    fullName: "Gastón Campo",
     amount: 1500,
-    note: 'Test desde API Route',
+    note: "Test desde API Route",
   });
 
   return NextResponse.json(result);
@@ -317,6 +321,7 @@ Luego accede a: `http://localhost:3000/api/test-pisama` (POST)
 **Causa:** El fuzzy matching falló porque el nombre es muy diferente.
 
 **Solución:** El nombre debe coincidir parcialmente. Por ejemplo:
+
 - ✓ "Gastón Campo" → "Campo" (OK)
 - ✓ "Gastón Campo" → "Gastón" (OK)
 - ✗ "Gastón Campo" → "Juan Pérez" (ERROR)
@@ -325,13 +330,14 @@ Luego accede a: `http://localhost:3000/api/test-pisama` (POST)
 
 **Causa:** Ya existe un pago con ese `transactionId`.
 
-**Solución:** Esto es NORMAL y esperado (idempotencia). El pago ya fue procesado. No hagas nada o muestra mensaje "Ya enviado".
+**Solución:** Esto es NORMAL y esperado (idempotencia). El pago ya fue procesado. Muestra mensaje "Ya enviado".
 
 ### Warning: Variables de entorno no definidas
 
 **Causa:** Olvidaste copiar `.env.example` a `.env.local`.
 
 **Solución:**
+
 ```bash
 cp .env.example .env.local
 # Edita .env.local con tus credenciales
@@ -367,7 +373,7 @@ cp .env.example .env.local
 - Filtra las transacciones antes de enviarlas:
   ```typescript
   const pisamaPayments = allTransactions.filter(
-    tx => tx.category === 'Espacio Pisama (Pago)'
+    (tx) => tx.category === "Espacio Pisama (Pago)",
   );
   ```
 
