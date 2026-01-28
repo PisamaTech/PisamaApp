@@ -248,7 +248,9 @@ export const Facturas = () => {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Total de Pagos
               </CardTitle>
-              <DollarSign className="h-5 w-5 text-green-600" />
+              <div className="p-2 bg-slate-200 rounded-full">
+                <DollarSign className="h-5 w-5 text-green-600" />
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -268,7 +270,9 @@ export const Facturas = () => {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Total de Gastos
               </CardTitle>
-              <CreditCard className="h-5 w-5 text-red-600" />
+              <div className="p-2 bg-slate-200 rounded-full">
+                <CreditCard className="h-5 w-5 text-red-600" />
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -288,11 +292,13 @@ export const Facturas = () => {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Balance
               </CardTitle>
-              {totalPagosUsuario - totalFacturadoUsuario >= 0 ? (
-                <TrendingUp className="h-5 w-5 text-blue-600" />
-              ) : (
-                <TrendingDown className="h-5 w-5 text-orange-600" />
-              )}
+              <div className="p-2 bg-slate-100 rounded-full">
+                {totalPagosUsuario - totalFacturadoUsuario >= 0 ? (
+                  <TrendingUp className="h-5 w-5 text-blue-600" />
+                ) : (
+                  <TrendingDown className="h-5 w-5 text-orange-600" />
+                )}
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -489,8 +495,8 @@ export const Facturas = () => {
                         <TableRow>
                           <TableHead>Fecha</TableHead>
                           <TableHead className="text-right">Monto</TableHead>
-                          <TableHead>Tipo</TableHead>
                           <TableHead>Cuenta</TableHead>
+                          <TableHead>Tipo</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -507,6 +513,9 @@ export const Facturas = () => {
                                 "es-UY",
                               )}
                             </TableCell>
+                            <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
+                              {payment.nota || "-"}
+                            </TableCell>
                             <TableCell>
                               <Badge
                                 variant={getPaymentTypeBadgeVariant(
@@ -515,9 +524,6 @@ export const Facturas = () => {
                               >
                                 {formatPaymentType(payment.tipo)}
                               </Badge>
-                            </TableCell>
-                            <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
-                              {payment.nota || "-"}
                             </TableCell>
                           </TableRow>
                         ))}
