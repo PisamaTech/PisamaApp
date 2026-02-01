@@ -73,7 +73,9 @@ export const CalendarDiario = () => {
   );
 
   const { profile } = useAuthStore();
+  const isAdmin = profile?.role === "admin";
   const userId = profile?.id;
+  const [isAdminBookingMode, setIsAdminBookingMode] = useState(false);
 
   const { handleReservation } = useReservationHandler(resetReservationState);
   const { events } = useEventStore(); // Usa el store de Zustand
@@ -150,6 +152,22 @@ export const CalendarDiario = () => {
       <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6 text-center">
         Disponibilidad Diaria
       </h1>
+      {/* --- Añadir el Interruptor de Modo Admin --- */}
+      {isAdmin && (
+        <div className="flex items-center space-x-2 bg-yellow-100 border border-yellow-300 p-2 sm:p-3 rounded-md">
+          <Switch
+            id="admin-booking-mode"
+            checked={isAdminBookingMode}
+            onCheckedChange={setIsAdminBookingMode}
+          />
+          <Label
+            htmlFor="admin-booking-mode"
+            className="font-semibold text-yellow-800 text-xs sm:text-sm"
+          >
+            Modo Administrador: Agendar para otro usuario
+          </Label>
+        </div>
+      )}
       <Separator />
       <div className="flex items-center justify-center space-x-2 my-3 sm:my-4">
         <Switch
@@ -242,6 +260,7 @@ export const CalendarDiario = () => {
           onCancel={cancelarReserveDialog}
           isReagendamiento={isReagendamientoMode}
           penalizedBooking={penalizedBookingForReagendamiento}
+          isAdminBookingMode={isAdminBookingMode}
         />
       )}
       <ConfirmReservationDialog
