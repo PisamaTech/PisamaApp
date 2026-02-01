@@ -248,7 +248,7 @@ export const Facturas = () => {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Total de Pagos
               </CardTitle>
-              <div className="p-2 bg-slate-200 rounded-full">
+              <div className="p-2 bg-slate-100 rounded-full">
                 <DollarSign className="h-5 w-5 text-green-600" />
               </div>
             </div>
@@ -270,7 +270,7 @@ export const Facturas = () => {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Total de Gastos
               </CardTitle>
-              <div className="p-2 bg-slate-200 rounded-full">
+              <div className="p-2 bg-slate-100 rounded-full">
                 <CreditCard className="h-5 w-5 text-red-600" />
               </div>
             </div>
@@ -616,7 +616,7 @@ export const Facturas = () => {
       {/* --- Sección de Facturación en Curso --- */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl">Facturación en Curso</CardTitle>
+          <CardTitle className="text-xl">Tu próxima factura</CardTitle>
           <Separator />
           <CardDescription className="py-2">
             Este es un resumen de tu actividad que aún no ha sido facturada.

@@ -31,6 +31,7 @@ export const UserCombobox = ({ users, selectedUserId, onSelect }) => {
     : "Selecciona un usuario";
 
   const handleSelectUser = (userId) => {
+    console.log("UserCombobox - Selected userId:", userId, "type:", typeof userId);
     onSelect(userId);
     setOpen(false);
   };

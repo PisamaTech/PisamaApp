@@ -100,6 +100,12 @@ const PaymentManagementPage = () => {
     const loadUsers = async () => {
       try {
         const { data } = await fetchAllUsers(1, 1000);
+        // Debug: Verificar estructura de datos de usuarios
+        console.log("Loaded users:", data);
+        if (data && data.length > 0) {
+          console.log("First user structure:", data[0]);
+          console.log("First user id:", data[0].id, "type:", typeof data[0].id);
+        }
         setAllUsers(data);
       } catch (error) {
         console.error("No se pudieron cargar los usuarios para el filtro.");
@@ -223,6 +229,20 @@ const PaymentManagementPage = () => {
         type: "error",
         title: "Error",
         message: "Todos los campos excepto nota son requeridos",
+      });
+      return;
+    }
+
+    // Debug: Log del userId para verificar el valor
+    console.log("Invoice Form userId:", invoiceForm.userId);
+    console.log("Invoice Form userId type:", typeof invoiceForm.userId);
+
+    // Verificar que userId no sea "todos"
+    if (invoiceForm.userId === "todos") {
+      showToast({
+        type: "error",
+        title: "Error",
+        message: "Debes seleccionar un usuario específico",
       });
       return;
     }

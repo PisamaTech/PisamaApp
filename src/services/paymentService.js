@@ -128,22 +128,18 @@ export const fetchUserBalance = async (userId) => {
  */
 export const createManualPayment = async (paymentData) => {
   try {
-    const { data, error } = await supabase
-      .from("pagos")
-      .insert({
-        usuario_id: paymentData.userId,
-        monto: paymentData.amount,
-        tipo: paymentData.type,
-        fecha_pago: paymentData.date || new Date().toISOString(),
-        estado: "procesado",
-        nota: paymentData.note || null,
-      })
-      .select()
-      .single();
+    const { data, error } = await supabase.rpc("create_manual_payment", {
+      p_usuario_id: paymentData.userId,
+      p_monto: paymentData.amount,
+      p_tipo: paymentData.type,
+      p_fecha_pago: paymentData.date || new Date().toISOString(),
+      p_nota: paymentData.note || null,
+    });
 
     if (error) throw error;
 
-    return data;
+    // La función RPC retorna el ID del pago creado
+    return { id: data };
   } catch (error) {
     console.error("Error al crear pago manual:", error);
     throw new Error(`No se pudo crear el pago manual: ${error.message}`);
@@ -222,28 +218,19 @@ export const searchAllPayments = async (
  */
 export const createManualInvoice = async (invoiceData) => {
   try {
-    const { data, error } = await supabase
-      .from("facturas")
-      .insert({
-        usuario_id: invoiceData.userId,
-        periodo_inicio: invoiceData.periodoInicio,
-        periodo_fin: invoiceData.periodoFin,
-        monto_total: invoiceData.montoTotal,
-        monto_base: invoiceData.montoTotal, // Para facturas manuales, base = total
-        monto_descuento: 0,
-        saldo_pendiente:
-          invoiceData.estado === "pendiente" ? invoiceData.montoTotal : 0,
-        estado: invoiceData.estado,
-        fecha_emision: new Date().toISOString(),
-        fecha_pago: invoiceData.estado === "pagada" ? new Date().toISOString() : null,
-        nota: invoiceData.note || null,
-      })
-      .select()
-      .single();
+    const { data, error } = await supabase.rpc("create_manual_invoice", {
+      p_usuario_id: invoiceData.userId,
+      p_periodo_inicio: invoiceData.periodoInicio,
+      p_periodo_fin: invoiceData.periodoFin,
+      p_monto_total: invoiceData.montoTotal,
+      p_estado: invoiceData.estado,
+      p_nota: invoiceData.note || null,
+    });
 
     if (error) throw error;
 
-    return data;
+    // La función RPC retorna el ID de la factura creada
+    return { id: data };
   } catch (error) {
     console.error("Error al crear factura manual:", error);
     throw new Error(`No se pudo crear la factura manual: ${error.message}`);

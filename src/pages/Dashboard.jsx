@@ -583,6 +583,46 @@ const Dashboard = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex-grow space-y-4">
+            {/* Saldo de Cuenta */}
+            <div>
+              <h4 className="text-md font-semibold mb-2">Saldo de Cuenta</h4>
+              {userBalance ? (
+                <div className="space-y-2">
+                  <div className="flex justify-between items-baseline p-4 bg-green-50 rounded-lg border border-green-200">
+                    <span className="text-green-700 font-medium">
+                      Saldo a favor:
+                    </span>
+                    <span className="text-2xl font-bold text-green-600">
+                      $
+                      {(userBalance.saldo_disponible > 0
+                        ? userBalance.saldo_disponible
+                        : 0
+                      ).toLocaleString("es-UY")}
+                    </span>
+                  </div>
+                  {userBalance.saldo_facturas_pendientes > 0 && (
+                    <div className="flex justify-between items-baseline p-3 bg-orange-50 rounded-lg border border-orange-200">
+                      <span className="text-orange-700 text-sm">
+                        Pendiente de pago:
+                      </span>
+                      <span className="text-lg font-bold text-orange-600">
+                        $
+                        {userBalance.saldo_facturas_pendientes.toLocaleString(
+                          "es-UY"
+                        )}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-center text-muted-foreground py-4">
+                  Cargando saldo...
+                </p>
+              )}
+            </div>
+
+            <Separator />
+
             {/* Sección de Facturas Pendientes */}
             <div>
               <h4 className="text-md font-semibold mb-2">
@@ -672,46 +712,6 @@ const Dashboard = () => {
               ) : (
                 <p className="text-sm text-center text-muted-foreground py-4">
                   Sin consumo registrado en el período actual.
-                </p>
-              )}
-            </div>
-
-            <Separator />
-
-            {/* Saldo de Cuenta */}
-            <div>
-              <h4 className="text-md font-semibold mb-2">Saldo de Cuenta</h4>
-              {userBalance ? (
-                <div className="space-y-2">
-                  <div className="flex justify-between items-baseline p-4 bg-green-50 rounded-lg border border-green-200">
-                    <span className="text-green-700 font-medium">
-                      Saldo a favor:
-                    </span>
-                    <span className="text-2xl font-bold text-green-600">
-                      $
-                      {(userBalance.saldo_disponible > 0
-                        ? userBalance.saldo_disponible
-                        : 0
-                      ).toLocaleString("es-UY")}
-                    </span>
-                  </div>
-                  {userBalance.saldo_facturas_pendientes > 0 && (
-                    <div className="flex justify-between items-baseline p-3 bg-orange-50 rounded-lg border border-orange-200">
-                      <span className="text-orange-700 text-sm">
-                        Pendiente de pago:
-                      </span>
-                      <span className="text-lg font-bold text-orange-600">
-                        $
-                        {userBalance.saldo_facturas_pendientes.toLocaleString(
-                          "es-UY"
-                        )}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <p className="text-sm text-center text-muted-foreground py-4">
-                  Cargando saldo...
                 </p>
               )}
             </div>
