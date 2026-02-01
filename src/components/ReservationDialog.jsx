@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import dayjs from "dayjs";
-import { UserCombobox } from "@/components/admin/UserCombobox";
 import { fetchAllUsers } from "@/services/adminService"; // El nuevo servicio
 import {
   Button,
@@ -53,6 +52,7 @@ export const ReservationDialog = ({
   // --- Añade estados para la lista de usuarios y el usuario seleccionado ---
   const [userList, setUserList] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState(null);
+  const [userSearchQuery, setUserSearchQuery] = useState("");
 
   // --- Cargar la lista de usuarios si estamos en modo admin ---
   useEffect(() => {
@@ -68,6 +68,10 @@ export const ReservationDialog = ({
         }
       };
       loadUsers();
+    }
+    // Limpiar búsqueda cuando se cierra el diálogo
+    if (!open) {
+      setUserSearchQuery("");
     }
   }, [isAdminBookingMode, open]);
 
@@ -185,6 +189,14 @@ export const ReservationDialog = ({
     }
   };
 
+  // --- Filtrar usuarios según la búsqueda ---
+  const filteredUsers = userList.filter((user) => {
+    const searchLower = userSearchQuery.toLowerCase();
+    const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
+    const email = user.email?.toLowerCase() || "";
+    return fullName.includes(searchLower) || email.includes(searchLower);
+  });
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange} modal={true}>
       <DialogContent
@@ -259,14 +271,45 @@ export const ReservationDialog = ({
             {/* --- Añade el selector de usuario condicional --- */}
             {isAdminBookingMode && (
               <div className="p-3 sm:p-4 bg-yellow-50 border border-yellow-200 rounded-md space-y-2">
-                <Label className="font-semibold text-yellow-800 text-xs sm:text-sm">
+                <Label htmlFor="selectedUser" className="font-semibold text-yellow-800 text-xs sm:text-sm">
                   Agendando para:
                 </Label>
-                <UserCombobox
-                  users={userList}
-                  selectedUserId={selectedUserId}
-                  onSelect={handleUserSelect}
+                {/* Campo de búsqueda */}
+                <Input
+                  type="text"
+                  placeholder="Buscar usuario por nombre o email..."
+                  value={userSearchQuery}
+                  onChange={(e) => setUserSearchQuery(e.target.value)}
+                  className="text-xs sm:text-sm h-8 sm:h-10"
                 />
+                <Select
+                  value={selectedUserId || ""}
+                  onValueChange={(value) => handleUserSelect(value)}
+                >
+                  <SelectTrigger className="w-full text-xs sm:text-sm h-8 sm:h-10">
+                    <SelectValue placeholder="Selecciona un usuario" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    {filteredUsers.length > 0 ? (
+                      filteredUsers.map((user) => (
+                        <SelectItem
+                          key={user.id}
+                          value={user.id}
+                          className="text-xs sm:text-sm"
+                        >
+                          <div className="flex flex-col">
+                            <span>{user.firstName} {user.lastName}</span>
+                            <span className="text-xs text-muted-foreground">{user.email}</span>
+                          </div>
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <div className="px-2 py-6 text-center text-xs sm:text-sm text-muted-foreground">
+                        No se encontraron usuarios
+                      </div>
+                    )}
+                  </SelectContent>
+                </Select>
                 {/* --- 5. Muestra el error de validación --- */}
                 {errors.selectedUserId && (
                   <p className="text-xs sm:text-sm text-red-500 mt-1">
