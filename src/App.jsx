@@ -21,6 +21,8 @@ import PaymentManagement from "./pages/admin/PaymentManagement";
 import PricingManagement from "./pages/admin/PricingManagement";
 import Broadcast from "./pages/admin/Broadcast";
 import PerformancePage from "./pages/admin/Performance";
+import BalanceSummary from "./pages/admin/BalanceSummary";
+import UserBillingDetails from "./pages/admin/UserBillingDetails";
 import { useAuthStore } from "./stores/authStore";
 import { useNotificationStore } from "./stores/notificationStore";
 import LoadingOverlay from "./components/LoadingOverlay";
@@ -129,6 +131,14 @@ function App() {
               <Route
                 path="/admin/broadcast"
                 element={<AdminRouteGuard><Broadcast /></AdminRouteGuard>}
+              />
+              <Route
+                path="/admin/balance-summary"
+                element={<AdminRouteGuard><BalanceSummary /></AdminRouteGuard>}
+              />
+              <Route
+                path="/admin/balance-summary/:userId"
+                element={<AdminRouteGuard><UserBillingDetails /></AdminRouteGuard>}
               />
               <Route path="perfil" element={<Perfil />} />
               <Route path="ayuda" element={<Ayuda />} />

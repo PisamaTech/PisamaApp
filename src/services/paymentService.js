@@ -301,3 +301,27 @@ export const getPaymentStats = async (userId = null, startDate = null, endDate =
     );
   }
 };
+
+/**
+ * Admin: Obtiene el resumen de saldos de todos los usuarios.
+ * Utiliza la función RPC get_all_users_balance de la base de datos.
+ *
+ * @param {string|null} userId - ID del usuario específico (opcional, "todos" para todos).
+ * @returns {Promise<Array<{user_id: string, first_name: string, last_name: string, email: string, total_pagos: number, total_facturado: number, saldo_disponible: number}>>}
+ */
+export const fetchAllUsersBalance = async (userId = null) => {
+  try {
+    const { data, error } = await supabase.rpc("get_all_users_balance", {
+      p_user_id: userId === "todos" ? null : userId,
+    });
+
+    if (error) throw error;
+
+    return data || [];
+  } catch (error) {
+    console.error("Error al obtener el resumen de saldos:", error);
+    throw new Error(
+      `No se pudo obtener el resumen de saldos: ${error.message}`
+    );
+  }
+};

@@ -12,6 +12,7 @@ import {
   Send,
   TrendingUp,
   CreditCard,
+  Scale,
 } from "lucide-react";
 
 export const menuItems = [
@@ -83,6 +84,11 @@ export const menuItems = [
         title: "Pagos",
         url: "/admin/payment-management",
         icon: CreditCard,
+      },
+      {
+        title: "Saldos",
+        url: "/admin/balance-summary",
+        icon: Scale,
       },
       {
         title: "Precios",
