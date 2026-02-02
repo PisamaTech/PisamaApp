@@ -513,7 +513,7 @@ export const Facturas = () => {
                                 "es-UY",
                               )}
                             </TableCell>
-                            <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
+                            <TableCell className="text-sm text-muted-foreground overflow-hidden">
                               {payment.nota || "-"}
                             </TableCell>
                             <TableCell>

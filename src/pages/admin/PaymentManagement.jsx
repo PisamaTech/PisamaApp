@@ -92,7 +92,7 @@ const PaymentManagementPage = () => {
 
   const totalPages = useMemo(
     () => Math.ceil(totalPayments / itemsPerPage),
-    [totalPayments, itemsPerPage]
+    [totalPayments, itemsPerPage],
   );
 
   // Cargar usuarios para filtros
@@ -122,7 +122,7 @@ const PaymentManagementPage = () => {
         const { data, count } = await searchAllPayments(
           currentPage,
           itemsPerPage,
-          appliedFilters
+          appliedFilters,
         );
         setPayments(data);
         setTotalPayments(count);
@@ -179,7 +179,7 @@ const PaymentManagementPage = () => {
         tipo: "PAGO_REGISTRADO",
         titulo: "Pago Registrado",
         mensaje: `Se ha registrado un pago de $${parseFloat(
-          paymentForm.amount
+          paymentForm.amount,
         ).toLocaleString("es-UY")} en tu cuenta.`,
         enlace: "/pagos",
       });
@@ -202,7 +202,7 @@ const PaymentManagementPage = () => {
       const { data, count } = await searchAllPayments(
         currentPage,
         itemsPerPage,
-        appliedFilters
+        appliedFilters,
       );
       setPayments(data);
       setTotalPayments(count);
@@ -264,7 +264,7 @@ const PaymentManagementPage = () => {
         tipo: "FACTURA_GENERADA",
         titulo: "Factura Histórica Registrada",
         mensaje: `Se ha registrado una factura histórica de $${parseFloat(
-          invoiceForm.montoTotal
+          invoiceForm.montoTotal,
         ).toLocaleString("es-UY")}.`,
         enlace: "/facturas",
       });
@@ -313,7 +313,9 @@ const PaymentManagementPage = () => {
       <div className="container mx-auto p-4 md:p-8 space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Gestión de Pagos</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Gestión de Pagos
+          </h1>
           <p className="text-muted-foreground mt-2">
             Administra pagos manuales y facturas históricas
           </p>
@@ -419,12 +421,12 @@ const PaymentManagementPage = () => {
             <DialogTrigger asChild>
               <Button variant="outline">
                 <FileText className="mr-2 h-4 w-4" />
-                Factura Histórica
+                Crear Factura Manual
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
-                <DialogTitle>Crear Factura Histórica</DialogTitle>
+                <DialogTitle>Crear Factura Manual</DialogTitle>
                 <DialogDescription>
                   Registra una factura de deuda previa a la implementación de la
                   app
@@ -588,99 +590,105 @@ const PaymentManagementPage = () => {
                 : "No se encontraron pagos"}
             </p>
           </CardHeader>
-        <CardContent>
-          {loading ? (
-            <p className="text-center py-8">Cargando pagos...</p>
-          ) : payments.length > 0 ? (
-            <>
-              {/* Desktop View */}
-              <div className="hidden md:block border rounded-md">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Fecha</TableHead>
-                      <TableHead>Usuario</TableHead>
-                      <TableHead>Monto</TableHead>
-                      <TableHead>Tipo</TableHead>
-                      <TableHead>Nota</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {payments.map((payment) => (
-                      <TableRow key={payment.id}>
-                        <TableCell>
-                          {dayjs(payment.fecha_pago).format("DD/MM/YYYY HH:mm")}
-                        </TableCell>
-                        <TableCell>
-                          <div className="font-medium">
-                            {payment.firstName} {payment.lastName}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {payment.email}
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-bold">
-                          ${payment.monto.toLocaleString("es-UY")}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={getPaymentTypeBadgeVariant(payment.tipo)}
-                          >
-                            {formatPaymentType(payment.tipo)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground max-w-md truncate">
-                          {payment.nota || "-"}
-                        </TableCell>
+          <CardContent>
+            {loading ? (
+              <p className="text-center py-8">Cargando pagos...</p>
+            ) : payments.length > 0 ? (
+              <>
+                {/* Desktop View */}
+                <div className="hidden md:block border rounded-md">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Fecha</TableHead>
+                        <TableHead>Usuario</TableHead>
+                        <TableHead>Monto</TableHead>
+                        <TableHead>Tipo</TableHead>
+                        <TableHead>Nota</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                    </TableHeader>
+                    <TableBody>
+                      {payments.map((payment) => (
+                        <TableRow key={payment.id}>
+                          <TableCell>
+                            {dayjs(payment.fecha_pago).format(
+                              "DD/MM/YYYY HH:mm",
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium">
+                              {payment.firstName} {payment.lastName}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {payment.email}
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-bold">
+                            ${payment.monto.toLocaleString("es-UY")}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={getPaymentTypeBadgeVariant(payment.tipo)}
+                            >
+                              {formatPaymentType(payment.tipo)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground max-w-md truncate">
+                            {payment.nota || "-"}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
 
-              {/* Mobile View */}
-              <div className="md:hidden space-y-4">
-                {payments.map((payment) => (
-                  <div
-                    key={payment.id}
-                    className="bg-slate-200 text-slate-900 p-4 rounded-lg space-y-3 border border-slate-300"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-bold">
-                          {payment.firstName} {payment.lastName}
-                        </p>
-                        <p className="text-sm text-slate-600">
-                          {payment.email}
-                        </p>
-                        <p className="text-xs text-slate-500 mt-1">
-                          {dayjs(payment.fecha_pago).format("DD/MM/YYYY HH:mm")}
-                        </p>
+                {/* Mobile View */}
+                <div className="md:hidden space-y-4">
+                  {payments.map((payment) => (
+                    <div
+                      key={payment.id}
+                      className="bg-slate-200 text-slate-900 p-4 rounded-lg space-y-3 border border-slate-300"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-bold">
+                            {payment.firstName} {payment.lastName}
+                          </p>
+                          <p className="text-sm text-slate-600">
+                            {payment.email}
+                          </p>
+                          <p className="text-xs text-slate-500 mt-1">
+                            {dayjs(payment.fecha_pago).format(
+                              "DD/MM/YYYY HH:mm",
+                            )}
+                          </p>
+                        </div>
+                        <Badge
+                          variant={getPaymentTypeBadgeVariant(payment.tipo)}
+                        >
+                          {formatPaymentType(payment.tipo)}
+                        </Badge>
                       </div>
-                      <Badge variant={getPaymentTypeBadgeVariant(payment.tipo)}>
-                        {formatPaymentType(payment.tipo)}
-                      </Badge>
+                      <div className="flex justify-between items-center border-t border-slate-300 pt-2">
+                        <span className="text-sm font-medium">Monto:</span>
+                        <span className="text-xl font-black">
+                          ${payment.monto.toLocaleString("es-UY")}
+                        </span>
+                      </div>
+                      {payment.nota && (
+                        <p className="text-sm text-slate-600 border-t border-slate-300 pt-2">
+                          {payment.nota}
+                        </p>
+                      )}
                     </div>
-                    <div className="flex justify-between items-center border-t border-slate-300 pt-2">
-                      <span className="text-sm font-medium">Monto:</span>
-                      <span className="text-xl font-black">
-                        ${payment.monto.toLocaleString("es-UY")}
-                      </span>
-                    </div>
-                    {payment.nota && (
-                      <p className="text-sm text-slate-600 border-t border-slate-300 pt-2">
-                        {payment.nota}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </>
-          ) : (
-            <p className="text-center py-8 text-muted-foreground">
-              No hay pagos registrados
-            </p>
-          )}
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="text-center py-8 text-muted-foreground">
+                No hay pagos registrados
+              </p>
+            )}
           </CardContent>
         </Card>
 
