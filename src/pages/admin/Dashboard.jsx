@@ -196,7 +196,15 @@ const AdminDashboardPage = () => {
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Horas Reservadas (Últimos 7 Días)</CardTitle>
+            <CardTitle className="flex items-center justify-between">
+              <span>Horas Reservadas (Últimos 7 Días)</span>
+              <span className="text-2xl font-bold text-green-600">
+                {dashboardData.dailyBookingStats.reduce(
+                  (total, day) => total + day.horas_reservadas,
+                  0
+                )}h
+              </span>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {/* Renderiza el gráfico de barras */}
@@ -230,6 +238,7 @@ const AdminDashboardPage = () => {
                   <TableRow>
                     <TableHead>Usuario</TableHead>
                     <TableHead>Consultorio</TableHead>
+                    <TableHead>Día</TableHead>
                     <TableHead className="text-right">Fecha Reserva</TableHead>
                     <TableHead className="text-right">Fecha Creación</TableHead>
                   </TableRow>
@@ -243,6 +252,11 @@ const AdminDashboardPage = () => {
                         }`.trim()}
                       </TableCell>
                       <TableCell>{booking.consultorio_nombre}</TableCell>
+                      <TableCell className="text-sm capitalize">
+                        {dayjs(booking.start_time)
+                          .format("ddd")
+                          .replace(/^\w/, (c) => c.toUpperCase())}
+                      </TableCell>
                       <TableCell className="text-right text-sm text-muted-foreground">
                         {dayjs(booking.start_time).format("DD/MM/YY [-] HH:mm")}
                       </TableCell>
@@ -272,6 +286,7 @@ const AdminDashboardPage = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Usuario</TableHead>
+                    <TableHead>Día</TableHead>
                     <TableHead>Fecha Original</TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead>Fecha Cancelación</TableHead>
@@ -284,6 +299,11 @@ const AdminDashboardPage = () => {
                         {`${cancellation.usuario_firstname || ""} ${
                           cancellation.usuario_lastname || ""
                         }`.trim()}
+                      </TableCell>
+                      <TableCell className="text-sm capitalize">
+                        {dayjs(cancellation.start_time)
+                          .format("ddd")
+                          .replace(/^\w/, (c) => c.toUpperCase())}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {dayjs(cancellation.start_time).format(
