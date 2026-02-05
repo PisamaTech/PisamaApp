@@ -33,7 +33,14 @@ import {
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/es";
-import { ArrowRight, Bell, BellRing, CalendarDays, RefreshCw, Wallet } from "lucide-react";
+import {
+  ArrowRight,
+  Bell,
+  BellRing,
+  CalendarDays,
+  RefreshCw,
+  Wallet,
+} from "lucide-react";
 
 dayjs.extend(relativeTime);
 dayjs.locale("es");
@@ -52,15 +59,13 @@ const Dashboard = () => {
   const { loadInitialEvents: reloadCalendarEvents } = useEventStore(); // Renombramos para mayor claridad de su función
   const navigate = useNavigate(); // Hook para navegar
   const startReagendamientoMode = useUIStore(
-    (state) => state.startReagendamientoMode
+    (state) => state.startReagendamientoMode,
   );
 
   const storeNotifications = useNotificationStore(
-    (state) => state.notifications
+    (state) => state.notifications,
   );
-  const notificationsLoading = useNotificationStore(
-    (state) => state.isLoading
-  );
+  const notificationsLoading = useNotificationStore((state) => state.isLoading);
 
   // --- Estados para ConfirmEventDialog ---
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
@@ -119,7 +124,7 @@ const Dashboard = () => {
       // Llama a la función orquestadora que valida y luego crea/extiende
       const result = await renewAndValidateSeries(
         selectedSerieForAction.recurrence_id,
-        profile.id
+        profile.id,
       );
 
       showToast({
@@ -287,17 +292,18 @@ const Dashboard = () => {
 
       {/* --- Tarjeta de Últimas Notificaciones --- */}
       {!notificationsLoading && storeNotifications.length > 0 && (
-        <Card>
+        <Card className="overflow-hidden">
           <CardHeader className="pb-2 pt-4 px-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <CardTitle className="flex items-center gap-2 text-lg">
-                <Bell className="h-4 w-4" />
+                <Bell className="h-4 w-4 flex-shrink-0" />
                 Últimas Notificaciones
               </CardTitle>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => navigate("/notificaciones")}
+                className="w-full sm:w-auto"
               >
                 Ver Todas
                 <ArrowRight className="ml-1 h-4 w-4" />
@@ -305,8 +311,8 @@ const Dashboard = () => {
             </div>
             <Separator />
           </CardHeader>
-          <CardContent className="pt-0">
-            <div>
+          <CardContent className="pt-0 px-2 sm:px-6">
+            <div className="overflow-hidden">
               {[...storeNotifications]
                 .sort((a, b) => {
                   if (a.estado === "pendiente" && b.estado !== "pendiente")
@@ -322,7 +328,7 @@ const Dashboard = () => {
                 .map((notification) => (
                   <div
                     key={notification.id}
-                    className={`flex items-start gap-2 px-3 py-2 rounded-lg transition-colors hover:bg-muted/50 cursor-pointer ${
+                    className={`flex items-start gap-2 px-2 sm:px-3 py-2 rounded-lg transition-colors hover:bg-muted/50 cursor-pointer overflow-hidden ${
                       notification.estado === "pendiente" ? "bg-blue-50/50" : ""
                     }`}
                     onClick={() => {
@@ -346,25 +352,18 @@ const Dashboard = () => {
                         <span className="block h-2 w-2 rounded-full bg-muted-foreground/20" />
                       )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-baseline justify-between gap-2">
-                        <p
-                          className={`text-sm font-medium truncate ${
-                            notification.estado === "pendiente"
-                              ? "text-foreground"
-                              : "text-muted-foreground"
-                          }`}
-                        >
-                          {notification.notificaciones.titulo}
-                        </p>
-                        <span className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">
-                          {dayjs(
-                            notification.notificaciones.created_at
-                          ).fromNow()}
-                        </span>
-                      </div>
+                    <div className="flex-1 min-w-0 overflow-hidden">
                       <p
-                        className={`text-xs truncate ${
+                        className={`text-sm font-medium ${
+                          notification.estado === "pendiente"
+                            ? "text-foreground"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        {notification.notificaciones.titulo}
+                      </p>
+                      <p
+                        className={`text-xs ${
                           notification.estado === "pendiente"
                             ? "text-foreground"
                             : "text-muted-foreground"
@@ -372,6 +371,11 @@ const Dashboard = () => {
                       >
                         {notification.notificaciones.mensaje}
                       </p>
+                      <span className="text-xs text-muted-foreground">
+                        {dayjs(
+                          notification.notificaciones.created_at,
+                        ).fromNow()}
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -590,7 +594,7 @@ const Dashboard = () => {
                           <TableCell>
                             <div className="font-medium">
                               {dayjs(reserva.start_time).format(
-                                "ddd DD/MM/YY - HH:mm"
+                                "ddd DD/MM/YY - HH:mm",
                               )}
                             </div>
                             <div className="text-sm text-muted-foreground">
@@ -600,14 +604,14 @@ const Dashboard = () => {
                           <TableCell>
                             <div className="font-medium text-red-600">
                               {dayjs(reserva.permite_reagendar_hasta).format(
-                                "DD/MM/YYYY"
+                                "DD/MM/YYYY",
                               )}
                             </div>
                             <div className="text-sm text-muted-foreground">
                               (Faltan{" "}
                               {dayjs(reserva.permite_reagendar_hasta).diff(
                                 dayjs(),
-                                "day"
+                                "day",
                               )}{" "}
                               días)
                             </div>
@@ -638,7 +642,7 @@ const Dashboard = () => {
                         </p>
                         <p className="font-bold text-slate-900">
                           {dayjs(reserva.start_time).format(
-                            "ddd DD/MM/YY - HH:mm"
+                            "ddd DD/MM/YY - HH:mm",
                           )}{" "}
                           hs
                         </p>
@@ -650,13 +654,13 @@ const Dashboard = () => {
                       <div className="bg-red-50 p-2 rounded border border-red-200 text-red-700 text-sm shadow-sm">
                         <span className="font-bold">Vence: </span>
                         {dayjs(reserva.permite_reagendar_hasta).format(
-                          "DD/MM/YYYY"
+                          "DD/MM/YYYY",
                         )}
                         <span className="block text-xs mt-1 font-medium italic">
                           (Faltan{" "}
                           {dayjs(reserva.permite_reagendar_hasta).diff(
                             dayjs(),
-                            "day"
+                            "day",
                           )}{" "}
                           días)
                         </span>
@@ -721,7 +725,7 @@ const Dashboard = () => {
                       <span className="text-lg font-bold text-orange-600">
                         $
                         {userBalance.saldo_facturas_pendientes.toLocaleString(
-                          "es-UY"
+                          "es-UY",
                         )}
                       </span>
                     </div>
