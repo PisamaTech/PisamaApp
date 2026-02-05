@@ -1,4 +1,5 @@
 import {
+  Bell,
   CalendarDays,
   List,
   Wallet,
@@ -40,6 +41,11 @@ export const menuItems = [
     title: "Facturación",
     url: "/facturas",
     icon: Wallet,
+  },
+  {
+    title: "Notificaciones",
+    url: "/notificaciones",
+    icon: Bell,
   },
   {
     title: "Perfil",

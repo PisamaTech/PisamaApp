@@ -124,6 +124,47 @@ export const markNotificationAsRead = async (notificationId) => {
  * @param {string} userId
  * @returns {Promise<Array<object>>}
  */
+/**
+ * Obtiene todas las notificaciones In-App de un usuario (últimas 50).
+ * @param {string} userId
+ * @returns {Promise<Array>}
+ */
+export const fetchAllNotifications = async (userId) => {
+  try {
+    const { data, error } = await supabase
+      .from("cola_envios")
+      .select(
+        `
+        id,
+        estado,
+        notificacion_id,
+        notificaciones:notificaciones!inner (
+          id,
+          titulo,
+          mensaje,
+          enlace,
+          created_at
+        )
+      `
+      )
+      .eq("canal", "in-app")
+      .eq("notificaciones.usuario_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error("Error al obtener todas las notificaciones:", error);
+    throw error;
+  }
+};
+
+/**
+ * Marca todas las notificaciones In-App de un usuario como leídas.
+ * @param {string} userId
+ * @returns {Promise<Array<object>>}
+ */
 export const markAllNotificationsAsRead = async (userId) => {
   try {
     // Esta operación requiere una RPC para ser segura y eficiente

@@ -11,6 +11,7 @@ import {
   ConfirmationPage,
   Error404,
   FacturaDetalle,
+  Notificaciones,
 } from "./pages";
 import PaymentHistory from "./pages/PaymentHistory";
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -96,6 +97,7 @@ function App() {
               <Route path="/facturas" element={<Facturas />} />
               <Route path="/facturas/:id" element={<FacturaDetalle />} />
               <Route path="/pagos" element={<PaymentHistory />} />
+              <Route path="/notificaciones" element={<Notificaciones />} />
               <Route
                 path="/admin"
                 element={<Navigate to="/admin/dashboard" replace />}

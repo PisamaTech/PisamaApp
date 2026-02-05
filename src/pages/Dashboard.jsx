@@ -5,6 +5,7 @@ import { fetchDashboardData } from "@/services/dashboardService"; // Importa la 
 import { fetchUserBalance } from "@/services/paymentService";
 import { renewAndValidateSeries } from "@/supabase";
 import { useEventStore } from "@/stores/calendarStore";
+import { useNotificationStore } from "@/stores/notificationStore";
 import { ConfirmCancelDialog } from "@/components";
 
 import { EventDialog } from "@/components/EventDialog";
@@ -30,7 +31,12 @@ import {
   TableRow,
 } from "@/components/ui";
 import dayjs from "dayjs";
-import { ArrowRight, BellRing } from "lucide-react";
+import relativeTime from "dayjs/plugin/relativeTime";
+import "dayjs/locale/es";
+import { ArrowRight, Bell, BellRing, CalendarDays, RefreshCw, Wallet } from "lucide-react";
+
+dayjs.extend(relativeTime);
+dayjs.locale("es");
 
 const Dashboard = () => {
   const { profile } = useAuthStore();
@@ -47,6 +53,13 @@ const Dashboard = () => {
   const navigate = useNavigate(); // Hook para navegar
   const startReagendamientoMode = useUIStore(
     (state) => state.startReagendamientoMode
+  );
+
+  const storeNotifications = useNotificationStore(
+    (state) => state.notifications
+  );
+  const notificationsLoading = useNotificationStore(
+    (state) => state.isLoading
   );
 
   // --- Estados para ConfirmEventDialog ---
@@ -272,7 +285,102 @@ const Dashboard = () => {
         </p>
       </div>
 
-      {/* --- Sección de Notificaciones --- */}
+      {/* --- Tarjeta de Últimas Notificaciones --- */}
+      {!notificationsLoading && storeNotifications.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2 pt-4 px-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Bell className="h-4 w-4" />
+                Últimas Notificaciones
+              </CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/notificaciones")}
+              >
+                Ver Todas
+                <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
+            </div>
+            <Separator />
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div>
+              {[...storeNotifications]
+                .sort((a, b) => {
+                  if (a.estado === "pendiente" && b.estado !== "pendiente")
+                    return -1;
+                  if (a.estado !== "pendiente" && b.estado === "pendiente")
+                    return 1;
+                  return (
+                    new Date(b.notificaciones.created_at) -
+                    new Date(a.notificaciones.created_at)
+                  );
+                })
+                .slice(0, 5)
+                .map((notification) => (
+                  <div
+                    key={notification.id}
+                    className={`flex items-start gap-2 px-3 py-2 rounded-lg transition-colors hover:bg-muted/50 cursor-pointer ${
+                      notification.estado === "pendiente" ? "bg-blue-50/50" : ""
+                    }`}
+                    onClick={() => {
+                      if (notification.notificaciones.enlace) {
+                        const url = notification.notificaciones.enlace;
+                        if (
+                          url.startsWith("http://") ||
+                          url.startsWith("https://")
+                        ) {
+                          window.open(url, "_blank", "noopener,noreferrer");
+                        } else {
+                          navigate(url);
+                        }
+                      }
+                    }}
+                  >
+                    <div className="mt-1.5 flex-shrink-0">
+                      {notification.estado === "pendiente" ? (
+                        <span className="block h-2 w-2 rounded-full bg-primary" />
+                      ) : (
+                        <span className="block h-2 w-2 rounded-full bg-muted-foreground/20" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <p
+                          className={`text-sm font-medium truncate ${
+                            notification.estado === "pendiente"
+                              ? "text-foreground"
+                              : "text-muted-foreground"
+                          }`}
+                        >
+                          {notification.notificaciones.titulo}
+                        </p>
+                        <span className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">
+                          {dayjs(
+                            notification.notificaciones.created_at
+                          ).fromNow()}
+                        </span>
+                      </div>
+                      <p
+                        className={`text-xs truncate ${
+                          notification.estado === "pendiente"
+                            ? "text-foreground"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        {notification.notificaciones.mensaje}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* --- Sección de Series por Vencer --- */}
       {expiringSeries && expiringSeries.length > 0 && (
         <Card className="border-blue-500 bg-blue-50">
           <CardHeader>
@@ -316,7 +424,10 @@ const Dashboard = () => {
       {/* Sección 2: Próximas Reservas  */}
       <Card>
         <CardHeader>
-          <CardTitle className="pb-2 text-xl">Tus Próximas Reservas</CardTitle>
+          <CardTitle className="pb-2 text-xl flex items-center gap-2">
+            <CalendarDays className="h-5 w-5" />
+            Tus Próximas Reservas
+          </CardTitle>
           <Separator />
           <CardDescription className="py-2">
             {upcomingBookings.length > 0
@@ -450,7 +561,8 @@ const Dashboard = () => {
         {/* Card de Reagendamientos (Paso 7) */}
         <Card>
           <CardHeader>
-            <CardTitle className="pb-2 text-xl">
+            <CardTitle className="pb-2 text-xl flex items-center gap-2">
+              <RefreshCw className="h-5 w-5" />
               Reservas disponibles para Reagendar
             </CardTitle>
             <Separator />
@@ -574,7 +686,8 @@ const Dashboard = () => {
         {/* Card de Facturación */}
         <Card className="flex flex-col">
           <CardHeader>
-            <CardTitle className="pb-2 text-xl">
+            <CardTitle className="pb-2 text-xl flex items-center gap-2">
+              <Wallet className="h-5 w-5" />
               Resumen de Facturación
             </CardTitle>
             <Separator />

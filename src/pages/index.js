@@ -10,3 +10,4 @@ export * from "./Perfil";
 export * from "./RecoverPassword";
 export * from "./Reservas";
 export * from "./ResetPassword";
+export * from "./Notificaciones";
