@@ -81,13 +81,17 @@ export function NavUser({ user }) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => navigate("/notificaciones")}>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() => navigate("/notificaciones")}
+              >
                 <Bell />
                 Notificaciones
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem
+              className="cursor-pointer"
               onClick={() => {
                 signOut();
                 setTimeout(() => {
