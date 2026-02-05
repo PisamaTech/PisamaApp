@@ -23,6 +23,7 @@ import PricingManagement from "./pages/admin/PricingManagement";
 import Broadcast from "./pages/admin/Broadcast";
 import PerformancePage from "./pages/admin/Performance";
 import BalanceSummary from "./pages/admin/BalanceSummary";
+import ExpiringReservations from "./pages/admin/ExpiringReservations";
 import UserBillingDetails from "./pages/admin/UserBillingDetails";
 import { useAuthStore } from "./stores/authStore";
 import { useNotificationStore } from "./stores/notificationStore";
@@ -133,6 +134,10 @@ function App() {
               <Route
                 path="/admin/broadcast"
                 element={<AdminRouteGuard><Broadcast /></AdminRouteGuard>}
+              />
+              <Route
+                path="/admin/expiring-reservations"
+                element={<AdminRouteGuard><ExpiringReservations /></AdminRouteGuard>}
               />
               <Route
                 path="/admin/balance-summary"

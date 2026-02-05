@@ -686,6 +686,57 @@ export const fetchKpiStats = async (startDate, endDate) => {
  * Agregador para la página de Rendimiento.
  * @param {number} year - Año seleccionado.
  */
+/**
+ * Obtiene las series de reservas fijas de TODOS los usuarios que están por vencer.
+ * @param {number} daysThreshold - Umbral en días. Por defecto 60.
+ * @returns {Promise<Array<object>>} Array de series por vencer, agrupadas por recurrence_id.
+ */
+export const fetchExpiringFixedSeries = async (daysThreshold = 60) => {
+  try {
+    const now = dayjs();
+    const thresholdDate = now.add(daysThreshold, "day").toISOString();
+
+    const { data, error } = await supabase
+      .from("reservas_completas")
+      .select(
+        "recurrence_id, recurrence_end_date, start_time, end_time, consultorio_nombre, tipo_reserva, usuario_firstname, usuario_lastname"
+      )
+      .eq("tipo_reserva", "Fija")
+      .eq("estado", "activa")
+      .not("recurrence_end_date", "is", null)
+      .gte("recurrence_end_date", now.toISOString())
+      .lte("recurrence_end_date", thresholdDate)
+      .order("recurrence_end_date", { ascending: true })
+      .limit(1000);
+
+    if (error) throw error;
+    if (!data || data.length === 0) return [];
+
+    // Agrupar por recurrence_id para obtener una fila por serie
+    const seriesMap = new Map();
+    data.forEach((reserva) => {
+      if (!seriesMap.has(reserva.recurrence_id)) {
+        const endDate = dayjs(reserva.recurrence_end_date);
+        seriesMap.set(reserva.recurrence_id, {
+          recurrence_id: reserva.recurrence_id,
+          recurrence_end_date: reserva.recurrence_end_date,
+          usuario: `${reserva.usuario_firstname || ""} ${reserva.usuario_lastname || ""}`.trim() || "Sin nombre",
+          consultorio: reserva.consultorio_nombre,
+          serie_desc: `${dayjs(reserva.start_time).format("dddd")} - ${dayjs(reserva.start_time).format("HH:mm")}hs`,
+          dias_restantes: endDate.diff(now, "day"),
+        });
+      }
+    });
+
+    return Array.from(seriesMap.values());
+  } catch (error) {
+    console.error("Error al obtener series por vencer:", error);
+    throw new Error(
+      `No se pudieron obtener las series por vencer: ${error.message}`
+    );
+  }
+};
+
 export const fetchPerformanceData = async (year) => {
   const startOfYear = dayjs().year(year).startOf("year").toISOString();
   const endOfYear = dayjs().year(year).endOf("year").toISOString();

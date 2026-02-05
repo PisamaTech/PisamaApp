@@ -14,6 +14,7 @@ import {
   TrendingUp,
   CreditCard,
   Scale,
+  CalendarClock,
 } from "lucide-react";
 
 export const menuItems = [
@@ -95,6 +96,11 @@ export const menuItems = [
         title: "Saldos",
         url: "/admin/balance-summary",
         icon: Scale,
+      },
+      {
+        title: "Vencimientos",
+        url: "/admin/expiring-reservations",
+        icon: CalendarClock,
       },
       {
         title: "Precios",

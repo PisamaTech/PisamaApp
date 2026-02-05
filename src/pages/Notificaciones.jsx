@@ -29,10 +29,10 @@ export const Notificaciones = () => {
   const { profile } = useAuthStore();
   const user = useAuthStore((state) => state.user);
   const setNotificationsAsRead = useNotificationStore(
-    (state) => state.setNotificationsAsRead
+    (state) => state.setNotificationsAsRead,
   );
   const setAllNotificationsAsRead = useNotificationStore(
-    (state) => state.setAllNotificationsAsRead
+    (state) => state.setAllNotificationsAsRead,
   );
 
   const [notifications, setNotifications] = useState([]);
@@ -68,7 +68,7 @@ export const Notificaciones = () => {
   });
 
   const unreadCount = notifications.filter(
-    (n) => n.estado === "pendiente"
+    (n) => n.estado === "pendiente",
   ).length;
 
   const handleNotificationClick = async (notification) => {
@@ -78,8 +78,8 @@ export const Notificaciones = () => {
         // Actualizar estado local de la página
         setNotifications((prev) =>
           prev.map((n) =>
-            n.id === notification.id ? { ...n, estado: "leido" } : n
-          )
+            n.id === notification.id ? { ...n, estado: "leido" } : n,
+          ),
         );
         // Actualizar el store global (para la campana)
         setNotificationsAsRead(notification.notificacion_id);
@@ -103,15 +103,13 @@ export const Notificaciones = () => {
     try {
       await markAllNotificationsAsRead(user.id);
       // Actualizar estado local
-      setNotifications((prev) =>
-        prev.map((n) => ({ ...n, estado: "leido" }))
-      );
+      setNotifications((prev) => prev.map((n) => ({ ...n, estado: "leido" })));
       // Actualizar store global
       setAllNotificationsAsRead();
     } catch (error) {
       console.error(
         "Error al marcar todas las notificaciones como leídas:",
-        error
+        error,
       );
     }
   };
@@ -140,7 +138,7 @@ export const Notificaciones = () => {
 
   return (
     <div className="container mx-auto p-4 md:p-8 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Bell className="h-6 w-6" />
           <h1 className="text-2xl font-bold">Notificaciones</h1>
@@ -155,7 +153,7 @@ export const Notificaciones = () => {
           size="sm"
           onClick={handleMarkAllAsRead}
           disabled={unreadCount === 0}
-          className="gap-2"
+          className="gap-2 w-full sm:w-auto"
         >
           <CheckCheck className="h-4 w-4" />
           Marcar todas como leídas
@@ -193,7 +191,7 @@ export const Notificaciones = () => {
                       <div className="flex-1 min-w-0 space-y-1">
                         <div className="flex items-baseline justify-between gap-2">
                           <p
-                            className={`font-semibold truncate ${
+                            className={`font-semibold ${
                               notification.estado === "pendiente"
                                 ? "text-foreground"
                                 : "text-muted-foreground"
@@ -203,7 +201,7 @@ export const Notificaciones = () => {
                           </p>
                           <span className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">
                             {dayjs(
-                              notification.notificaciones.created_at
+                              notification.notificaciones.created_at,
                             ).fromNow()}
                           </span>
                         </div>
