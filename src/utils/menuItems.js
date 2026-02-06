@@ -15,6 +15,7 @@ import {
   CreditCard,
   Scale,
   CalendarClock,
+  KeyRound,
 } from "lucide-react";
 
 export const menuItems = [
@@ -111,6 +112,11 @@ export const menuItems = [
         title: "Comunicación",
         url: "/admin/broadcast",
         icon: Send,
+      },
+      {
+        title: "Control Acceso",
+        url: "/admin/access-control",
+        icon: KeyRound,
       },
     ],
   },

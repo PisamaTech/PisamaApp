@@ -25,6 +25,7 @@ import PerformancePage from "./pages/admin/Performance";
 import BalanceSummary from "./pages/admin/BalanceSummary";
 import ExpiringReservations from "./pages/admin/ExpiringReservations";
 import UserBillingDetails from "./pages/admin/UserBillingDetails";
+import AccessControl from "./pages/admin/AccessControl";
 import { useAuthStore } from "./stores/authStore";
 import { useNotificationStore } from "./stores/notificationStore";
 import LoadingOverlay from "./components/LoadingOverlay";
@@ -146,6 +147,10 @@ function App() {
               <Route
                 path="/admin/balance-summary/:userId"
                 element={<AdminRouteGuard><UserBillingDetails /></AdminRouteGuard>}
+              />
+              <Route
+                path="/admin/access-control"
+                element={<AdminRouteGuard><AccessControl /></AdminRouteGuard>}
               />
               <Route path="perfil" element={<Perfil />} />
               <Route path="ayuda" element={<Ayuda />} />

@@ -4,6 +4,7 @@ import {
   fetchAllUsers,
   updateUserPaymentMethod,
 } from "@/services/adminService";
+import { updateUserAccessName } from "@/services/accessControlService";
 import useDebounce from "@/hooks/useDebounce";
 
 // --- Importaciones de Componentes Shadcn UI ---
@@ -55,10 +56,15 @@ const UserManagementPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 500); // 500ms de retraso
 
-  // Estados para el modal de edición
+  // Estados para el modal de edición de modalidad de pago
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [newPaymentMethod, setNewPaymentMethod] = useState("");
+
+  // Estados para el modal de edición de access_system_name
+  const [isAccessModalOpen, setIsAccessModalOpen] = useState(false);
+  const [selectedUserForAccess, setSelectedUserForAccess] = useState(null);
+  const [newAccessName, setNewAccessName] = useState("");
 
   const totalPages = useMemo(
     () => Math.ceil(totalUsers / itemsPerPage),
@@ -138,6 +144,46 @@ const UserManagementPage = () => {
     }
   };
 
+  const openAccessModal = (user) => {
+    setTimeout(() => {
+      setSelectedUserForAccess(user);
+      setNewAccessName(user.access_system_name || "");
+      setIsAccessModalOpen(true);
+    }, 150);
+  };
+
+  const handleUpdateAccessName = async () => {
+    if (!selectedUserForAccess) return;
+    setIsAccessModalOpen(false);
+    startLoading();
+    try {
+      const updatedUser = await updateUserAccessName(
+        selectedUserForAccess.id,
+        newAccessName.trim() || null
+      );
+      setUsers((prevUsers) =>
+        prevUsers.map((u) =>
+          u.id === updatedUser.id
+            ? { ...u, access_system_name: updatedUser.access_system_name }
+            : u
+        )
+      );
+      showToast({
+        type: "success",
+        title: "Éxito",
+        message: "Nombre de acceso actualizado.",
+      });
+    } catch {
+      showToast({
+        type: "error",
+        title: "Error",
+        message: "No se pudo actualizar el nombre de acceso.",
+      });
+    } finally {
+      stopLoading();
+    }
+  };
+
   return (
     <div className="container mx-auto p-4 md:p-8 space-y-6">
       <div className="space-y-1">
@@ -167,9 +213,9 @@ const UserManagementPage = () => {
             <TableRow>
               <TableHead>Nombre Completo</TableHead>
               <TableHead>Email</TableHead>
+              <TableHead>Nombre Acceso</TableHead>
               <TableHead>Teléfono</TableHead>
               <TableHead>Profesión</TableHead>
-              <TableHead>Fecha de Ingreso</TableHead>
               <TableHead>Modalidad de Pago</TableHead>
               <TableHead>Rol</TableHead>
             </TableRow>
@@ -188,11 +234,24 @@ const UserManagementPage = () => {
                     {user.firstName} {user.lastName}
                   </TableCell>
                   <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <span className={user.access_system_name ? "" : "text-muted-foreground italic"}>
+                        {user.access_system_name || "Sin asignar"}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openAccessModal(user)}
+                        className="h-8 w-8 p-0 hover:bg-accent"
+                        title="Editar nombre de acceso"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
                   <TableCell>{user.phone || "N/A"}</TableCell>
                   <TableCell>{user.profession || "N/A"}</TableCell>
-                  <TableCell>
-                    {new Date(user.created_at).toLocaleDateString()}
-                  </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Badge variant="outline" className="capitalize">
@@ -260,6 +319,26 @@ const UserManagementPage = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-sm text-slate-700 border-t border-slate-300 pt-3">
+                <div className="col-span-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                        Nombre Acceso
+                      </p>
+                      <p className={`font-medium ${user.access_system_name ? "" : "text-slate-400 italic"}`}>
+                        {user.access_system_name || "Sin asignar"}
+                      </p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openAccessModal(user)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
                 <div>
                   <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">
                     Teléfono
@@ -272,14 +351,6 @@ const UserManagementPage = () => {
                   </p>
                   <p className="font-medium truncate">
                     {user.profession || "N/A"}
-                  </p>
-                </div>
-                <div className="col-span-2">
-                  <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">
-                    Fecha de Ingreso
-                  </p>
-                  <p className="font-medium">
-                    {new Date(user.created_at).toLocaleDateString()}
                   </p>
                 </div>
               </div>
@@ -375,6 +446,39 @@ const UserManagementPage = () => {
             </Button>
             <Button onClick={handleUpdatePaymentMethod} disabled={loading}>
               {loading ? "Guardando..." : "Guardar Cambios"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal para Editar Nombre de Acceso */}
+      <Dialog open={isAccessModalOpen} onOpenChange={setIsAccessModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Nombre de Acceso</DialogTitle>
+            <DialogDescription>
+              Asigna el nombre que usa {selectedUserForAccess?.firstName}{" "}
+              {selectedUserForAccess?.lastName} en el sistema de control de acceso del portero.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-2">
+            <Label htmlFor="accessName">Nombre en Sistema de Acceso</Label>
+            <Input
+              id="accessName"
+              value={newAccessName}
+              onChange={(e) => setNewAccessName(e.target.value)}
+              placeholder="Ej: Juan Pérez"
+            />
+            <p className="text-xs text-muted-foreground">
+              Deja vacío para quitar la asignación.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAccessModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleUpdateAccessName} disabled={loading}>
+              {loading ? "Guardando..." : "Guardar"}
             </Button>
           </DialogFooter>
         </DialogContent>
