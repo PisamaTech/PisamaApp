@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useUIStore } from "@/stores/uiStore";
 import { fetchPerformanceData } from "@/services/adminService";
 import { MonthlyHoursChart } from "@/components/admin/charts/MonthlyHoursChart";
+import { MonthlyInvoiceChart } from "@/components/admin/charts/MonthlyInvoiceChart";
 import { ReservationTypeTrendChart } from "@/components/admin/charts/ReservationTypeTrendChart";
 import { PeakHoursHeatmap } from "@/components/admin/charts/PeakHoursHeatmap";
 import { TopUsersTable } from "@/components/admin/stats/TopUsersTable";
@@ -164,6 +165,19 @@ const PerformancePage = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Facturación Mensual */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Facturación Mensual</CardTitle>
+          <CardDescription>
+            Montos totales facturados por mes durante {year}.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <MonthlyInvoiceChart data={data.monthlyInvoices} />
+        </CardContent>
+      </Card>
 
       {/* Mapa de Calor y Top Usuarios */}
       <div className="grid gap-6 lg:grid-cols-3">

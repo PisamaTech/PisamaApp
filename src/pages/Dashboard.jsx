@@ -312,7 +312,7 @@ const Dashboard = () => {
             <Separator />
           </CardHeader>
           <CardContent className="pt-0 px-2 sm:px-6">
-            <div className="overflow-hidden">
+            <div className="overflow-hidden space-y-2">
               {[...storeNotifications]
                 .sort((a, b) => {
                   if (a.estado === "pendiente" && b.estado !== "pendiente")
@@ -328,8 +328,10 @@ const Dashboard = () => {
                 .map((notification) => (
                   <div
                     key={notification.id}
-                    className={`flex items-start gap-2 px-2 sm:px-3 py-2 rounded-lg transition-colors hover:bg-muted/50 cursor-pointer overflow-hidden ${
-                      notification.estado === "pendiente" ? "bg-blue-50/50" : ""
+                    className={`flex items-start gap-2 px-2 sm:px-3 py-2 rounded-lg border border-slate-200 transition-colors hover:bg-muted/50 cursor-pointer overflow-hidden ${
+                      notification.estado === "pendiente"
+                        ? "bg-blue-50/50"
+                        : "bg-slate-100"
                     }`}
                     onClick={() => {
                       if (notification.notificaciones.enlace) {

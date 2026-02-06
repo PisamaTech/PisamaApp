@@ -619,6 +619,40 @@ export const sendNotificationToUsers = async (userIds, notificationData) => {
  */
 
 /**
+ * Obtiene estadísticas mensuales de montos facturados.
+ * @param {number} year - Año a consultar.
+ * @returns {Promise<Array<{mes: number, monto_total: number, cantidad_facturas: number}>>}
+ */
+export const fetchMonthlyInvoiceStats = async (year) => {
+  const startOfYear = dayjs().year(year).startOf("year").toISOString();
+  const endOfYear = dayjs().year(year).endOf("year").toISOString();
+
+  const { data, error } = await supabase
+    .from("facturas")
+    .select("monto_total, fecha_emision")
+    .gte("fecha_emision", startOfYear)
+    .lte("fecha_emision", endOfYear);
+
+  if (error) throw error;
+
+  // Agrupar por mes en el cliente
+  const monthlyStats = {};
+  for (let m = 1; m <= 12; m++) {
+    monthlyStats[m] = { mes: m, monto_total: 0, cantidad_facturas: 0 };
+  }
+
+  (data || []).forEach((factura) => {
+    const mes = dayjs(factura.fecha_emision).month() + 1; // dayjs month es 0-indexed
+    if (monthlyStats[mes]) {
+      monthlyStats[mes].monto_total += factura.monto_total || 0;
+      monthlyStats[mes].cantidad_facturas += 1;
+    }
+  });
+
+  return Object.values(monthlyStats);
+};
+
+/**
  * Obtiene estadísticas mensuales de horas (activas, utilizadas, penalizadas).
  * @param {number} year - Año a consultar.
  */
@@ -657,15 +691,57 @@ export const fetchHeatmapData = async (startDate, endDate) => {
 };
 
 /**
- * Obtiene el top de usuarios (VIP).
+ * Obtiene el top de usuarios (VIP) basado en facturación.
  * @param {number} limit - Cantidad de usuarios a traer.
  */
 export const fetchTopUsers = async (limit = 10) => {
-  const { data, error } = await supabase.rpc("get_top_users_v2", {
-    p_limit: limit,
-  });
-  if (error) throw error;
-  return data || [];
+  try {
+    // Intentar usar la RPC si existe
+    const { data: rpcData, error: rpcError } = await supabase.rpc("get_top_users_v2", {
+      p_limit: limit,
+    });
+
+    if (!rpcError && rpcData) {
+      return rpcData;
+    }
+
+    // Fallback: consulta directa si la RPC no existe
+    console.log("RPC get_top_users_v2 no disponible, usando fallback...");
+
+    // Obtener facturas pagadas con datos de usuario
+    const { data: invoices, error: invoiceError } = await supabase
+      .from("facturas_con_detalles_usuario")
+      .select("usuario_id, monto_total, firstName, lastName, email")
+      .eq("estado", "pagada");
+
+    if (invoiceError) throw invoiceError;
+
+    // Agrupar por usuario
+    const userStats = {};
+    (invoices || []).forEach((inv) => {
+      if (!userStats[inv.usuario_id]) {
+        userStats[inv.usuario_id] = {
+          usuario_id: inv.usuario_id,
+          nombre_completo: `${inv.firstName || ""} ${inv.lastName || ""}`.trim() || "Sin nombre",
+          email: inv.email || "",
+          total_reservas: 0,
+          total_gastado: 0,
+        };
+      }
+      userStats[inv.usuario_id].total_reservas += 1;
+      userStats[inv.usuario_id].total_gastado += inv.monto_total || 0;
+    });
+
+    // Ordenar por total gastado y limitar
+    const sortedUsers = Object.values(userStats)
+      .sort((a, b) => b.total_gastado - a.total_gastado)
+      .slice(0, limit);
+
+    return sortedUsers;
+  } catch (error) {
+    console.error("Error en fetchTopUsers:", error);
+    return [];
+  }
 };
 
 /**
@@ -749,6 +825,7 @@ export const fetchPerformanceData = async (year) => {
     fetchHeatmapData(startOfYear, endOfYear),
     fetchTopUsers(10),
     fetchKpiStats(startOfYear, endOfYear),
+    fetchMonthlyInvoiceStats(year),
   ]);
 
   const [
@@ -757,6 +834,7 @@ export const fetchPerformanceData = async (year) => {
     heatmapRes,
     topUsersRes,
     kpiStatsRes,
+    monthlyInvoicesRes,
   ] = results;
 
   return {
@@ -778,5 +856,7 @@ export const fetchPerformanceData = async (year) => {
             total_reservas: 0,
             ingresos_totales: 0,
           },
+    monthlyInvoices:
+      monthlyInvoicesRes.status === "fulfilled" ? monthlyInvoicesRes.value : [],
   };
 };
