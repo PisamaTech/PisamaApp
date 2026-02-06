@@ -9,13 +9,33 @@ import {
 const DAYS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 const HOURS = Array.from({ length: 15 }, (_, i) => i + 8); // 8:00 a 22:00 (aprox)
 
+// Offset de Uruguay: UTC-3 (restar 3 horas para convertir de UTC a hora local)
+const URUGUAY_OFFSET = -3;
+
 export const PeakHoursHeatmap = ({ data }) => {
   // Procesar datos para acceso rápido: map[dia][hora] = cantidad
+  // Aplicar conversión de zona horaria UTC -> Uruguay (UTC-3)
   const processedData = useMemo(() => {
     const map = {};
     data.forEach((item) => {
-      if (!map[item.dia_semana]) map[item.dia_semana] = {};
-      map[item.dia_semana][item.hora] = item.cantidad;
+      // Convertir hora UTC a hora de Uruguay
+      let horaLocal = item.hora + URUGUAY_OFFSET;
+      let diaLocal = item.dia_semana;
+
+      // Si la hora queda negativa, ajustar al día anterior
+      if (horaLocal < 0) {
+        horaLocal += 24;
+        diaLocal = (diaLocal - 1 + 7) % 7; // Retroceder un día
+      }
+      // Si la hora queda >= 24, ajustar al día siguiente
+      else if (horaLocal >= 24) {
+        horaLocal -= 24;
+        diaLocal = (diaLocal + 1) % 7; // Avanzar un día
+      }
+
+      if (!map[diaLocal]) map[diaLocal] = {};
+      // Sumar cantidades si ya hay datos para esa celda (puede pasar por ajuste de día)
+      map[diaLocal][horaLocal] = (map[diaLocal][horaLocal] || 0) + item.cantidad;
     });
     return map;
   }, [data]);

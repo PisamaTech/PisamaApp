@@ -1,22 +1,28 @@
--- Función para obtener estadísticas mensuales de horas (Activas, Utilizadas, Penalizadas)
+-- Función para obtener estadísticas mensuales de horas (Activas, Utilizadas, Penalizadas, Canceladas)
 CREATE OR REPLACE FUNCTION get_monthly_hours_stats(year_input int)
 RETURNS TABLE (
   mes int,
   horas_activas numeric,
   horas_utilizadas numeric,
-  horas_penalizadas numeric
+  horas_penalizadas numeric,
+  horas_canceladas numeric
 ) AS $$
 BEGIN
   RETURN QUERY
   SELECT
     EXTRACT(MONTH FROM start_time)::int AS mes,
-    COALESCE(SUM(EXTRACT(EPOCH FROM (end_time - start_time))/3600) FILTER (WHERE estado != 'cancelada'), 0) AS horas_activas,
-    COALESCE(SUM(EXTRACT(EPOCH FROM (end_time - start_time))/3600) FILTER (WHERE estado != 'cancelada' AND end_time < NOW()), 0) AS horas_utilizadas,
-    0::numeric AS horas_penalizadas
+    -- Horas Activas: reservas activas (pendientes de uso)
+    COALESCE(COUNT(*) FILTER (WHERE estado = 'activa'), 0)::numeric AS horas_activas,
+    -- Horas Utilizadas: reservas utilizadas
+    COALESCE(COUNT(*) FILTER (WHERE estado = 'utilizada'), 0)::numeric AS horas_utilizadas,
+    -- Horas Penalizadas: reservas con estado 'penalizada'
+    COALESCE(COUNT(*) FILTER (WHERE estado = 'penalizada'), 0)::numeric AS horas_penalizadas,
+    -- Horas Canceladas: reservas canceladas
+    COALESCE(COUNT(*) FILTER (WHERE estado = 'cancelada'), 0)::numeric AS horas_canceladas
   FROM reservas
   WHERE EXTRACT(YEAR FROM start_time) = year_input
-  GROUP BY 1
-  ORDER BY 1;
+  GROUP BY mes
+  ORDER BY mes;
 END;
 $$ LANGUAGE plpgsql;
 

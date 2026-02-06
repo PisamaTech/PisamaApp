@@ -53,7 +53,8 @@ export const MonthlyHoursChart = ({ data }) => {
             Vamos a ponerlas lado a lado para comparar. */}
         <Bar dataKey="horas_activas" name="Activas" fill="#3b82f6" radius={[4, 4, 0, 0]} />
         <Bar dataKey="horas_utilizadas" name="Utilizadas" fill="#22c55e" radius={[4, 4, 0, 0]} />
-        <Bar dataKey="horas_penalizadas" name="Penalizadas" fill="#ef4444" radius={[4, 4, 0, 0]} />
+        <Bar dataKey="horas_penalizadas" name="Penalizadas" fill="#f97316" radius={[4, 4, 0, 0]} />
+        <Bar dataKey="horas_canceladas" name="Canceladas" fill="#ef4444" radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
