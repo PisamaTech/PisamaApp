@@ -240,7 +240,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
           selectedEvent.usuario_id, // seriesOwnerId
           profileId, // requestingUserId
           userRole, // requestingUserRole
-          selectedEvent.start_time
+          selectedEvent.start_time,
         );
       }
 
@@ -337,7 +337,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
     try {
       const result = await renewAndValidateSeries(
         selectedEvent.recurrence_id,
-        profile.id
+        profile.id,
       );
 
       // ✅ CRÍTICO: Cerrar diálogo principal DESPUÉS de la operación exitosa
@@ -448,7 +448,9 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
             <DialogTitle className="mb-3">
               <div className="flex gap-2 sm:gap-3 items-center">
                 <CalendarClock size={18} className="sm:w-5 sm:h-5" />
-                <span className="text-base sm:text-lg">Datos de la reserva</span>
+                <span className="text-base sm:text-lg">
+                  Datos de la reserva
+                </span>
               </div>
             </DialogTitle>
             <Separator />
@@ -460,9 +462,11 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
 
           <div className="space-y-2 sm:space-y-3">
             {/* Campos del formulario - mantienen el mismo contenido */}
-            <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4">
+            <div className="flex flex-row justify-between gap-3 sm:gap-4">
               <div className="space-y-1 sm:space-y-2 w-full">
-                <Label htmlFor="titular" className="text-xs sm:text-sm">Titular de la reserva</Label>
+                <Label htmlFor="titular" className="text-xs sm:text-sm">
+                  Titular de la reserva
+                </Label>
                 <Input
                   id="titular"
                   type="text"
@@ -472,7 +476,9 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                 />
               </div>
               <div className="space-y-1 sm:space-y-2 w-full">
-                <Label htmlFor="resourceId" className="text-xs sm:text-sm">Consultorio</Label>
+                <Label htmlFor="resourceId" className="text-xs sm:text-sm">
+                  Consultorio
+                </Label>
                 <Input
                   id="resourceId"
                   type="text"
@@ -483,9 +489,11 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4">
+            <div className="flex flex-row justify-between gap-3 sm:gap-4">
               <div className="space-y-1 sm:space-y-2 w-full">
-                <Label htmlFor="dia" className="text-xs sm:text-sm">Día de reserva</Label>
+                <Label htmlFor="dia" className="text-xs sm:text-sm">
+                  Día de reserva
+                </Label>
                 <Input
                   id="dia"
                   type="text"
@@ -495,7 +503,9 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                 />
               </div>
               <div className="space-y-1 sm:space-y-2 w-full">
-                <Label htmlFor="date" className="text-xs sm:text-sm">Fecha de reserva</Label>
+                <Label htmlFor="date" className="text-xs sm:text-sm">
+                  Fecha de reserva
+                </Label>
                 <Input
                   id="date"
                   type="date"
@@ -506,28 +516,40 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4">
+            <div className="flex flex-row justify-between gap-3 sm:gap-4">
               <div className="space-y-1 sm:space-y-2 w-full">
-                <Label htmlFor="startTime" className="text-xs sm:text-sm">Hora de reserva</Label>
+                <Label htmlFor="startTime" className="text-xs sm:text-sm">
+                  Hora de reserva
+                </Label>
                 <Input
                   id="startTime"
                   type="text"
                   value={`${dayjs(selectedEvent.start_time).format(
-                    "HH:mm"
+                    "HH:mm",
                   )} - ${dayjs(selectedEvent.end_time).format("HH:mm")}`}
                   disabled
                   className="text-xs sm:text-sm h-8 sm:h-10"
                 />
               </div>
               <div className="space-y-1 sm:space-y-2 w-full">
-                <Label htmlFor="id" className="text-xs sm:text-sm">Identificador de reserva</Label>
-                <Input id="id" type="text" value={selectedEvent.id} disabled className="text-xs sm:text-sm h-8 sm:h-10" />
+                <Label htmlFor="id" className="text-xs sm:text-sm">
+                  Identificador de reserva
+                </Label>
+                <Input
+                  id="id"
+                  type="text"
+                  value={selectedEvent.id}
+                  disabled
+                  className="text-xs sm:text-sm h-8 sm:h-10"
+                />
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4">
+            <div className="flex flex-row justify-between gap-3 sm:gap-4">
               <div className="space-y-1 sm:space-y-2 w-full">
-                <Label htmlFor="tipo" className="text-xs sm:text-sm">Tipo de reserva</Label>
+                <Label htmlFor="tipo" className="text-xs sm:text-sm">
+                  Tipo de reserva
+                </Label>
                 <Input
                   id="tipo"
                   type="text"
@@ -541,7 +563,9 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                 />
               </div>
               <div className="space-y-1 sm:space-y-2 w-full">
-                <Label htmlFor="usaCamilla" className="text-xs sm:text-sm">¿Utilizarás la camilla?</Label>
+                <Label htmlFor="usaCamilla" className="text-xs sm:text-sm">
+                  ¿Utilizarás la camilla?
+                </Label>
                 <Input
                   id="usaCamilla"
                   type="text"
@@ -552,9 +576,11 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4">
+            <div className="flex flex-row justify-between gap-3 sm:gap-4">
               <div className="space-y-1 sm:space-y-2 w-full">
-                <Label htmlFor="estado" className="text-xs sm:text-sm">Estado de reserva</Label>
+                <Label htmlFor="estado" className="text-xs sm:text-sm">
+                  Estado de reserva
+                </Label>
                 <Input
                   id="estado"
                   type="text"
@@ -566,11 +592,15 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                 />
               </div>
               <div className="space-y-1 sm:space-y-2 w-full">
-                <Label htmlFor="fechaCreacion" className="text-xs sm:text-sm">Fecha de creación</Label>
+                <Label htmlFor="fechaCreacion" className="text-xs sm:text-sm">
+                  Fecha de creación
+                </Label>
                 <Input
                   id="fechaCreacion"
                   type="text"
-                  value={dayjs(selectedEvent.created_at).format("DD/MM/YYYY")}
+                  value={dayjs(selectedEvent.created_at).format(
+                    "DD/MM/YYYY - HH:mm",
+                  )}
                   disabled
                   className="text-xs sm:text-sm h-8 sm:h-10"
                 />
@@ -578,21 +608,28 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
             </div>
 
             {selectedEvent.fecha_cancelacion && (
-              <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4">
+              <div className="flex flex-row justify-between gap-3 sm:gap-4">
                 <div className="space-y-1 sm:space-y-2 w-full">
-                  <Label htmlFor="fechaCancelacion" className="text-xs sm:text-sm">Fecha de cancelación</Label>
+                  <Label
+                    htmlFor="fechaCancelacion"
+                    className="text-xs sm:text-sm"
+                  >
+                    Fecha de cancelación
+                  </Label>
                   <Input
                     id="fechaCancelacion"
                     type="text"
                     value={dayjs(selectedEvent.fecha_cancelacion).format(
-                      "DD/MM/YY [-] HH:mm"
+                      "DD/MM/YY [-] HH:mm",
                     )}
                     disabled
                     className="text-xs sm:text-sm h-8 sm:h-10"
                   />
                 </div>
                 <div className="space-y-1 sm:space-y-2 w-full">
-                  <Label htmlFor="fueReagendada" className="text-xs sm:text-sm">¿Fue Reagendada?</Label>
+                  <Label htmlFor="fueReagendada" className="text-xs sm:text-sm">
+                    ¿Fue Reagendada?
+                  </Label>
                   <Input
                     id="fueReagendada"
                     type="text"
@@ -605,21 +642,29 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
             )}
 
             {selectedEvent.recurrence_end_date && (
-              <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4">
+              <div className="flex flex-row justify-between gap-3 sm:gap-4">
                 <div className="space-y-1 sm:space-y-2 w-full">
-                  <Label htmlFor="finReservaFija" className="text-xs sm:text-sm">Fin de reserva fija</Label>
+                  <Label
+                    htmlFor="finReservaFija"
+                    className="text-xs sm:text-sm"
+                  >
+                    Fin de reserva fija
+                  </Label>
                   <Input
                     id="finReservaFija"
                     type="text"
                     value={dayjs(selectedEvent.recurrence_end_date).format(
-                      "DD/MM/YYYY"
+                      "DD/MM/YYYY",
                     )}
                     disabled
                     className="text-xs sm:text-sm h-8 sm:h-10"
                   />
                 </div>
                 <div className="space-y-1 sm:space-y-2 w-full">
-                  <Label htmlFor="extenderFinReservaFija" className="text-xs sm:text-sm">
+                  <Label
+                    htmlFor="extenderFinReservaFija"
+                    className="text-xs sm:text-sm"
+                  >
                     Extender fin de reserva fija
                   </Label>
                   <div className="flex items-center gap-1">
@@ -641,7 +686,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                                 (selectedEvent.recurrence_end_date &&
                                   dayjs(selectedEvent.recurrence_end_date).diff(
                                     dayjs(),
-                                    "day"
+                                    "day",
                                   ) > 45) ||
                                 selectedEvent.estado !== "activa"
                               }
@@ -654,7 +699,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                           (selectedEvent.recurrence_end_date &&
                             dayjs(selectedEvent.recurrence_end_date).diff(
                               dayjs(),
-                              "day"
+                              "day",
                             ) > 45)) && (
                           <TooltipContent className="text-xs">
                             <p>
@@ -676,18 +721,21 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
 
             {selectedEvent.estado === "penalizada" && (
               <div className="space-y-1 sm:space-y-2 w-full">
-                <Label htmlFor="permiteReagendamiento" className="text-xs sm:text-sm">
+                <Label
+                  htmlFor="permiteReagendamiento"
+                  className="text-xs sm:text-sm"
+                >
                   Permite reagendar hasta
                 </Label>
                 <Input
                   id="permiteReagendamiento"
                   type="text"
                   value={`${dayjs(selectedEvent.permite_reagendar_hasta).format(
-                    "DD/MM/YYYY"
+                    "DD/MM/YYYY",
                   )}${
                     dayjs().isAfter(
                       dayjs(selectedEvent.permite_reagendar_hasta),
-                      "day"
+                      "day",
                     )
                       ? " - Plazo vencido. Ya no se puede reagendar."
                       : ""
