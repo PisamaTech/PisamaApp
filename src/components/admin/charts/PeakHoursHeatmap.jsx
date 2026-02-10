@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/tooltip";
 
 const DAYS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
-const HOURS = Array.from({ length: 15 }, (_, i) => i + 8); // 8:00 a 22:00 (aprox)
+const HOURS = Array.from({ length: 16 }, (_, i) => i + 7); // 7:00 a 22:00 (aprox)
 
 // Offset de Uruguay: UTC-3 (restar 3 horas para convertir de UTC a hora local)
 const URUGUAY_OFFSET = -3;
@@ -35,7 +35,8 @@ export const PeakHoursHeatmap = ({ data }) => {
 
       if (!map[diaLocal]) map[diaLocal] = {};
       // Sumar cantidades si ya hay datos para esa celda (puede pasar por ajuste de día)
-      map[diaLocal][horaLocal] = (map[diaLocal][horaLocal] || 0) + item.cantidad;
+      map[diaLocal][horaLocal] =
+        (map[diaLocal][horaLocal] || 0) + item.cantidad;
     });
     return map;
   }, [data]);
@@ -63,7 +64,10 @@ export const PeakHoursHeatmap = ({ data }) => {
         <div className="flex">
           <div className="w-12 flex-shrink-0"></div>
           {HOURS.map((h) => (
-            <div key={h} className="flex-1 text-center text-xs text-muted-foreground">
+            <div
+              key={h}
+              className="flex-1 text-center text-xs text-muted-foreground"
+            >
               {h}:00
             </div>
           ))}
@@ -84,7 +88,7 @@ export const PeakHoursHeatmap = ({ data }) => {
                       <TooltipTrigger asChild>
                         <div
                           className={`flex-1 h-full mx-[1px] rounded-sm transition-colors ${getColor(
-                            value
+                            value,
                           )}`}
                         />
                       </TooltipTrigger>
