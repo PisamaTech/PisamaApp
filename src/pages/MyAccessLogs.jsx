@@ -22,6 +22,8 @@ import {
   History,
   AlertTriangle,
   Calendar,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -36,11 +38,17 @@ const formatAccessDate = (date) => {
   return formatted.charAt(0).toUpperCase() + formatted.slice(1);
 };
 
+const ITEMS_PER_PAGE = 20;
+
 const MyAccessLogsPage = () => {
   const { user } = useAuthStore();
-  const { startLoading, stopLoading, showToast } = useUIStore();
+  const { showToast } = useUIStore();
   const [logs, setLogs] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
   useEffect(() => {
     const loadLogs = async () => {
@@ -48,8 +56,9 @@ const MyAccessLogsPage = () => {
 
       try {
         setLoadingData(true);
-        const data = await fetchUserAccessLogs(user.id);
+        const { data, count } = await fetchUserAccessLogs(user.id, currentPage, ITEMS_PER_PAGE);
         setLogs(data);
+        setTotalCount(count);
       } catch (error) {
         showToast({
           type: "error",
@@ -62,7 +71,19 @@ const MyAccessLogsPage = () => {
     };
 
     loadLogs();
-  }, [user?.id, showToast]);
+  }, [user?.id, currentPage, showToast]);
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -136,49 +157,84 @@ const MyAccessLogsPage = () => {
               <p>No hay registros de acceso recientes.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Hora de Ingreso</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead className="hidden md:table-cell">
-                      Reserva Asociada
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {logs.map((log) => (
-                    <TableRow key={log.id}>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          {formatAccessDate(log.access_time)}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-muted-foreground" />
-                          {dayjs.utc(log.access_time).format("HH:mm")}
-                        </div>
-                      </TableCell>
-                      <TableCell>{getStatusBadge(log.status)}</TableCell>
-                      <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
-                        {log.reservation ? (
-                          <span>
-                            {dayjs(log.reservation.start_time).format("HH:mm")}{" "}
-                            - {log.reservation.consultorio_nombre}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
+            <>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Fecha</TableHead>
+                      <TableHead>Hora de Ingreso</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead className="hidden md:table-cell">
+                        Reserva Asociada
+                      </TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {logs.map((log) => (
+                      <TableRow key={log.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-muted-foreground" />
+                            {formatAccessDate(log.access_time)}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-muted-foreground" />
+                            {dayjs.utc(log.access_time).format("HH:mm")}
+                          </div>
+                        </TableCell>
+                        <TableCell>{getStatusBadge(log.status)}</TableCell>
+                        <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                          {log.reservation ? (
+                            <span>
+                              {dayjs(log.reservation.start_time).format("HH:mm")}{" "}
+                              - {log.reservation.consultorio_nombre}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Paginación */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-4 border-t mt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Mostrando {(currentPage - 1) * ITEMS_PER_PAGE + 1} -{" "}
+                    {Math.min(currentPage * ITEMS_PER_PAGE, totalCount)} de {totalCount} registros
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handlePreviousPage}
+                      disabled={currentPage === 1 || loadingData}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Anterior
+                    </Button>
+                    <span className="text-sm text-muted-foreground px-2">
+                      Página {currentPage} de {totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleNextPage}
+                      disabled={currentPage === totalPages || loadingData}
+                    >
+                      Siguiente
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

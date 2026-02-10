@@ -559,17 +559,21 @@ export const markAccessAsNotified = async (logId) => {
 };
 
 /**
- * Obtiene el historial de accesos de un usuario específico.
+ * Obtiene el historial de accesos de un usuario específico con paginación.
  * @param {string} userId - ID del usuario
- * @returns {Promise<Array>} Lista de sus accesos
+ * @param {number} page - Página actual (1-indexed)
+ * @param {number} itemsPerPage - Items por página
+ * @returns {Promise<{data: Array, count: number}>} Lista de accesos y conteo total
  */
-export const fetchUserAccessLogs = async (userId) => {
-  const { data, error } = await supabase
+export const fetchUserAccessLogs = async (userId, page = 1, itemsPerPage = 20) => {
+  const offset = (page - 1) * itemsPerPage;
+
+  const { data, error, count } = await supabase
     .from("access_logs")
-    .select("*")
+    .select("*", { count: "exact" })
     .eq("user_id", userId)
     .order("access_time", { ascending: false })
-    .limit(100); // Límite razonable para mostrar
+    .range(offset, offset + itemsPerPage - 1);
 
   if (error) throw error;
 
@@ -594,5 +598,5 @@ export const fetchUserAccessLogs = async (userId) => {
     }
   }
 
-  return data || [];
+  return { data: data || [], count: count || 0 };
 };
