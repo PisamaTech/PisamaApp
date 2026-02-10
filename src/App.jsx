@@ -12,6 +12,8 @@ import {
   Error404,
   FacturaDetalle,
   Notificaciones,
+  MyAccessLogs,
+  AccessNotifications,
 } from "./pages";
 import PaymentHistory from "./pages/PaymentHistory";
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -26,6 +28,7 @@ import BalanceSummary from "./pages/admin/BalanceSummary";
 import ExpiringReservations from "./pages/admin/ExpiringReservations";
 import UserBillingDetails from "./pages/admin/UserBillingDetails";
 import AccessControl from "./pages/admin/AccessControl";
+import AccessImport from "./pages/admin/AccessImport";
 import { useAuthStore } from "./stores/authStore";
 import { useNotificationStore } from "./stores/notificationStore";
 import LoadingOverlay from "./components/LoadingOverlay";
@@ -42,7 +45,7 @@ function App() {
   const { user, checkSession } = useAuthStore();
   const { toast, hideToast } = useUIStore();
   const initializeNotifications = useNotificationStore(
-    (state) => state.initialize
+    (state) => state.initialize,
   );
   const clearNotifications = useNotificationStore((state) => state.clear);
 
@@ -76,99 +79,170 @@ function App() {
           onClose={hideToast}
         />
         <Routes>
-        {user ? (
-          // Rutas para usuario autenticado
-          <>
-            {/* Si intenta acceder a /auth o /recuperar-password, lo redirigimos */}
-            <Route
-              path="/auth"
-              element={<Navigate to="/dashboard" replace />}
-            />
-            <Route
-              path="/recuperar-password"
-              element={<Navigate to="/dashboard" replace />}
-            />
+          {user ? (
+            // Rutas para usuario autenticado
+            <>
+              {/* Si intenta acceder a /auth o /recuperar-password, lo redirigimos */}
+              <Route
+                path="/auth"
+                element={<Navigate to="/dashboard" replace />}
+              />
+              <Route
+                path="/recuperar-password"
+                element={<Navigate to="/dashboard" replace />}
+              />
 
-            {/* Definimos un layout general para las rutas autenticadas */}
-            <Route path="/" element={<Layout />}>
-              <Route index element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/calendario_semanal" element={<CalendarSemanal />} />
-              <Route path="/calendario_diario" element={<CalendarDiario />} />
-              <Route path="/reservas" element={<Reservas />} />
-              <Route path="/facturas" element={<Facturas />} />
-              <Route path="/facturas/:id" element={<FacturaDetalle />} />
-              <Route path="/pagos" element={<PaymentHistory />} />
-              <Route path="/notificaciones" element={<Notificaciones />} />
-              <Route
-                path="/admin"
-                element={<Navigate to="/admin/dashboard" replace />}
-              />
-              <Route
-                path="/admin/dashboard"
-                element={<AdminRouteGuard><AdminDashboard /></AdminRouteGuard>}
-              />
-              <Route
-                path="/admin/performance"
-                element={<AdminRouteGuard><PerformancePage /></AdminRouteGuard>}
-              />
-              <Route
-                path="/admin/user-management"
-                element={<AdminRouteGuard><UserManagement /></AdminRouteGuard>}
-              />
-              <Route
-                path="/admin/reservations-management"
-                element={<AdminRouteGuard><ReservationsManagement /></AdminRouteGuard>}
-              />
-              <Route
-                path="/admin/billing-management"
-                element={<AdminRouteGuard><BillingManagement /></AdminRouteGuard>}
-              />
-              <Route
-                path="/admin/payment-management"
-                element={<AdminRouteGuard><PaymentManagement /></AdminRouteGuard>}
-              />
-              <Route
-                path="/admin/pricing-management"
-                element={<AdminRouteGuard><PricingManagement /></AdminRouteGuard>}
-              />
-              <Route
-                path="/admin/broadcast"
-                element={<AdminRouteGuard><Broadcast /></AdminRouteGuard>}
-              />
-              <Route
-                path="/admin/expiring-reservations"
-                element={<AdminRouteGuard><ExpiringReservations /></AdminRouteGuard>}
-              />
-              <Route
-                path="/admin/balance-summary"
-                element={<AdminRouteGuard><BalanceSummary /></AdminRouteGuard>}
-              />
-              <Route
-                path="/admin/balance-summary/:userId"
-                element={<AdminRouteGuard><UserBillingDetails /></AdminRouteGuard>}
-              />
-              <Route
-                path="/admin/access-control"
-                element={<AdminRouteGuard><AccessControl /></AdminRouteGuard>}
-              />
-              <Route path="perfil" element={<Perfil />} />
-              <Route path="ayuda" element={<Ayuda />} />
-              <Route path="reset-password" element={<ResetPassword />} />
-              {/* Si no coincide ninguna, redirigimos a calendario */}
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
-            </Route>
-          </>
-        ) : (
-          // Rutas para usuario NO autenticado
-          <>
-            <Route path="/" element={<AuthPage />} />
-            <Route path="/recuperar-password" element={<RecoverPassword />} />
-            <Route path="/confirmacion" element={<ConfirmationPage />} />
-            {/* Si el usuario no está autenticado y accede a otra ruta, lo redirigimos a /auth */}
-            <Route path="*" element={<Error404 />} />
-          </>
-        )}
+              {/* Definimos un layout general para las rutas autenticadas */}
+              <Route path="/" element={<Layout />}>
+                <Route index element={<Navigate to="/dashboard" replace />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route
+                  path="/calendario_semanal"
+                  element={<CalendarSemanal />}
+                />
+                <Route path="/calendario_diario" element={<CalendarDiario />} />
+                <Route path="/reservas" element={<Reservas />} />
+                <Route path="/facturas" element={<Facturas />} />
+                <Route path="/facturas/:id" element={<FacturaDetalle />} />
+                <Route path="/pagos" element={<PaymentHistory />} />
+                <Route path="/notificaciones" element={<Notificaciones />} />
+                <Route path="/mis-accesos" element={<MyAccessLogs />} />
+                <Route
+                  path="/admin"
+                  element={<Navigate to="/admin/dashboard" replace />}
+                />
+                <Route
+                  path="/admin/dashboard"
+                  element={
+                    <AdminRouteGuard>
+                      <AdminDashboard />
+                    </AdminRouteGuard>
+                  }
+                />
+                <Route
+                  path="/admin/performance"
+                  element={
+                    <AdminRouteGuard>
+                      <PerformancePage />
+                    </AdminRouteGuard>
+                  }
+                />
+                <Route
+                  path="/admin/user-management"
+                  element={
+                    <AdminRouteGuard>
+                      <UserManagement />
+                    </AdminRouteGuard>
+                  }
+                />
+                <Route
+                  path="/admin/reservations-management"
+                  element={
+                    <AdminRouteGuard>
+                      <ReservationsManagement />
+                    </AdminRouteGuard>
+                  }
+                />
+                <Route
+                  path="/admin/billing-management"
+                  element={
+                    <AdminRouteGuard>
+                      <BillingManagement />
+                    </AdminRouteGuard>
+                  }
+                />
+                <Route
+                  path="/admin/payment-management"
+                  element={
+                    <AdminRouteGuard>
+                      <PaymentManagement />
+                    </AdminRouteGuard>
+                  }
+                />
+                <Route
+                  path="/admin/pricing-management"
+                  element={
+                    <AdminRouteGuard>
+                      <PricingManagement />
+                    </AdminRouteGuard>
+                  }
+                />
+                <Route
+                  path="/admin/broadcast"
+                  element={
+                    <AdminRouteGuard>
+                      <Broadcast />
+                    </AdminRouteGuard>
+                  }
+                />
+                <Route
+                  path="/admin/expiring-reservations"
+                  element={
+                    <AdminRouteGuard>
+                      <ExpiringReservations />
+                    </AdminRouteGuard>
+                  }
+                />
+                <Route
+                  path="/admin/balance-summary"
+                  element={
+                    <AdminRouteGuard>
+                      <BalanceSummary />
+                    </AdminRouteGuard>
+                  }
+                />
+                <Route
+                  path="/admin/balance-summary/:userId"
+                  element={
+                    <AdminRouteGuard>
+                      <UserBillingDetails />
+                    </AdminRouteGuard>
+                  }
+                />
+                <Route
+                  path="/admin/access-control"
+                  element={
+                    <AdminRouteGuard>
+                      <AccessControl />
+                    </AdminRouteGuard>
+                  }
+                />
+                <Route
+                  path="/admin/access-control/import"
+                  element={
+                    <AdminRouteGuard>
+                      <AccessImport />
+                    </AdminRouteGuard>
+                  }
+                />
+                <Route
+                  path="/admin/access-notifications"
+                  element={
+                    <AdminRouteGuard>
+                      <AccessNotifications />
+                    </AdminRouteGuard>
+                  }
+                />
+                <Route path="perfil" element={<Perfil />} />
+                <Route path="ayuda" element={<Ayuda />} />
+                <Route path="reset-password" element={<ResetPassword />} />
+                {/* Si no coincide ninguna, redirigimos a calendario */}
+                <Route
+                  path="*"
+                  element={<Navigate to="/dashboard" replace />}
+                />
+              </Route>
+            </>
+          ) : (
+            // Rutas para usuario NO autenticado
+            <>
+              <Route path="/" element={<AuthPage />} />
+              <Route path="/recuperar-password" element={<RecoverPassword />} />
+              <Route path="/confirmacion" element={<ConfirmationPage />} />
+              {/* Si el usuario no está autenticado y accede a otra ruta, lo redirigimos a /auth */}
+              <Route path="*" element={<Error404 />} />
+            </>
+          )}
         </Routes>
       </BrowserRouter>
     </ErrorBoundary>

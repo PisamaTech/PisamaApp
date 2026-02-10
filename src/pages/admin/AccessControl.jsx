@@ -1,21 +1,33 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useUIStore } from "@/stores/uiStore";
 import {
-  parseAccessExcelFile,
-  validateExcelFile,
-} from "@/utils/excelParser";
-import {
-  processAccessBatch,
+  fetchAccessLogs,
   AccessMatchStatus,
-  updateUserAccessName,
-  fetchUsersForAccessMatching,
 } from "@/services/accessControlService";
-import { StatCard } from "@/components/admin/StatCard";
+import { fetchAllUsers } from "@/services/adminService";
+import { UserCombobox } from "@/components/admin/UserCombobox";
 import dayjs from "dayjs";
+import "dayjs/locale/es";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.locale("es");
+
+const TIMEZONE = "America/Montevideo";
+
+// Helper para formatear fecha con día capitalizado
+// Nota: access_time se guarda en la BD como UTC pero son realmente horas locales de Uruguay,
+// por lo que usamos dayjs.utc() para leer el valor sin conversión de zona horaria
+const formatAccessDate = (date) => {
+  const formatted = dayjs.utc(date).format("ddd D/M/YYYY - HH:mm");
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+};
 
 // Componentes UI
 import {
-  Input,
   Button,
   Badge,
   Separator,
@@ -30,106 +42,161 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-  Label,
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
 } from "@/components/ui";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationLink,
+} from "@/components/ui/pagination";
 import {
   Upload,
   CheckCircle2,
   AlertTriangle,
   UserX,
-  FileSpreadsheet,
   Filter,
-  UserPlus,
-  X,
+  CalendarIcon,
   ArrowUp,
   ArrowDown,
   ArrowUpDown,
+  Bell,
 } from "lucide-react";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+
+// Rangos predeterminados
+const DATE_PRESETS = [
+  { label: "Último día", days: 1 },
+  { label: "Últimos 7 días", days: 7 },
+  { label: "Últimos 15 días", days: 15 },
+  { label: "Últimos 30 días", days: 30 },
+];
 
 const AccessControlPage = () => {
+  const navigate = useNavigate();
   const { loading, startLoading, stopLoading, showToast } = useUIStore();
 
-  // Estados principales
-  const [file, setFile] = useState(null);
-  const [previewData, setPreviewData] = useState(null);
-  const [results, setResults] = useState(null);
-  const [statusFilter, setStatusFilter] = useState("todos");
+  // Estados de datos
+  const [logs, setLogs] = useState([]);
+  const [totalLogs, setTotalLogs] = useState(0);
+  const [allUsers, setAllUsers] = useState([]);
+
+  // Estados de paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(20);
+
+  // Estados de filtros
+  const [filters, setFilters] = useState({
+    userId: "todos",
+    status: "todos",
+    notified: "todos",
+    dateRange: { from: undefined, to: undefined },
+    mariOnly: false,
+  });
+  const [appliedFilters, setAppliedFilters] = useState(filters);
 
   // Estados de ordenamiento
-  const [sortField, setSortField] = useState(null);
-  const [sortDirection, setSortDirection] = useState("asc");
+  const [sortField, setSortField] = useState("access_time");
+  const [sortDirection, setSortDirection] = useState("desc");
 
-  // Estados para modal de asignación de alias
-  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
-  const [selectedUnmatchedName, setSelectedUnmatchedName] = useState("");
-  const [availableUsers, setAvailableUsers] = useState([]);
-  const [selectedUserId, setSelectedUserId] = useState("");
+  const totalPages = useMemo(
+    () => Math.ceil(totalLogs / itemsPerPage),
+    [totalLogs, itemsPerPage],
+  );
 
-  // Datos filtrados y ordenados
-  const filteredResults = useMemo(() => {
-    if (!results?.results) return [];
+  // Cargar usuarios para el filtro
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const { data } = await fetchAllUsers(1, 1000);
+        setAllUsers(data);
+      } catch (error) {
+        console.error("Error cargando usuarios:", error);
+      }
+    };
+    loadUsers();
+  }, []);
 
-    // Filtrar
-    let data =
-      statusFilter === "todos"
-        ? [...results.results]
-        : results.results.filter((r) => r.status === statusFilter);
+  // Cargar logs
+  useEffect(() => {
+    const loadLogs = async () => {
+      startLoading();
+      try {
+        const { data, count } = await fetchAccessLogs(
+          currentPage,
+          itemsPerPage,
+          appliedFilters,
+        );
+        setLogs(data);
+        setTotalLogs(count);
+      } catch (error) {
+        showToast({
+          type: "error",
+          title: "Error",
+          message: "No se pudieron cargar los registros de acceso.",
+        });
+      } finally {
+        stopLoading();
+      }
+    };
+    loadLogs();
+  }, [currentPage, appliedFilters, itemsPerPage]);
 
-    // Ordenar
-    if (sortField) {
-      data.sort((a, b) => {
-        let valueA, valueB;
+  // Handlers de filtros
+  const handleFilterChange = (filterName, value) => {
+    setFilters((prev) => ({ ...prev, [filterName]: value }));
+  };
 
-        switch (sortField) {
-          case "accessTime":
-            valueA = new Date(a.accessTime).getTime();
-            valueB = new Date(b.accessTime).getTime();
-            break;
-          case "accessUserName":
-            valueA = a.accessUserName?.toLowerCase() || "";
-            valueB = b.accessUserName?.toLowerCase() || "";
-            break;
-          case "matchedUser":
-            valueA = a.matchedUser?.name?.toLowerCase() || "";
-            valueB = b.matchedUser?.name?.toLowerCase() || "";
-            break;
-          case "reservation":
-            valueA = a.reservation?.startTime
-              ? new Date(a.reservation.startTime).getTime()
-              : 0;
-            valueB = b.reservation?.startTime
-              ? new Date(b.reservation.startTime).getTime()
-              : 0;
-            break;
-          case "status":
-            valueA = a.status || "";
-            valueB = b.status || "";
-            break;
-          default:
-            return 0;
-        }
+  const handleApplyFilters = () => {
+    setCurrentPage(1);
+    setAppliedFilters(filters);
+  };
 
-        if (valueA < valueB) return sortDirection === "asc" ? -1 : 1;
-        if (valueA > valueB) return sortDirection === "asc" ? 1 : -1;
-        return 0;
-      });
-    }
+  const handleResetFilters = () => {
+    const defaultFilters = {
+      userId: "todos",
+      status: "todos",
+      notified: "todos",
+      dateRange: { from: undefined, to: undefined },
+      mariOnly: false,
+    };
+    setFilters(defaultFilters);
+    setAppliedFilters(defaultFilters);
+    setCurrentPage(1);
+  };
 
-    return data;
-  }, [results, statusFilter, sortField, sortDirection]);
+  const handlePresetClick = (days) => {
+    const to = new Date();
+    const from = new Date();
+    from.setDate(from.getDate() - days);
+    setFilters((prev) => ({ ...prev, dateRange: { from, to } }));
+  };
 
-  // Handler para ordenamiento
+  const handleMariFilterToggle = () => {
+    setFilters((prev) => ({ ...prev, mariOnly: !prev.mariOnly }));
+  };
+
+  // Handlers de paginación
+  const handlePreviousPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  };
+
+  // Handler de ordenamiento
   const handleSort = (field) => {
     if (sortField === field) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
@@ -139,135 +206,34 @@ const AccessControlPage = () => {
     }
   };
 
-  // Handler para selección de archivo
-  const handleFileChange = async (e) => {
-    const selectedFile = e.target.files?.[0];
-    if (!selectedFile) return;
-
-    // Validar archivo
-    const validation = validateExcelFile(selectedFile);
-    if (!validation.valid) {
-      showToast({
-        type: "error",
-        title: "Archivo inválido",
-        message: validation.error,
-      });
-      return;
-    }
-
-    setFile(selectedFile);
-    setResults(null);
-
-    // Generar preview
-    try {
-      startLoading("Leyendo archivo...");
-      const records = await parseAccessExcelFile(selectedFile);
-      setPreviewData({
-        fileName: selectedFile.name,
-        recordCount: records.length,
-        sampleRecords: records.slice(0, 5),
-        rawRecords: records,
-      });
-    } catch (error) {
-      showToast({
-        type: "error",
-        title: "Error de lectura",
-        message: error.message,
-      });
-      setFile(null);
-      setPreviewData(null);
-    } finally {
-      stopLoading();
-    }
-  };
-
-  // Handler para procesar archivo
-  const handleProcess = async () => {
-    if (!previewData?.rawRecords) return;
-
-    try {
-      startLoading("Procesando registros...");
-      const processedResults = await processAccessBatch(previewData.rawRecords);
-      setResults(processedResults);
-      setStatusFilter("todos");
-
-      showToast({
-        type: "success",
-        title: "Procesamiento completado",
-        message: `Se procesaron ${processedResults.stats.total} registros.`,
-      });
-    } catch (error) {
-      showToast({
-        type: "error",
-        title: "Error de procesamiento",
-        message: error.message,
-      });
-    } finally {
-      stopLoading();
-    }
-  };
-
-  // Handler para abrir modal de asignación
-  const handleOpenAssignModal = async (unmatchedName) => {
-    setSelectedUnmatchedName(unmatchedName);
-    setSelectedUserId("");
-
-    try {
-      startLoading();
-      const users = await fetchUsersForAccessMatching();
-      setAvailableUsers(users);
-      setIsAssignModalOpen(true);
-    } catch (error) {
-      showToast({
-        type: "error",
-        title: "Error",
-        message: "No se pudieron cargar los usuarios.",
-      });
-    } finally {
-      stopLoading();
-    }
-  };
-
-  // Handler para confirmar asignación
-  const handleConfirmAssign = async () => {
-    if (!selectedUserId || !selectedUnmatchedName) return;
-
-    try {
-      startLoading("Asignando alias...");
-      await updateUserAccessName(selectedUserId, selectedUnmatchedName);
-
-      showToast({
-        type: "success",
-        title: "Alias asignado",
-        message: `El nombre "${selectedUnmatchedName}" fue vinculado exitosamente.`,
-      });
-
-      setIsAssignModalOpen(false);
-
-      // Reprocesar si hay datos cargados
-      if (previewData?.rawRecords) {
-        await handleProcess();
+  // Ordenar logs localmente
+  const sortedLogs = useMemo(() => {
+    if (!sortField) return logs;
+    return [...logs].sort((a, b) => {
+      let valueA, valueB;
+      switch (sortField) {
+        case "access_time":
+          valueA = new Date(a.access_time).getTime();
+          valueB = new Date(b.access_time).getTime();
+          break;
+        case "access_name":
+          valueA = a.access_name?.toLowerCase() || "";
+          valueB = b.access_name?.toLowerCase() || "";
+          break;
+        case "status":
+          valueA = a.status || "";
+          valueB = b.status || "";
+          break;
+        default:
+          return 0;
       }
-    } catch (error) {
-      showToast({
-        type: "error",
-        title: "Error",
-        message: error.message,
-      });
-    } finally {
-      stopLoading();
-    }
-  };
+      if (valueA < valueB) return sortDirection === "asc" ? -1 : 1;
+      if (valueA > valueB) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [logs, sortField, sortDirection]);
 
-  // Limpiar todo
-  const handleReset = () => {
-    setFile(null);
-    setPreviewData(null);
-    setResults(null);
-    setStatusFilter("todos");
-  };
-
-  // Componente para header ordenable
+  // Componente SortableTableHead
   const SortableTableHead = ({ label, field }) => {
     const isActive = sortField === field;
     return (
@@ -291,22 +257,31 @@ const AccessControlPage = () => {
     );
   };
 
-  // Obtener variante de badge según estado
+  // Badge de estado
   const getStatusBadge = (status) => {
     switch (status) {
       case AccessMatchStatus.VALID:
+      case "valido":
         return (
-          <Badge variant="success" className="gap-1">
+          <Badge
+            variant="success"
+            className="gap-1 bg-green-100 text-green-800 hover:bg-green-100 border-none"
+          >
             <CheckCircle2 className="h-3 w-3" /> Válido
           </Badge>
         );
       case AccessMatchStatus.NO_RESERVATION:
+      case "sin_reserva":
         return (
-          <Badge variant="warning" className="gap-1">
+          <Badge
+            variant="warning"
+            className="gap-1 bg-orange-100 text-orange-800 hover:bg-orange-100 border-none"
+          >
             <AlertTriangle className="h-3 w-3" /> Sin Reserva
           </Badge>
         );
       case AccessMatchStatus.UNMATCHED:
+      case "sin_match":
         return (
           <Badge variant="destructive" className="gap-1">
             <UserX className="h-3 w-3" /> Sin Match
@@ -317,239 +292,253 @@ const AccessControlPage = () => {
     }
   };
 
+  // Componente DateRangePicker
+  const DateRangePicker = ({ date, onDateChange }) => (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          className={cn(
+            "w-full justify-start text-left font-normal",
+            !date?.from && "text-muted-foreground",
+          )}
+        >
+          <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
+          <span className="truncate">
+            {date?.from ? (
+              date.to ? (
+                <>
+                  {format(date.from, "dd/MM/yy", { locale: es })} -{" "}
+                  {format(date.to, "dd/MM/yy", { locale: es })}
+                </>
+              ) : (
+                format(date.from, "dd/MM/yy", { locale: es })
+              )
+            ) : (
+              <span>Rango personalizado</span>
+            )}
+          </span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar
+          initialFocus
+          mode="range"
+          defaultMonth={date?.from}
+          selected={date}
+          onSelect={onDateChange}
+          numberOfMonths={1}
+          locale={es}
+        />
+      </PopoverContent>
+    </Popover>
+  );
+
   return (
     <div className="container mx-auto p-4 md:p-8 space-y-6">
       {/* Header */}
-      <div className="space-y-1">
-        <h1 className="text-3xl font-bold">Control de Acceso</h1>
-        <p className="text-muted-foreground">
-          Sube el archivo Excel del sistema de acceso para cotejarlo contra las
-          reservas.
-        </p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold">Control de Acceso</h1>
+          <p className="text-muted-foreground">
+            Historial de accesos registrados en el sistema.
+          </p>
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          <Button
+            variant="default"
+            className="gap-2"
+            onClick={() => navigate("/admin/access-control/import")}
+          >
+            <Upload className="h-4 w-4" />
+            Importar Excel
+          </Button>
+          <Button
+            variant="secondary"
+            className="gap-2"
+            onClick={() => navigate("/admin/access-notifications")}
+          >
+            <AlertTriangle className="h-4 w-4" />
+            Ver Infracciones
+          </Button>
+        </div>
       </div>
       <Separator />
 
-      {/* Sección de Upload */}
+      {/* Filtros */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Upload className="h-5 w-5" />
-            Subir Archivo de Accesos
+            <Filter className="h-5 w-5" />
+            Filtros
           </CardTitle>
-          <CardDescription>
-            El archivo debe tener las columnas: time, user, content, unlock
-            record
-          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Input
-              type="file"
-              accept=".xlsx,.xls"
-              onChange={handleFileChange}
-              disabled={loading}
-              className="flex-1"
-            />
-            {file && (
-              <Button variant="outline" onClick={handleReset} disabled={loading}>
-                <X className="h-4 w-4 mr-2" />
-                Limpiar
+          {/* Rangos predeterminados */}
+          <div className="flex flex-wrap gap-2">
+            {DATE_PRESETS.map((preset) => (
+              <Button
+                key={preset.days}
+                variant="outline"
+                size="sm"
+                onClick={() => handlePresetClick(preset.days)}
+              >
+                {preset.label}
               </Button>
-            )}
+            ))}
+            <Separator orientation="vertical" className="h-8" />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleMariFilterToggle}
+              className={cn(
+                "transition-all",
+                filters.mariOnly
+                  ? "bg-indigo-600 hover:bg-indigo-700 text-white border-transparent shadow-sm"
+                  : "text-indigo-600 border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-300",
+              )}
+            >
+              Solo Mari
+            </Button>
           </div>
 
-          {/* Preview del archivo */}
-          {previewData && !results && (
-            <div className="border rounded-lg p-4 space-y-4 bg-muted/50">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <FileSpreadsheet className="h-5 w-5 text-green-600" />
-                  <span className="font-medium">{previewData.fileName}</span>
-                </div>
-                <Badge variant="secondary">
-                  {previewData.recordCount} registros
-                </Badge>
-              </div>
-
-              <div className="text-sm text-muted-foreground">
-                <p className="font-medium mb-2">
-                  Vista previa (primeros 5 registros):
-                </p>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Hora</TableHead>
-                        <TableHead>Usuario</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {previewData.sampleRecords.map((r, i) => (
-                        <TableRow key={i}>
-                          <TableCell className="text-xs">{r.time}</TableCell>
-                          <TableCell className="text-xs">{r.user}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
-
+          {/* Filtros principales */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 items-center">
+            <DateRangePicker
+              date={filters.dateRange}
+              onDateChange={(range) => handleFilterChange("dateRange", range)}
+            />
+            <UserCombobox
+              users={allUsers}
+              selectedUserId={filters.userId}
+              onSelect={(id) => handleFilterChange("userId", id)}
+            />
+            <Select
+              value={filters.status}
+              onValueChange={(value) => handleFilterChange("status", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos los estados</SelectItem>
+                <SelectItem value="valido">Válido</SelectItem>
+                <SelectItem value="sin_reserva">Sin Reserva</SelectItem>
+                <SelectItem value="sin_match">Sin Match</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select
+              value={filters.notified}
+              onValueChange={(value) => handleFilterChange("notified", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Notificado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                <SelectItem value="si">Notificado</SelectItem>
+                <SelectItem value="no">No notificado</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="flex gap-2">
+              <Button onClick={handleApplyFilters} className="flex-1">
+                Buscar
+              </Button>
               <Button
-                onClick={handleProcess}
-                disabled={loading}
-                className="w-full sm:w-auto"
+                onClick={handleResetFilters}
+                variant="outline"
+                className="flex-1"
               >
-                Procesar Archivo
+                Limpiar
               </Button>
             </div>
-          )}
+          </div>
         </CardContent>
       </Card>
 
-      {/* Resultados */}
-      {results && (
-        <>
-          {/* Estadísticas */}
-          <div className="grid gap-4 md:grid-cols-4">
-            <StatCard
-              Icon={FileSpreadsheet}
-              title="Total Registros"
-              value={results.stats.total}
-              footer={`Período: ${results.dateRange.from} - ${results.dateRange.to}`}
-              isLoading={loading}
-            />
-            <StatCard
-              Icon={CheckCircle2}
-              title="Accesos Válidos"
-              value={results.stats.valid}
-              footer={`${((results.stats.valid / results.stats.total) * 100).toFixed(1)}% del total`}
-              isLoading={loading}
-            />
-            <StatCard
-              Icon={AlertTriangle}
-              title="Sin Reserva"
-              value={results.stats.noReservation}
-              footer="Usuario existe pero sin reserva"
-              isLoading={loading}
-            />
-            <StatCard
-              Icon={UserX}
-              title="Sin Match"
-              value={results.stats.unmatched}
-              footer={`${results.unmatchedUsers.length} nombres únicos`}
-              isLoading={loading}
-            />
+      {/* Tabla de resultados */}
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle>Registros ({totalLogs})</CardTitle>
           </div>
-
-          {/* Lista de usuarios sin match */}
-          {results.unmatchedUsers.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <UserPlus className="h-5 w-5" />
-                  Usuarios Sin Vincular ({results.unmatchedUsers.length})
-                </CardTitle>
-                <CardDescription>
-                  Estos nombres del sistema de acceso no tienen usuario
-                  asignado. Haz clic para vincularlos.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {results.unmatchedUsers.map((name) => (
-                    <Button
-                      key={name}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleOpenAssignModal(name)}
-                      className="gap-1"
-                    >
-                      <UserPlus className="h-3 w-3" />
-                      {name}
-                    </Button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Filtro y Tabla de resultados */}
-          <Card>
-            <CardHeader>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <CardTitle>Detalle de Registros</CardTitle>
-                <div className="flex items-center gap-2">
-                  <Filter className="h-4 w-4 text-muted-foreground" />
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Filtrar por estado" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="todos">Todos</SelectItem>
-                      <SelectItem value={AccessMatchStatus.VALID}>
-                        Válidos
-                      </SelectItem>
-                      <SelectItem value={AccessMatchStatus.NO_RESERVATION}>
-                        Sin Reserva
-                      </SelectItem>
-                      <SelectItem value={AccessMatchStatus.UNMATCHED}>
-                        Sin Match
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center space-y-4">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                <p className="text-muted-foreground">Cargando registros...</p>
               </div>
-            </CardHeader>
-            <CardContent>
+            </div>
+          ) : (
+            <>
               {/* Tabla Desktop */}
-              <div className="hidden md:block border rounded-md">
+              <div className="hidden md:block border rounded-md overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <SortableTableHead label="Hora de Acceso" field="accessTime" />
-                      <SortableTableHead label="Nombre (Sistema)" field="accessUserName" />
-                      <SortableTableHead label="Usuario (App)" field="matchedUser" />
-                      <SortableTableHead label="Reserva" field="reservation" />
+                      <SortableTableHead
+                        label="Fecha/Hora"
+                        field="access_time"
+                      />
+                      <SortableTableHead
+                        label="Nombre (Sistema)"
+                        field="access_name"
+                      />
+                      <TableHead>Usuario (App)</TableHead>
+                      <TableHead>Reserva</TableHead>
                       <SortableTableHead label="Estado" field="status" />
+                      <TableHead>Notificado</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredResults.length > 0 ? (
-                      filteredResults.map((record, index) => (
-                        <TableRow key={index}>
-                          <TableCell className="text-sm">
-                            {dayjs(record.accessTime).format("DD/MM/YY HH:mm")}
+                    {sortedLogs.length > 0 ? (
+                      sortedLogs.map((log) => (
+                        <TableRow key={log.id}>
+                          <TableCell>
+                            {formatAccessDate(log.access_time)}
                           </TableCell>
                           <TableCell className="font-medium">
-                            {record.accessUserName}
+                            {log.access_name}
                           </TableCell>
                           <TableCell>
-                            {record.matchedUser?.name || (
+                            {log.usuario ? (
+                              `${log.usuario.firstName} ${log.usuario.lastName}`
+                            ) : (
                               <span className="text-muted-foreground italic">
                                 No vinculado
                               </span>
                             )}
                           </TableCell>
                           <TableCell className="text-sm">
-                            {record.reservation ? (
+                            {log.reservation ? (
                               <span>
-                                {dayjs(record.reservation.startTime).format(
-                                  "HH:mm"
-                                )}{" "}
-                                - {record.reservation.consultorio}
+                                {dayjs(log.reservation.start_time)
+                                  .tz(TIMEZONE)
+                                  .format("HH:mm")}{" "}
+                                - {log.reservation.consultorio_nombre}
                               </span>
                             ) : (
                               <span className="text-muted-foreground">-</span>
                             )}
                           </TableCell>
-                          <TableCell>{getStatusBadge(record.status)}</TableCell>
+                          <TableCell>{getStatusBadge(log.status)}</TableCell>
+                          <TableCell>
+                            {log.notified ? (
+                              <Badge variant="outline" className="gap-1">
+                                <Bell className="h-3 w-3" /> Sí
+                              </Badge>
+                            ) : (
+                              <Badge variant="secondary">No</Badge>
+                            )}
+                          </TableCell>
                         </TableRow>
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={5} className="h-24 text-center">
-                          No hay registros con el filtro seleccionado.
+                        <TableCell colSpan={6} className="h-24 text-center">
+                          No hay registros con los filtros seleccionados.
                         </TableCell>
                       </TableRow>
                     )}
@@ -557,101 +546,101 @@ const AccessControlPage = () => {
                 </Table>
               </div>
 
-              {/* Vista Móvil (Cards) */}
+              {/* Vista Móvil */}
               <div className="md:hidden space-y-4">
-                {filteredResults.length > 0 ? (
-                  filteredResults.map((record, index) => (
+                {sortedLogs.length > 0 ? (
+                  sortedLogs.map((log) => (
                     <div
-                      key={index}
-                      className="bg-slate-200 text-slate-900 p-4 rounded-lg space-y-2 border border-slate-300"
+                      key={log.id}
+                      className="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg space-y-2 border"
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="font-bold">{record.accessUserName}</p>
-                          <p className="text-sm text-slate-600">
-                            {dayjs(record.accessTime).format("DD/MM/YY HH:mm")}
+                          <p className="font-bold">{log.access_name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {formatAccessDate(log.access_time)}
                           </p>
                         </div>
-                        {getStatusBadge(record.status)}
+                        {getStatusBadge(log.status)}
                       </div>
-                      {record.matchedUser && (
+                      {log.usuario && (
                         <p className="text-sm">
-                          <span className="text-slate-500">Usuario:</span>{" "}
-                          {record.matchedUser.name}
+                          <span className="text-muted-foreground">
+                            Usuario:
+                          </span>{" "}
+                          {log.usuario.firstName} {log.usuario.lastName}
                         </p>
                       )}
-                      {record.reservation && (
+                      {log.reservation && (
                         <p className="text-sm">
-                          <span className="text-slate-500">Reserva:</span>{" "}
-                          {dayjs(record.reservation.startTime).format("HH:mm")}{" "}
-                          - {record.reservation.consultorio}
+                          <span className="text-muted-foreground">
+                            Reserva:
+                          </span>{" "}
+                          {dayjs(log.reservation.start_time)
+                            .tz(TIMEZONE)
+                            .format("HH:mm")}{" "}
+                          - {log.reservation.consultorio_nombre}
                         </p>
                       )}
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">
+                          Notificado:
+                        </span>
+                        {log.notified ? (
+                          <Badge variant="outline" className="gap-1">
+                            <Bell className="h-3 w-3" /> Sí
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary">No</Badge>
+                        )}
+                      </div>
                     </div>
                   ))
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
-                    No hay registros con el filtro seleccionado.
+                    No hay registros con los filtros seleccionados.
                   </div>
                 )}
               </div>
-            </CardContent>
-          </Card>
-        </>
-      )}
 
-      {/* Modal de asignación de alias */}
-      <Dialog open={isAssignModalOpen} onOpenChange={setIsAssignModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Vincular Usuario</DialogTitle>
-            <DialogDescription>
-              Asigna el nombre &quot;{selectedUnmatchedName}&quot; a un usuario
-              del sistema.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4 space-y-4">
-            <div className="space-y-2">
-              <Label>Nombre en sistema de acceso</Label>
-              <Input value={selectedUnmatchedName} disabled />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="userSelect">Seleccionar Usuario</Label>
-              <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-                <SelectTrigger id="userSelect">
-                  <SelectValue placeholder="Elige un usuario..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableUsers.map((user) => (
-                    <SelectItem key={user.id} value={user.id}>
-                      {user.firstName} {user.lastName}
-                      {user.access_system_name && (
-                        <span className="text-muted-foreground ml-2">
-                          (actual: {user.access_system_name})
-                        </span>
-                      )}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsAssignModalOpen(false)}
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleConfirmAssign}
-              disabled={!selectedUserId || loading}
-            >
-              {loading ? "Guardando..." : "Confirmar"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              {/* Paginación */}
+              {totalPages > 1 && (
+                <div className="flex justify-center mt-4">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          onClick={handlePreviousPage}
+                          className={cn(
+                            "cursor-pointer",
+                            currentPage === 1 &&
+                              "pointer-events-none opacity-50",
+                          )}
+                        />
+                      </PaginationItem>
+                      <PaginationItem>
+                        <PaginationLink isActive>
+                          {currentPage} / {totalPages}
+                        </PaginationLink>
+                      </PaginationItem>
+                      <PaginationItem>
+                        <PaginationNext
+                          onClick={handleNextPage}
+                          className={cn(
+                            "cursor-pointer",
+                            currentPage === totalPages &&
+                              "pointer-events-none opacity-50",
+                          )}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

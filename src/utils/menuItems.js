@@ -55,6 +55,11 @@ export const menuItems = [
     icon: Settings,
   },
   {
+    title: "Mis Accesos",
+    url: "/mis-accesos",
+    icon: KeyRound,
+  },
+  {
     title: "Ayuda",
     url: "/ayuda",
     icon: MessageCircleQuestion,

@@ -11,3 +11,5 @@ export * from "./RecoverPassword";
 export * from "./Reservas";
 export * from "./ResetPassword";
 export * from "./Notificaciones";
+export { default as MyAccessLogs } from "./MyAccessLogs";
+export { default as AccessNotifications } from "./admin/AccessNotifications";
