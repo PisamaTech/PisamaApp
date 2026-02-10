@@ -27,8 +27,14 @@ import {
 } from "lucide-react";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
+import "dayjs/locale/es";
+import timezone from "dayjs/plugin/timezone";
 
 dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.locale("es");
+
+const TIMEZONE = "America/Montevideo";
 
 const AccessNotificationsPage = () => {
   const navigate = useNavigate();
@@ -71,9 +77,11 @@ const AccessNotificationsPage = () => {
         titulo: "⚠ Acceso registrado sin reserva",
         mensaje: `Hola ${log.usuario?.firstName}, nuestro sistema registró tu ingreso el día ${dayjs(
           log.access_time,
-        ).format(
-          "dddd, DD/MM [a las] HH:mm",
-        )} pero no encontramos una reserva asociada. Por favor, recuerda agendar tus consultas para evitar inconvenientes.`,
+        )
+          .tz(TIMEZONE)
+          .format(
+            "dddd, DD/MM [a las] HH:mm",
+          )} pero no encontramos una reserva asociada. Por favor, recuerda agendar tus consultas para evitar inconvenientes.`,
         enlace: "/mis-accesos",
         metadata: { access_log_id: log.id },
       });
@@ -182,10 +190,10 @@ const AccessNotificationsPage = () => {
               <CardHeader className="pb-2 flex-grow">
                 <div className="flex justify-between items-start mb-2">
                   <Badge variant="outline" className={"capitalize "}>
-                    {dayjs.utc(log.access_time).format("dddd")}
+                    {dayjs(log.access_time).tz(TIMEZONE).format("dddd")}
                   </Badge>
                   <Badge variant="outline">
-                    {dayjs.utc(log.access_time).format("DD/MM/YYYY")}
+                    {dayjs(log.access_time).tz(TIMEZONE).format("DD/MM/YYYY")}
                   </Badge>
                   <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100 border-none">
                     Sin Reserva
@@ -207,7 +215,7 @@ const AccessNotificationsPage = () => {
                   <Clock className="h-3 w-3" />
                   Hora de ingreso:{" "}
                   <span className="font-medium text-foreground">
-                    {dayjs.utc(log.access_time).format("HH:mm")}
+                    {dayjs(log.access_time).tz(TIMEZONE).format("HH:mm")}
                   </span>
                 </CardDescription>
               </CardHeader>

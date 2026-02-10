@@ -19,10 +19,8 @@ dayjs.locale("es");
 const TIMEZONE = "America/Montevideo";
 
 // Helper para formatear fecha con día capitalizado
-// Nota: access_time se guarda en la BD como UTC pero son realmente horas locales de Uruguay,
-// por lo que usamos dayjs.utc() para leer el valor sin conversión de zona horaria
 const formatAccessDate = (date) => {
-  const formatted = dayjs.utc(date).format("ddd D/M/YYYY - HH:mm");
+  const formatted = dayjs(date).tz(TIMEZONE).format("ddd D/M/YYYY - HH:mm");
   return formatted.charAt(0).toUpperCase() + formatted.slice(1);
 };
 

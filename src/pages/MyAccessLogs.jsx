@@ -27,14 +27,18 @@ import {
 } from "lucide-react";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 import "dayjs/locale/es";
 
 dayjs.extend(utc);
+dayjs.extend(timezone);
 dayjs.locale("es");
+
+const TIMEZONE = "America/Montevideo";
 
 // Helper para formatear fecha con día capitalizado
 const formatAccessDate = (date) => {
-  const formatted = dayjs.utc(date).format("dddd - DD/MM/YYYY");
+  const formatted = dayjs(date).tz(TIMEZONE).format("dddd - DD/MM/YYYY");
   return formatted.charAt(0).toUpperCase() + formatted.slice(1);
 };
 
@@ -56,7 +60,11 @@ const MyAccessLogsPage = () => {
 
       try {
         setLoadingData(true);
-        const { data, count } = await fetchUserAccessLogs(user.id, currentPage, ITEMS_PER_PAGE);
+        const { data, count } = await fetchUserAccessLogs(
+          user.id,
+          currentPage,
+          ITEMS_PER_PAGE,
+        );
         setLogs(data);
         setTotalCount(count);
       } catch (error) {
@@ -182,14 +190,18 @@ const MyAccessLogsPage = () => {
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Clock className="h-4 w-4 text-muted-foreground" />
-                            {dayjs.utc(log.access_time).format("HH:mm")}
+                            {dayjs(log.access_time)
+                              .tz(TIMEZONE)
+                              .format("HH:mm")}
                           </div>
                         </TableCell>
                         <TableCell>{getStatusBadge(log.status)}</TableCell>
                         <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
                           {log.reservation ? (
                             <span>
-                              {dayjs(log.reservation.start_time).format("HH:mm")}{" "}
+                              {dayjs(log.reservation.start_time).format(
+                                "HH:mm",
+                              )}{" "}
                               - {log.reservation.consultorio_nombre}
                             </span>
                           ) : (
@@ -207,7 +219,8 @@ const MyAccessLogsPage = () => {
                 <div className="flex items-center justify-between pt-4 border-t mt-4">
                   <p className="text-sm text-muted-foreground">
                     Mostrando {(currentPage - 1) * ITEMS_PER_PAGE + 1} -{" "}
-                    {Math.min(currentPage * ITEMS_PER_PAGE, totalCount)} de {totalCount} registros
+                    {Math.min(currentPage * ITEMS_PER_PAGE, totalCount)} de{" "}
+                    {totalCount} registros
                   </p>
                   <div className="flex items-center gap-2">
                     <Button
