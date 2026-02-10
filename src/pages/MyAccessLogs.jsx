@@ -150,7 +150,8 @@ const MyAccessLogsPage = () => {
           acceso para ingresar a Espacio Pisama. Si ves un registro marcado como
           "Sin Reserva", significa que ingresaste en un horario donde no tenías
           una reserva confirmada en el sistema. Puedes ingresar hasta 50 minutos
-          antes del inicio de tu reserva sin que se considere "Sin Reserva".
+          antes del inicio de tu reserva sin que se considere un acceso "Sin
+          Reserva".
         </p>
       </div>
 
