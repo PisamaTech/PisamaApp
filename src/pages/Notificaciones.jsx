@@ -140,8 +140,10 @@ export const Notificaciones = () => {
     <div className="container mx-auto p-4 md:p-8 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <Bell className="h-6 w-6" />
-          <h1 className="text-2xl font-bold">Notificaciones</h1>
+          <Bell className="h-5 w-5" />
+          <h1 className="text-2xl font-bold text-gray-800 text-center">
+            Notificaciones
+          </h1>
           {unreadCount > 0 && (
             <span className="bg-primary text-primary-foreground text-xs font-bold px-2 py-0.5 rounded-full">
               {unreadCount} sin leer

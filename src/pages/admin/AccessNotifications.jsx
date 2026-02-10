@@ -68,13 +68,13 @@ const AccessNotificationsPage = () => {
       await createNotification({
         usuario_id: log.user_id,
         tipo: "ACCESO_SIN_RESERVA",
-        titulo: "Acceso registrado sin reserva",
+        titulo: "⚠ Acceso registrado sin reserva",
         mensaje: `Hola ${log.usuario?.firstName}, nuestro sistema registró tu ingreso el día ${dayjs(
           log.access_time,
         ).format(
-          "DD/MM [a las] HH:mm",
+          "dddd, DD/MM [a las] HH:mm",
         )} pero no encontramos una reserva asociada. Por favor, recuerda agendar tus consultas para evitar inconvenientes.`,
-        enlace: "/reservas",
+        enlace: "/mis-accesos",
         metadata: { access_log_id: log.id },
       });
 
@@ -138,7 +138,7 @@ const AccessNotificationsPage = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="space-y-1">
           <h1 className="text-3xl font-bold flex items-center gap-2">
-            <AlertTriangle className="text-orange-500" />
+            <AlertTriangle />
             Infracciones de Acceso
           </h1>
           <p className="text-muted-foreground">
@@ -181,6 +181,9 @@ const AccessNotificationsPage = () => {
               <div className="h-2 bg-orange-500 w-full" />
               <CardHeader className="pb-2 flex-grow">
                 <div className="flex justify-between items-start mb-2">
+                  <Badge variant="outline" className={"capitalize "}>
+                    {dayjs.utc(log.access_time).format("dddd")}
+                  </Badge>
                   <Badge variant="outline">
                     {dayjs.utc(log.access_time).format("DD/MM/YYYY")}
                   </Badge>

@@ -234,7 +234,7 @@ export const Facturas = () => {
 
   return (
     <div className="container mx-auto p-4 md:p-8 space-y-6">
-      <h1 className="text-3xl font-bold text-gray-800 text-center">
+      <h1 className="text-2xl font-bold text-gray-800 text-center">
         Facturación
       </h1>
       <Separator />

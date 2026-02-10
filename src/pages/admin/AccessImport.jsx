@@ -62,7 +62,9 @@ import {
   Eye,
   Trash2,
   Plus,
+  Copy,
 } from "lucide-react";
+import { FileDropzone } from "@/components/ui";
 
 const AccessImportPage = () => {
   const { loading, startLoading, stopLoading, showToast } = useUIStore();
@@ -89,6 +91,9 @@ const AccessImportPage = () => {
   const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
   const [newRuleName, setNewRuleName] = useState("");
   const [newRuleAction, setNewRuleAction] = useState("ignore");
+
+  // Estado para duplicados
+  const [duplicatesCount, setDuplicatesCount] = useState(0);
 
   // Cargar reglas al montar
   useEffect(() => {
@@ -166,19 +171,12 @@ const AccessImportPage = () => {
     }
   };
 
-  // Handler para selección de archivo
-  const handleFileChange = async (e) => {
-    const selectedFile = e.target.files?.[0];
-    if (!selectedFile) return;
-
-    // Validar archivo
-    const validation = validateExcelFile(selectedFile);
-    if (!validation.valid) {
-      showToast({
-        type: "error",
-        title: "Archivo inválido",
-        message: validation.error,
-      });
+  // Handler para selección de archivo via Dropzone
+  const handleFileSelect = async (selectedFile) => {
+    if (!selectedFile) {
+      setFile(null);
+      setPreviewData(null);
+      setResults(null);
       return;
     }
 
@@ -219,7 +217,12 @@ const AccessImportPage = () => {
       setStatusFilter("todos");
 
       // Auto-save: Guardar automáticamente en la base de datos
-      await saveAccessBatch(processedResults.results);
+      const savedRecords = await saveAccessBatch(processedResults.results);
+
+      // Calcular duplicados: registros enviados - registros insertados
+      const duplicates =
+        processedResults.results.length - (savedRecords?.length || 0);
+      setDuplicatesCount(duplicates);
 
       const ignoredMsg =
         processedResults.stats.ignored > 0
@@ -227,13 +230,14 @@ const AccessImportPage = () => {
           : "";
       const trackedMsg =
         processedResults.stats.tracked > 0
-          ? ` (${processedResults.stats.tracked} solo registro)`
+          ? ` (${processedResults.stats.tracked} solo registro sin vincular)`
           : "";
+      const duplicatesMsg = duplicates > 0 ? ` (${duplicates} duplicados)` : "";
 
       showToast({
         type: "success",
         title: "Procesado y Guardado",
-        message: `Se procesaron ${processedResults.stats.total} registros${ignoredMsg}${trackedMsg}.`,
+        message: `Se procesaron ${processedResults.stats.total} registros${ignoredMsg}${trackedMsg}${duplicatesMsg}.`,
       });
     } catch (error) {
       showToast({
@@ -359,6 +363,7 @@ const AccessImportPage = () => {
     setPreviewData(null);
     setResults(null);
     setStatusFilter("todos");
+    setDuplicatesCount(0);
   };
 
   // Componente para header ordenable
@@ -463,24 +468,8 @@ const AccessImportPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Input
-              type="file"
-              accept=".xlsx,.xls"
-              onChange={handleFileChange}
-              disabled={loading}
-              className="flex-1"
-            />
-            {file && (
-              <Button
-                variant="outline"
-                onClick={handleReset}
-                disabled={loading}
-              >
-                <X className="h-4 w-4 mr-2" />
-                Limpiar
-              </Button>
-            )}
+          <div className="flex flex-col gap-4">
+            <FileDropzone onFileSelect={handleFileSelect} disabled={loading} />
           </div>
 
           {/* Preview del archivo */}
@@ -536,7 +525,7 @@ const AccessImportPage = () => {
       {results && (
         <>
           {/* Estadísticas */}
-          <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+          <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-7">
             <StatCard
               Icon={FileSpreadsheet}
               title="Total Procesados"
@@ -574,6 +563,13 @@ const AccessImportPage = () => {
               title="Solo Registro"
               value={results.stats.tracked || 0}
               footer="Guardados sin vincular"
+              isLoading={loading}
+            />
+            <StatCard
+              Icon={Copy}
+              title="Duplicados"
+              value={duplicatesCount}
+              footer="Ya existían en BD"
               isLoading={loading}
             />
             <StatCard
@@ -687,7 +683,7 @@ const AccessImportPage = () => {
                             {record.reservation ? (
                               <span>
                                 {dayjs(record.reservation.startTime).format(
-                                  "HH:mm"
+                                  "HH:mm",
                                 )}{" "}
                                 - {record.reservation.consultorio}
                               </span>

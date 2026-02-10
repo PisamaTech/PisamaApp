@@ -50,14 +50,14 @@ export const menuItems = [
     icon: Bell,
   },
   {
-    title: "Perfil",
-    url: "/perfil",
-    icon: Settings,
-  },
-  {
     title: "Mis Accesos",
     url: "/mis-accesos",
     icon: KeyRound,
+  },
+  {
+    title: "Perfil",
+    url: "/perfil",
+    icon: Settings,
   },
   {
     title: "Ayuda",

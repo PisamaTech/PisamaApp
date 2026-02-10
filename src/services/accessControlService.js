@@ -580,7 +580,7 @@ export const fetchUserAccessLogs = async (userId) => {
     ];
     if (reservationIds.length > 0) {
       const { data: reservations } = await supabase
-        .from("reservas")
+        .from("reservas_completas")
         .select("id, start_time, end_time, consultorio_nombre")
         .in("id", reservationIds);
 

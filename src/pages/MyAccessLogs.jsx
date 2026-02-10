@@ -24,6 +24,17 @@ import {
   Calendar,
 } from "lucide-react";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import "dayjs/locale/es";
+
+dayjs.extend(utc);
+dayjs.locale("es");
+
+// Helper para formatear fecha con día capitalizado
+const formatAccessDate = (date) => {
+  const formatted = dayjs.utc(date).format("dddd - DD/MM/YYYY");
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+};
 
 const MyAccessLogsPage = () => {
   const { user } = useAuthStore();
@@ -92,12 +103,25 @@ const MyAccessLogsPage = () => {
   return (
     <div className="container mx-auto p-4 md:p-8 space-y-6">
       <div className="space-y-1">
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <History className="h-8 w-8" />
+        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+          <History className="h-5 w-5" />
           Mis Accesos
         </h1>
         <p className="text-muted-foreground">
           Historial de tus ingresos registrados al espacio.
+        </p>
+      </div>
+
+      <div className="text-sm text-muted-foreground bg-muted p-4 rounded-lg">
+        <p className="font-semibold mb-1 flex items-center gap-2">
+          <CheckCircle2 className="h-4 w-4" /> Sobre este registro
+        </p>
+        <p>
+          Este historial muestra los momentos en que utilizaste tu código de
+          acceso para ingresar a Espacio Pisama. Si ves un registro marcado como
+          "Sin Reserva", significa que ingresaste en un horario donde no tenías
+          una reserva confirmada en el sistema. Puedes ingresar hasta 50 minutos
+          antes del inicio de tu reserva sin que se considere "Sin Reserva".
         </p>
       </div>
 
@@ -117,7 +141,7 @@ const MyAccessLogsPage = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Fecha</TableHead>
-                    <TableHead>Hora</TableHead>
+                    <TableHead>Hora de Ingreso</TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead className="hidden md:table-cell">
                       Reserva Asociada
@@ -130,13 +154,13 @@ const MyAccessLogsPage = () => {
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4 text-muted-foreground" />
-                          {dayjs(log.access_time).format("DD/MM/YYYY")}
+                          {formatAccessDate(log.access_time)}
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Clock className="h-4 w-4 text-muted-foreground" />
-                          {dayjs(log.access_time).format("HH:mm")}
+                          {dayjs.utc(log.access_time).format("HH:mm")}
                         </div>
                       </TableCell>
                       <TableCell>{getStatusBadge(log.status)}</TableCell>
@@ -147,7 +171,7 @@ const MyAccessLogsPage = () => {
                             - {log.reservation.consultorio_nombre}
                           </span>
                         ) : (
-                          "-"
+                          <span className="text-muted-foreground">-</span>
                         )}
                       </TableCell>
                     </TableRow>
@@ -158,18 +182,6 @@ const MyAccessLogsPage = () => {
           )}
         </CardContent>
       </Card>
-
-      <div className="text-sm text-muted-foreground bg-muted p-4 rounded-lg">
-        <p className="font-semibold mb-1 flex items-center gap-2">
-          <CheckCircle2 className="h-4 w-4" /> Sobre este registro
-        </p>
-        <p>
-          Este historial muestra los momentos en que utilizaste tu credencial o
-          huella para ingresar. Si ves un registro marcado como "Sin Reserva",
-          significa que ingresaste en un horario donde no tenías una reserva
-          confirmada en el sistema.
-        </p>
-      </div>
     </div>
   );
 };

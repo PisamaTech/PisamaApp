@@ -388,14 +388,14 @@ const AccessControlPage = () => {
             ))}
             <Separator orientation="vertical" className="h-8" />
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={handleMariFilterToggle}
               className={cn(
                 "transition-all",
                 filters.mariOnly
-                  ? "bg-indigo-600 hover:bg-indigo-700 text-white border-transparent shadow-sm"
-                  : "text-indigo-600 border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-300",
+                  ? "bg-indigo-500 hover:bg-indigo-700 text-white border-transparent shadow-sm"
+                  : "text-indigo-600 border-indigo-200 bg-indigo-100 hover:bg-indigo-200 hover:text-indigo-700 hover:border-indigo-300",
               )}
             >
               Solo Mari
