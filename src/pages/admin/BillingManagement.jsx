@@ -40,6 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -63,7 +64,12 @@ const BillingManagementPage = () => {
   const [itemsPerPage] = useState(10);
 
   const [allUsers, setAllUsers] = useState([]); // Para el filtro de usuarios
-  const [filters, setFilters] = useState({ userId: "todos", status: "todos" });
+  const [filters, setFilters] = useState({
+    userId: "todos",
+    status: "todos",
+    minAmount: "",
+    maxAmount: "",
+  });
   const [appliedFilters, setAppliedFilters] = useState(filters);
 
   // Estados para el modal de confirmación
@@ -72,7 +78,7 @@ const BillingManagementPage = () => {
 
   const totalPages = useMemo(
     () => Math.ceil(totalInvoices / itemsPerPage),
-    [totalInvoices, itemsPerPage]
+    [totalInvoices, itemsPerPage],
   );
 
   // Cargar la lista de usuarios para el filtro una sola vez
@@ -97,7 +103,7 @@ const BillingManagementPage = () => {
         const { data, count } = await searchAllInvoices(
           currentPage,
           itemsPerPage,
-          appliedFilters
+          appliedFilters,
         );
         setInvoices(data);
         setTotalInvoices(count);
@@ -132,6 +138,18 @@ const BillingManagementPage = () => {
     setAppliedFilters(filters);
   };
 
+  const handleResetFilters = () => {
+    const initialFilters = {
+      userId: "todos",
+      status: "todos",
+      minAmount: "",
+      maxAmount: "",
+    };
+    setFilters(initialFilters);
+    setAppliedFilters(initialFilters);
+    setCurrentPage(1);
+  };
+
   const openConfirmationDialog = (invoice) => {
     setTimeout(() => {
       setSelectedInvoice(invoice);
@@ -158,8 +176,8 @@ const BillingManagementPage = () => {
                 firstName: inv.firstName, // Mantener datos del usuario
                 lastName: inv.lastName, // Mantener datos del usuario
               }
-            : inv
-        )
+            : inv,
+        ),
       );
       showToast({
         type: "success",
@@ -226,9 +244,37 @@ const BillingManagementPage = () => {
             </SelectContent>
           </Select>
 
-          <Button onClick={handleApplyFilters} className="w-full md:w-auto">
-            Buscar
-          </Button>
+          {/* Filtro de Montos */}
+          <div className="flex items-center gap-2 w-full md:w-auto">
+            <Input
+              type="number"
+              placeholder="Mín ($)"
+              value={filters.minAmount}
+              onChange={(e) => handleFilterChange("minAmount", e.target.value)}
+              className="w-full md:w-[100px]"
+            />
+            <span className="text-muted-foreground">-</span>
+            <Input
+              type="number"
+              placeholder="Máx ($)"
+              value={filters.maxAmount}
+              onChange={(e) => handleFilterChange("maxAmount", e.target.value)}
+              className="w-full md:w-[100px]"
+            />
+          </div>
+
+          <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+            <Button onClick={handleApplyFilters} className="w-full md:w-auto">
+              Buscar
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleResetFilters}
+              className="w-full md:w-auto"
+            >
+              Limpiar
+            </Button>
+          </div>
         </div>
 
         {/* Tabla de Facturas (Desktop) */}
@@ -377,26 +423,26 @@ const BillingManagementPage = () => {
                 </div>
 
                 <div className="grid grid-cols-1 gap-2 pt-2 border-t border-slate-300">
-                   {invoice.estado === "pendiente" && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openConfirmationDialog(invoice)}
-                        className="w-full bg-white hover:bg-green-50 text-green-700 border-slate-300 shadow-sm"
-                      >
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        Marcar Pagada
-                      </Button>
-                    )}
+                  {invoice.estado === "pendiente" && (
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-full bg-white hover:bg-slate-50 border-slate-300 text-slate-700 shadow-sm"
-                      onClick={() => navigate(`/facturas/${invoice.id}`)}
+                      onClick={() => openConfirmationDialog(invoice)}
+                      className="w-full bg-white hover:bg-green-50 text-green-700 border-slate-300 shadow-sm"
                     >
-                      <Eye className="h-4 w-4 mr-2" />
-                      Ver Detalle
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Marcar Pagada
                     </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full bg-white hover:bg-slate-50 border-slate-300 text-slate-700 shadow-sm"
+                    onClick={() => navigate(`/facturas/${invoice.id}`)}
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    Ver Detalle
+                  </Button>
                 </div>
               </div>
             ))
@@ -446,9 +492,9 @@ const BillingManagementPage = () => {
                 <b>
                   {selectedInvoice &&
                     `${dayjs(selectedInvoice.periodo_inicio).format(
-                      "DD/MM/YY"
+                      "DD/MM/YY",
                     )} - ${dayjs(selectedInvoice.periodo_fin).format(
-                      "DD/MM/YY"
+                      "DD/MM/YY",
                     )}`}
                 </b>{" "}
                 como pagada. Esta acción no se puede deshacer fácilmente.

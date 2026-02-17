@@ -14,7 +14,7 @@ import { createNotification } from "./notificationService";
 export const fetchAllUsers = async (
   page = 1,
   itemsPerPage = 10,
-  searchTerm = ""
+  searchTerm = "",
 ) => {
   try {
     const offset = (page - 1) * itemsPerPage;
@@ -25,7 +25,7 @@ export const fetchAllUsers = async (
       // Busca en múltiples columnas usando 'or'. ilike es case-insensitive.
       // Asegúrate de que los nombres de columna (firstName, lastName, email) coincidan con tu tabla.
       query = query.or(
-        `firstName.ilike.%${searchTerm}%,lastName.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`
+        `firstName.ilike.%${searchTerm}%,lastName.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`,
       );
     }
 
@@ -71,10 +71,10 @@ export const updateUserPaymentMethod = async (userId, newPaymentMethod) => {
   } catch (error) {
     console.error(
       `Error al actualizar la modalidad de pago para el usuario ${userId}:`,
-      error
+      error,
     );
     throw new Error(
-      `No se pudo actualizar la modalidad de pago: ${error.message}`
+      `No se pudo actualizar la modalidad de pago: ${error.message}`,
     );
   }
 };
@@ -90,7 +90,7 @@ export const updateUserPaymentMethod = async (userId, newPaymentMethod) => {
 export const searchAllInvoices = async (
   page = 1,
   itemsPerPage = 10,
-  filters = {}
+  filters = {},
 ) => {
   try {
     const offset = (page - 1) * itemsPerPage;
@@ -106,6 +106,13 @@ export const searchAllInvoices = async (
     }
     if (filters.status && filters.status !== "todos") {
       query = query.eq("estado", filters.status);
+    }
+
+    if (filters.minAmount) {
+      query = query.gte("monto_total", Number(filters.minAmount));
+    }
+    if (filters.maxAmount) {
+      query = query.lte("monto_total", Number(filters.maxAmount));
     }
 
     query = query
@@ -151,9 +158,9 @@ export const markInvoiceAsPaid = async (invoiceId) => {
         mensaje: `Hemos confirmado tu pago de la factura #${
           data.id
         } correspondiente al período entre el ${dayjs(
-          data.periodo_inicio
+          data.periodo_inicio,
         ).format("DD/MM/YY")} - ${dayjs(data.periodo_fin).format(
-          "DD/MM/YY"
+          "DD/MM/YY",
         )}. ¡Muchas gracias!`,
         enlace: `/facturas/${data.id}`,
         metadata: { factura_id: data.id },
@@ -164,7 +171,7 @@ export const markInvoiceAsPaid = async (invoiceId) => {
   } catch (error) {
     console.error(
       `Error al marcar la factura ${invoiceId} como pagada:`,
-      error
+      error,
     );
     throw new Error(`No se pudo actualizar la factura: ${error.message}`);
   }
@@ -186,7 +193,7 @@ export const fetchAllConsultorios = async () => {
   } catch (error) {
     console.error("Error al obtener los consultorios:", error);
     throw new Error(
-      `No se pudieron obtener los consultorios: ${error.message}`
+      `No se pudieron obtener los consultorios: ${error.message}`,
     );
   }
 };
@@ -216,7 +223,7 @@ export const updateConsultorioPrice = async (consultorioId, newPrice) => {
   } catch (error) {
     console.error(
       `Error al actualizar el precio del consultorio ${consultorioId}:`,
-      error
+      error,
     );
     throw new Error(`No se pudo actualizar el precio: ${error.message}`);
   }
@@ -234,7 +241,7 @@ export const updateConsultorioPrice = async (consultorioId, newPrice) => {
 export const searchAllReservations = async (
   page = 1,
   itemsPerPage = 10,
-  filters = {}
+  filters = {},
 ) => {
   try {
     const offset = (page - 1) * itemsPerPage;
@@ -320,7 +327,7 @@ export const getPendingBillingSummary = async () => {
 
   const totalAmount = data.reduce(
     (sum, invoice) => sum + invoice.monto_total,
-    0
+    0,
   );
   return { count: count || 0, totalAmount };
 };
@@ -418,7 +425,7 @@ export const getRecentBookings = async (limit = 10) => {
   const { data, error } = await supabase
     .from("reservas_completas")
     .select(
-      "id, start_time, usuario_firstname, usuario_lastname, consultorio_nombre, created_at"
+      "id, start_time, usuario_firstname, usuario_lastname, consultorio_nombre, created_at",
     )
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -434,7 +441,7 @@ export const getRecentCancellations = async (limit = 10) => {
   const { data, error } = await supabase
     .from("reservas_completas")
     .select(
-      "id, start_time, usuario_firstname, usuario_lastname, consultorio_nombre, estado, fecha_cancelacion"
+      "id, start_time, usuario_firstname, usuario_lastname, consultorio_nombre, estado, fecha_cancelacion",
     )
     .in("estado", ["cancelada", "penalizada"])
     .order("fecha_cancelacion", { ascending: false })
@@ -516,14 +523,14 @@ export const fetchAdminDashboardData = async () => {
       if (result.status === "rejected") {
         console.error(
           `La consulta del dashboard en el índice ${index} falló:`,
-          result.reason
+          result.reason,
         );
       }
     });
 
     console.log(
       "Datos del dashboard de administración cargados:",
-      dashboardData
+      dashboardData,
     );
     return dashboardData;
   } catch (error) {
@@ -547,7 +554,7 @@ export const sendBroadcastNotification = async (broadcastData) => {
       !broadcastData.mensaje
     ) {
       throw new Error(
-        "Tipo, título y mensaje son requeridos para una notificación masiva."
+        "Tipo, título y mensaje son requeridos para una notificación masiva.",
       );
     }
 
@@ -558,7 +565,7 @@ export const sendBroadcastNotification = async (broadcastData) => {
         p_titulo: broadcastData.titulo,
         p_mensaje: broadcastData.mensaje,
         p_enlace: broadcastData.enlace || null,
-      }
+      },
     );
 
     if (error) throw error;
@@ -585,7 +592,7 @@ export const sendNotificationToUsers = async (userIds, notificationData) => {
       !notificationData.mensaje
     ) {
       throw new Error(
-        "Se requiere una lista de usuarios, tipo, título y mensaje."
+        "Se requiere una lista de usuarios, tipo, título y mensaje.",
       );
     }
 
@@ -593,13 +600,13 @@ export const sendNotificationToUsers = async (userIds, notificationData) => {
       createNotification({
         usuario_id: userId,
         ...notificationData,
-      })
+      }),
     );
 
     const results = await Promise.allSettled(notificationPromises);
 
     const successfulCreations = results.filter(
-      (res) => res.status === "fulfilled" && res.value !== null
+      (res) => res.status === "fulfilled" && res.value !== null,
     ).length;
 
     if (successfulCreations === 0) {
@@ -608,11 +615,13 @@ export const sendNotificationToUsers = async (userIds, notificationData) => {
 
     return { notifications_created: successfulCreations };
   } catch (error) {
-    console.error("Error al enviar notificación a usuarios específicos:", error);
+    console.error(
+      "Error al enviar notificación a usuarios específicos:",
+      error,
+    );
     throw new Error(`No se pudo enviar la notificación: ${error.message}`);
   }
 };
-
 
 /**
  * --- SECCIÓN DE RENDIMIENTO ---
@@ -697,9 +706,12 @@ export const fetchHeatmapData = async (startDate, endDate) => {
 export const fetchTopUsers = async (limit = 10) => {
   try {
     // Intentar usar la RPC si existe
-    const { data: rpcData, error: rpcError } = await supabase.rpc("get_top_users_v2", {
-      p_limit: limit,
-    });
+    const { data: rpcData, error: rpcError } = await supabase.rpc(
+      "get_top_users_v2",
+      {
+        p_limit: limit,
+      },
+    );
 
     if (!rpcError && rpcData) {
       return rpcData;
@@ -722,7 +734,9 @@ export const fetchTopUsers = async (limit = 10) => {
       if (!userStats[inv.usuario_id]) {
         userStats[inv.usuario_id] = {
           usuario_id: inv.usuario_id,
-          nombre_completo: `${inv.firstName || ""} ${inv.lastName || ""}`.trim() || "Sin nombre",
+          nombre_completo:
+            `${inv.firstName || ""} ${inv.lastName || ""}`.trim() ||
+            "Sin nombre",
           email: inv.email || "",
           total_reservas: 0,
           total_gastado: 0,
@@ -775,7 +789,7 @@ export const fetchExpiringFixedSeries = async (daysThreshold = 60) => {
     const { data, error } = await supabase
       .from("reservas_completas")
       .select(
-        "recurrence_id, recurrence_end_date, start_time, end_time, consultorio_nombre, tipo_reserva, usuario_firstname, usuario_lastname"
+        "recurrence_id, recurrence_end_date, start_time, end_time, consultorio_nombre, tipo_reserva, usuario_firstname, usuario_lastname",
       )
       .eq("tipo_reserva", "Fija")
       .eq("estado", "activa")
@@ -796,7 +810,9 @@ export const fetchExpiringFixedSeries = async (daysThreshold = 60) => {
         seriesMap.set(reserva.recurrence_id, {
           recurrence_id: reserva.recurrence_id,
           recurrence_end_date: reserva.recurrence_end_date,
-          usuario: `${reserva.usuario_firstname || ""} ${reserva.usuario_lastname || ""}`.trim() || "Sin nombre",
+          usuario:
+            `${reserva.usuario_firstname || ""} ${reserva.usuario_lastname || ""}`.trim() ||
+            "Sin nombre",
           consultorio: reserva.consultorio_nombre,
           serie_desc: `${dayjs(reserva.start_time).format("dddd")} - ${dayjs(reserva.start_time).format("HH:mm")}hs`,
           dias_restantes: endDate.diff(now, "day"),
@@ -808,7 +824,7 @@ export const fetchExpiringFixedSeries = async (daysThreshold = 60) => {
   } catch (error) {
     console.error("Error al obtener series por vencer:", error);
     throw new Error(
-      `No se pudieron obtener las series por vencer: ${error.message}`
+      `No se pudieron obtener las series por vencer: ${error.message}`,
     );
   }
 };
