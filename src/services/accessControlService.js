@@ -48,7 +48,7 @@ export const fetchReservationsInRange = async (startDate, endDate) => {
     )
     .gte("start_time", startDate.toISOString())
     .lte("start_time", endDate.toISOString())
-    .in("estado", ["activa", "utilizada"]);
+    .in("estado", ["activa", "utilizada", "penalizada"]);
 
   if (error) throw error;
   return data || [];
@@ -565,7 +565,11 @@ export const markAccessAsNotified = async (logId) => {
  * @param {number} itemsPerPage - Items por página
  * @returns {Promise<{data: Array, count: number}>} Lista de accesos y conteo total
  */
-export const fetchUserAccessLogs = async (userId, page = 1, itemsPerPage = 20) => {
+export const fetchUserAccessLogs = async (
+  userId,
+  page = 1,
+  itemsPerPage = 20,
+) => {
   const offset = (page - 1) * itemsPerPage;
 
   const { data, error, count } = await supabase
