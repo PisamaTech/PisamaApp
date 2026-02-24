@@ -37,6 +37,7 @@ import {
   Terminal,
   ChevronLeft,
   ChevronRight,
+  CalendarCheck,
 } from "lucide-react";
 import { DailyBookingsChart } from "@/components/admin/charts/DailyBookingsChart";
 import { ConsultorioOccupancyChart } from "@/components/admin/charts/ConsultorioOccupancyChart";
@@ -202,21 +203,32 @@ const AdminDashboardPage = () => {
       </div>
       <Separator />
       {/* Fila 1: KPIs */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {/* Card 1: Ingresos */}
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+        {/* Card 1: Pagos Recibidos */}
         <StatCard
           isLoading={loading || !dashboardData}
           Icon={Wallet}
-          title="Ingresos (Mes Actual)"
+          title="Pagos Recibidos (Mes)"
           value={`$${
-            dashboardData?.revenueSummary?.currentMonthRevenue || "0"
+            dashboardData?.revenueSummary?.currentMonthRevenue?.toLocaleString() || "0"
           }`}
           footer={`vs. $${
-            dashboardData?.revenueSummary?.lastMonthRevenue || "0"
+            dashboardData?.revenueSummary?.lastMonthRevenue?.toLocaleString() || "0"
           } el mes anterior`}
         />
 
-        {/* Card 2: Cobranza Pendiente */}
+        {/* Card 2: Reservas del Mes */}
+        <StatCard
+          isLoading={loading || !dashboardData}
+          Icon={CalendarCheck}
+          title="Reservas (Mes)"
+          value={dashboardData?.reservationsSummary?.currentMonthCount?.toLocaleString() || "0"}
+          footer={`vs. ${
+            dashboardData?.reservationsSummary?.lastMonthCount?.toLocaleString() || "0"
+          } el mes anterior`}
+        />
+
+        {/* Card 3: Cobranza Pendiente */}
         <StatCard
           isLoading={loading || !dashboardData}
           Icon={Library}
@@ -227,7 +239,7 @@ const AdminDashboardPage = () => {
           } facturas pendientes`}
         />
 
-        {/* Card 3: Ocupación Hoy */}
+        {/* Card 4: Ocupación Hoy */}
         <StatCard
           isLoading={loading || !dashboardData}
           Icon={Clock}
@@ -238,7 +250,7 @@ const AdminDashboardPage = () => {
           } horas reservadas`}
         />
 
-        {/* Card 4: Nuevos Usuarios */}
+        {/* Card 5: Nuevos Usuarios */}
         <StatCard
           isLoading={loading || !dashboardData}
           Icon={Users}

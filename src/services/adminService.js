@@ -288,8 +288,8 @@ export const searchAllReservations = async (
   }
 };
 
-// * 1. Obtiene los ingresos de facturas pagadas para el mes actual y el anterior */
-export const getRevenueSummary = async () => {
+// * 1. Obtiene los pagos recibidos (transferencias) para el mes actual y el anterior */
+export const getPaymentsSummary = async () => {
   const startOfCurrentMonth = dayjs().startOf("month").toISOString();
   const endOfCurrentMonth = dayjs().endOf("month").toISOString();
   const startOfLastMonth = dayjs()
@@ -301,8 +301,7 @@ export const getRevenueSummary = async () => {
     .endOf("month")
     .toISOString();
 
-  // Usamos una función RPC para hacer el cálculo agregado en la base de datos, es más eficiente.
-  const { data, error } = await supabase.rpc("get_revenue_summary", {
+  const { data, error } = await supabase.rpc("get_payments_summary", {
     current_month_start: startOfCurrentMonth,
     current_month_end: endOfCurrentMonth,
     last_month_start: startOfLastMonth,
@@ -310,8 +309,40 @@ export const getRevenueSummary = async () => {
   });
 
   if (error) throw error;
-  // La RPC devolverá algo como { current_month_revenue: 5000, last_month_revenue: 4500 }
-  return data;
+  return {
+    currentMonthRevenue: data?.currentMonthPayments || 0,
+    lastMonthRevenue: data?.lastMonthPayments || 0,
+  };
+};
+
+/**
+ * 1b. Obtiene el conteo de reservas facturables (activa, utilizada, penalizada) para el mes actual y el anterior.
+ * Excluye las reservas de los dueños.
+ */
+export const getReservationsSummary = async () => {
+  const startOfCurrentMonth = dayjs().startOf("month").toISOString();
+  const endOfCurrentMonth = dayjs().endOf("month").toISOString();
+  const startOfLastMonth = dayjs()
+    .subtract(1, "month")
+    .startOf("month")
+    .toISOString();
+  const endOfLastMonth = dayjs()
+    .subtract(1, "month")
+    .endOf("month")
+    .toISOString();
+
+  const { data, error } = await supabase.rpc("get_reservations_summary", {
+    current_month_start: startOfCurrentMonth,
+    current_month_end: endOfCurrentMonth,
+    last_month_start: startOfLastMonth,
+    last_month_end: endOfLastMonth,
+  });
+
+  if (error) throw error;
+  return {
+    currentMonthCount: data?.currentMonthCount || 0,
+    lastMonthCount: data?.lastMonthCount || 0,
+  };
 };
 
 /**
@@ -401,12 +432,13 @@ export const getDailyBookingStats = async (days = 7) => {
 };
 
 /**
- * 5b. Obtiene las horas reservadas por día para una semana específica.
+ * 5b. Obtiene las horas reservadas por día para una semana específica,
+ * incluyendo los datos de la semana anterior para comparación.
  * @param {number} weekOffset - Offset de semanas (0 = semana actual, -1 = semana pasada, 1 = próxima semana)
  * @returns {Promise<{data: Array, weekStart: string, weekEnd: string}>}
  */
 export const getWeeklyBookingStats = async (weekOffset = 0) => {
-  // Calcular inicio y fin de la semana (Lunes a Domingo)
+  // Calcular inicio y fin de la semana seleccionada (Lunes a Domingo)
   const weekStart = dayjs()
     .add(weekOffset, "week")
     .startOf("week")
@@ -415,7 +447,6 @@ export const getWeeklyBookingStats = async (weekOffset = 0) => {
   const weekEnd = weekStart.add(6, "day").endOf("day");
 
   // Ajuste: si el día actual es Domingo, dayjs lo considera inicio de semana
-  // así que necesitamos manejar este caso
   const adjustedWeekStart = dayjs().day() === 0
     ? weekStart.subtract(1, "week")
     : weekStart;
@@ -423,23 +454,42 @@ export const getWeeklyBookingStats = async (weekOffset = 0) => {
     ? weekEnd.subtract(1, "week")
     : weekEnd;
 
-  const { data, error } = await supabase.rpc("get_daily_booking_stats", {
-    start_date: adjustedWeekStart.toISOString(),
-    end_date: adjustedWeekEnd.toISOString(),
-  });
+  // Calcular la semana anterior para comparación
+  const prevWeekStart = adjustedWeekStart.subtract(1, "week");
+  const prevWeekEnd = adjustedWeekEnd.subtract(1, "week");
 
-  if (error) throw error;
+  // Fetch de ambas semanas en paralelo
+  const [currentWeekRes, prevWeekRes] = await Promise.all([
+    supabase.rpc("get_daily_booking_stats", {
+      start_date: adjustedWeekStart.toISOString(),
+      end_date: adjustedWeekEnd.toISOString(),
+    }),
+    supabase.rpc("get_daily_booking_stats", {
+      start_date: prevWeekStart.toISOString(),
+      end_date: prevWeekEnd.toISOString(),
+    }),
+  ]);
 
-  // Crear array con todos los días de la semana, incluyendo los que no tienen datos
+  if (currentWeekRes.error) throw currentWeekRes.error;
+  if (prevWeekRes.error) throw prevWeekRes.error;
+
+  // Crear array con todos los días de la semana, combinando datos actuales y anteriores
   const fullWeekData = [];
   for (let i = 0; i < 7; i++) {
     const currentDay = adjustedWeekStart.add(i, "day").format("YYYY-MM-DD");
-    const existingData = (data || []).find(
+    const prevDay = prevWeekStart.add(i, "day").format("YYYY-MM-DD");
+
+    const currentData = (currentWeekRes.data || []).find(
       (item) => dayjs(item.dia).format("YYYY-MM-DD") === currentDay,
     );
+    const prevData = (prevWeekRes.data || []).find(
+      (item) => dayjs(item.dia).format("YYYY-MM-DD") === prevDay,
+    );
+
     fullWeekData.push({
       dia: currentDay,
-      horas_reservadas: existingData ? existingData.horas_reservadas : 0,
+      horas_reservadas: currentData ? currentData.horas_reservadas : 0,
+      horas_semana_anterior: prevData ? prevData.horas_reservadas : 0,
     });
   }
 
@@ -447,6 +497,8 @@ export const getWeeklyBookingStats = async (weekOffset = 0) => {
     data: fullWeekData,
     weekStart: adjustedWeekStart.format("YYYY-MM-DD"),
     weekEnd: adjustedWeekEnd.format("YYYY-MM-DD"),
+    prevWeekStart: prevWeekStart.format("YYYY-MM-DD"),
+    prevWeekEnd: prevWeekEnd.format("YYYY-MM-DD"),
   };
 };
 
@@ -514,7 +566,7 @@ export const fetchAdminDashboardData = async () => {
     // Usamos Promise.allSettled en lugar de Promise.all para mayor resiliencia.
     // Si una de las consultas falla, las demás aún pueden tener éxito.
     const results = await Promise.allSettled([
-      getRevenueSummary(),
+      getPaymentsSummary(),
       getPendingBillingSummary(),
       getTodaysOccupancy(),
       getNewUsersCount(),
@@ -522,6 +574,7 @@ export const fetchAdminDashboardData = async () => {
       getOccupancyByConsultorio(),
       getRecentBookings(10), // Un límite más pequeño para el dashboard
       getRecentCancellations(10),
+      getReservationsSummary(),
     ]);
 
     // Procesamos los resultados para manejar los casos de éxito y fallo individualmente
@@ -534,6 +587,7 @@ export const fetchAdminDashboardData = async () => {
       occupancyByConsultorioRes,
       recentBookingsRes,
       recentCancellationsRes,
+      reservationsSummaryRes,
     ] = results;
 
     // Construimos el objeto final, asignando los datos si la promesa se cumplió, o null/valor por defecto si falló.
@@ -566,6 +620,10 @@ export const fetchAdminDashboardData = async () => {
         recentCancellationsRes.status === "fulfilled"
           ? recentCancellationsRes.value
           : [],
+      reservationsSummary:
+        reservationsSummaryRes.status === "fulfilled"
+          ? reservationsSummaryRes.value
+          : { currentMonthCount: 0, lastMonthCount: 0 },
     };
 
     // Opcional: Registrar si alguna de las promesas falló
