@@ -4,6 +4,7 @@ import { useUIStore } from "@/stores/uiStore";
 import { fetchDashboardData } from "@/services/dashboardService"; // Importa la función agregadora
 import { fetchUserBalance } from "@/services/paymentService";
 import { renewAndValidateSeries } from "@/supabase";
+import { markNotificationAsRead } from "@/services/notificationService";
 import { useEventStore } from "@/stores/calendarStore";
 import { useNotificationStore } from "@/stores/notificationStore";
 import { ConfirmCancelDialog } from "@/components";
@@ -333,18 +334,28 @@ const Dashboard = () => {
                         ? "bg-blue-50/50"
                         : "bg-slate-100"
                     }`}
-                    onClick={() => {
-                      if (notification.notificaciones.enlace) {
-                        const url = notification.notificaciones.enlace;
-                        if (
-                          url.startsWith("http://") ||
-                          url.startsWith("https://")
-                        ) {
-                          window.open(url, "_blank", "noopener,noreferrer");
-                        } else {
-                          navigate(url);
+                    onClick={async () => {
+                      // 1. Marcar como leída si está pendiente
+                      if (notification.estado === "pendiente") {
+                        try {
+                          await markNotificationAsRead(
+                            notification.notificacion_id,
+                          );
+                          // Actualizar store global
+                          useNotificationStore
+                            .getState()
+                            .setNotificationsAsRead(
+                              notification.notificacion_id,
+                            );
+                        } catch (error) {
+                          console.error(
+                            "Error al marcar notificación como leída:",
+                            error,
+                          );
                         }
                       }
+                      // 2. Redirigir a la página de notificaciones
+                      navigate("/notificaciones");
                     }}
                   >
                     <div className="mt-1.5 flex-shrink-0">

@@ -48,7 +48,7 @@ export const fetchReservationsInRange = async (startDate, endDate) => {
     )
     .gte("start_time", startDate.toISOString())
     .lte("start_time", endDate.toISOString())
-    .in("estado", ["activa", "utilizada", "penalizada"]);
+    .in("estado", ["activa", "utilizada", "penalizada", "reagendada"]);
 
   if (error) throw error;
   return data || [];

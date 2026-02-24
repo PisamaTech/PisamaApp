@@ -204,7 +204,7 @@ serve(async (req) => {
         .select("id, usuario_id, start_time, end_time, consultorio_nombre")
         .gte("start_time", minDate.toISOString())
         .lte("start_time", maxDate.toISOString())
-        .in("estado", ["activa", "utilizada", "penalizada"]);
+        .in("estado", ["activa", "utilizada", "penalizada", "reagendada"]);
 
       // Función de matching de usuario
       const findUser = (accessName: string) => {
