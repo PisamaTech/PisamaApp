@@ -3,6 +3,7 @@ import { useUIStore } from "@/stores/uiStore";
 import { fetchPerformanceData } from "@/services/adminService";
 import { MonthlyHoursChart } from "@/components/admin/charts/MonthlyHoursChart";
 import { MonthlyInvoiceChart } from "@/components/admin/charts/MonthlyInvoiceChart";
+import { MonthlyPaymentsChart } from "@/components/admin/charts/MonthlyPaymentsChart";
 import { ReservationTypeTrendChart } from "@/components/admin/charts/ReservationTypeTrendChart";
 import { PeakHoursHeatmap } from "@/components/admin/charts/PeakHoursHeatmap";
 import { TopUsersTable } from "@/components/admin/stats/TopUsersTable";
@@ -79,6 +80,18 @@ const PerformancePage = () => {
 
   if (!data) return null;
 
+  // Calcular métricas basadas en facturación mensual (excluyendo dueños)
+  const calcularMetricasFacturacion = () => {
+    if (!data.monthlyInvoices) return { ticketPromedio: 0, ingresosReales: 0 };
+    const totalMonto = data.monthlyInvoices.reduce((sum, m) => sum + (m.monto_total || 0), 0);
+    const totalReservas = data.monthlyInvoices.reduce((sum, m) => sum + (m.cantidad_reservas || 0), 0);
+    return {
+      ticketPromedio: totalReservas > 0 ? Math.round(totalMonto / totalReservas) : 0,
+      ingresosReales: totalMonto,
+    };
+  };
+  const { ticketPromedio, ingresosReales } = calcularMetricasFacturacion();
+
   return (
     <div className="container mx-auto p-4 md:p-8 space-y-8">
       {/* Header y Selector de Año */}
@@ -110,10 +123,10 @@ const PerformancePage = () => {
       <Separator />
 
       {/* KPIs Principales */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Ticket Promedio"
-          value={`$${data.kpiStats.ticket_promedio}`}
+          value={`$${ticketPromedio.toLocaleString()}`}
           Icon={Banknote}
           footer="Ingreso promedio por reserva"
         />
@@ -131,9 +144,9 @@ const PerformancePage = () => {
         />
         <StatCard
           title="Ingresos Totales"
-          value={`$${data.kpiStats.ingresos_totales?.toLocaleString()}`}
+          value={`$${ingresosReales.toLocaleString()}`}
           Icon={TrendingUp}
-          footer={`Acumulado en ${year}`}
+          footer={`Acumulado en ${year} (sin dueños)`}
         />
       </div>
 
@@ -144,7 +157,7 @@ const PerformancePage = () => {
           <CardHeader>
             <CardTitle>Horas Mensuales</CardTitle>
             <CardDescription>
-              Comparativa de horas activas, utilizadas y penalizadas.
+              Comparativa de horas activas, utilizadas, penalizadas y reagendadas.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -155,9 +168,9 @@ const PerformancePage = () => {
         {/* Tipos de Reserva */}
         <Card>
           <CardHeader>
-            <CardTitle>Tipos de Reserva y Tendencia</CardTitle>
+            <CardTitle>Tipos de Reserva</CardTitle>
             <CardDescription>
-              Evolución de reservas eventuales vs. fijas y reagendamientos.
+              Distribución mensual de reservas eventuales vs. fijas.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -166,18 +179,32 @@ const PerformancePage = () => {
         </Card>
       </div>
 
-      {/* Facturación Mensual */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Facturación Mensual</CardTitle>
-          <CardDescription>
-            Montos totales facturados por mes durante {year}.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <MonthlyInvoiceChart data={data.monthlyInvoices} />
-        </CardContent>
-      </Card>
+      {/* Facturación y Pagos Mensuales */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Facturación Mensual</CardTitle>
+            <CardDescription>
+              Montos totales facturados por mes durante {year}.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <MonthlyInvoiceChart data={data.monthlyInvoices} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Pagos Recibidos</CardTitle>
+            <CardDescription>
+              Transferencias bancarias recibidas por mes durante {year}.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <MonthlyPaymentsChart data={data.monthlyPayments} />
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Mapa de Calor y Top Usuarios */}
       <div className="grid gap-6 lg:grid-cols-3">

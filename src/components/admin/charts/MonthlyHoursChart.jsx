@@ -55,6 +55,7 @@ export const MonthlyHoursChart = ({ data }) => {
         <Bar dataKey="horas_utilizadas" name="Utilizadas" fill="#22c55e" radius={[4, 4, 0, 0]} />
         <Bar dataKey="horas_penalizadas" name="Penalizadas" fill="#f97316" radius={[4, 4, 0, 0]} />
         <Bar dataKey="horas_canceladas" name="Canceladas" fill="#ef4444" radius={[4, 4, 0, 0]} />
+        <Bar dataKey="horas_reagendadas" name="Reagendadas" fill="#a855f7" radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );

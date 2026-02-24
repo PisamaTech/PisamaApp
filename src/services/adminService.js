@@ -678,34 +678,63 @@ export const sendNotificationToUsers = async (userIds, notificationData) => {
  */
 
 /**
- * Obtiene estadísticas mensuales de montos facturados.
+ * Obtiene estadísticas mensuales de montos facturados basándose en las reservas.
+ * Excluye las reservas de los dueños del espacio para reflejar ingresos reales.
  * @param {number} year - Año a consultar.
- * @returns {Promise<Array<{mes: number, monto_total: number, cantidad_facturas: number}>>}
+ * @returns {Promise<Array<{mes: number, monto_total: number, cantidad_reservas: number, costo_promedio: number}>>}
  */
 export const fetchMonthlyInvoiceStats = async (year) => {
-  const startOfYear = dayjs().year(year).startOf("year").toISOString();
-  const endOfYear = dayjs().year(year).endOf("year").toISOString();
-
-  const { data, error } = await supabase
-    .from("facturas")
-    .select("monto_total, fecha_emision")
-    .gte("fecha_emision", startOfYear)
-    .lte("fecha_emision", endOfYear);
+  const { data, error } = await supabase.rpc(
+    "get_monthly_invoice_stats_by_reservations",
+    { year_input: year }
+  );
 
   if (error) throw error;
 
-  // Agrupar por mes en el cliente
+  // Asegurar que todos los meses estén presentes (incluso sin datos)
   const monthlyStats = {};
   for (let m = 1; m <= 12; m++) {
-    monthlyStats[m] = { mes: m, monto_total: 0, cantidad_facturas: 0 };
+    monthlyStats[m] = { mes: m, monto_total: 0, cantidad_reservas: 0, costo_promedio: 0 };
   }
 
-  (data || []).forEach((factura) => {
-    const mes = dayjs(factura.fecha_emision).month() + 1; // dayjs month es 0-indexed
-    if (monthlyStats[mes]) {
-      monthlyStats[mes].monto_total += factura.monto_total || 0;
-      monthlyStats[mes].cantidad_facturas += 1;
-    }
+  (data || []).forEach((row) => {
+    monthlyStats[row.mes] = {
+      mes: row.mes,
+      monto_total: Number(row.monto_total),
+      cantidad_reservas: Number(row.cantidad_reservas),
+      costo_promedio: Number(row.costo_promedio),
+    };
+  });
+
+  return Object.values(monthlyStats);
+};
+
+/**
+ * Obtiene estadísticas mensuales de pagos recibidos (solo transferencias).
+ * Excluye los pagos de los dueños del espacio para reflejar ingresos reales.
+ * @param {number} year - Año a consultar.
+ * @returns {Promise<Array<{mes: number, monto_total: number, cantidad_pagos: number, pago_promedio: number}>>}
+ */
+export const fetchMonthlyPaymentStats = async (year) => {
+  const { data, error } = await supabase.rpc("get_monthly_payment_stats", {
+    year_input: year,
+  });
+
+  if (error) throw error;
+
+  // Asegurar que todos los meses estén presentes (incluso sin datos)
+  const monthlyStats = {};
+  for (let m = 1; m <= 12; m++) {
+    monthlyStats[m] = { mes: m, monto_total: 0, cantidad_pagos: 0, pago_promedio: 0 };
+  }
+
+  (data || []).forEach((row) => {
+    monthlyStats[row.mes] = {
+      mes: row.mes,
+      monto_total: Number(row.monto_total),
+      cantidad_pagos: Number(row.cantidad_pagos),
+      pago_promedio: Number(row.pago_promedio),
+    };
   });
 
   return Object.values(monthlyStats);
@@ -750,62 +779,18 @@ export const fetchHeatmapData = async (startDate, endDate) => {
 };
 
 /**
- * Obtiene el top de usuarios (VIP) basado en facturación.
+ * Obtiene el top de usuarios (VIP) basado en facturación por año.
+ * @param {number} year - Año a consultar.
  * @param {number} limit - Cantidad de usuarios a traer.
  */
-export const fetchTopUsers = async (limit = 10) => {
-  try {
-    // Intentar usar la RPC si existe
-    const { data: rpcData, error: rpcError } = await supabase.rpc(
-      "get_top_users_v2",
-      {
-        p_limit: limit,
-      },
-    );
+export const fetchTopUsers = async (year, limit = 10) => {
+  const { data, error } = await supabase.rpc("get_top_users_by_year", {
+    year_input: year,
+    p_limit: limit,
+  });
 
-    if (!rpcError && rpcData) {
-      return rpcData;
-    }
-
-    // Fallback: consulta directa si la RPC no existe
-    console.log("RPC get_top_users_v2 no disponible, usando fallback...");
-
-    // Obtener facturas pagadas con datos de usuario
-    const { data: invoices, error: invoiceError } = await supabase
-      .from("facturas_con_detalles_usuario")
-      .select("usuario_id, monto_total, firstName, lastName, email")
-      .eq("estado", "pagada");
-
-    if (invoiceError) throw invoiceError;
-
-    // Agrupar por usuario
-    const userStats = {};
-    (invoices || []).forEach((inv) => {
-      if (!userStats[inv.usuario_id]) {
-        userStats[inv.usuario_id] = {
-          usuario_id: inv.usuario_id,
-          nombre_completo:
-            `${inv.firstName || ""} ${inv.lastName || ""}`.trim() ||
-            "Sin nombre",
-          email: inv.email || "",
-          total_reservas: 0,
-          total_gastado: 0,
-        };
-      }
-      userStats[inv.usuario_id].total_reservas += 1;
-      userStats[inv.usuario_id].total_gastado += inv.monto_total || 0;
-    });
-
-    // Ordenar por total gastado y limitar
-    const sortedUsers = Object.values(userStats)
-      .sort((a, b) => b.total_gastado - a.total_gastado)
-      .slice(0, limit);
-
-    return sortedUsers;
-  } catch (error) {
-    console.error("Error en fetchTopUsers:", error);
-    return [];
-  }
+  if (error) throw error;
+  return data || [];
 };
 
 /**
@@ -889,9 +874,10 @@ export const fetchPerformanceData = async (year) => {
     fetchMonthlyHoursStats(year),
     fetchReservationTypeStats(year),
     fetchHeatmapData(startOfYear, endOfYear),
-    fetchTopUsers(10),
+    fetchTopUsers(year, 10),
     fetchKpiStats(startOfYear, endOfYear),
     fetchMonthlyInvoiceStats(year),
+    fetchMonthlyPaymentStats(year),
   ]);
 
   const [
@@ -901,6 +887,7 @@ export const fetchPerformanceData = async (year) => {
     topUsersRes,
     kpiStatsRes,
     monthlyInvoicesRes,
+    monthlyPaymentsRes,
   ] = results;
 
   return {
@@ -924,5 +911,7 @@ export const fetchPerformanceData = async (year) => {
           },
     monthlyInvoices:
       monthlyInvoicesRes.status === "fulfilled" ? monthlyInvoicesRes.value : [],
+    monthlyPayments:
+      monthlyPaymentsRes.status === "fulfilled" ? monthlyPaymentsRes.value : [],
   };
 };

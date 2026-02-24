@@ -39,7 +39,10 @@ export const MonthlyInvoiceChart = ({ data }) => {
             Monto: ${item.monto_total?.toLocaleString()}
           </p>
           <p style={{ margin: "4px 0 0 0", fontSize: "12px", color: "#6b7280" }}>
-            {item.cantidad_facturas} factura{item.cantidad_facturas !== 1 ? "s" : ""}
+            {item.cantidad_reservas} reserva{item.cantidad_reservas !== 1 ? "s" : ""} facturada{item.cantidad_reservas !== 1 ? "s" : ""}
+          </p>
+          <p style={{ margin: "4px 0 0 0", fontSize: "12px", color: "#3b82f6" }}>
+            Promedio: ${item.costo_promedio?.toLocaleString()} / reserva
           </p>
         </div>
       );
