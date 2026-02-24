@@ -347,12 +347,20 @@ export const getReservationsSummary = async () => {
 
 /**
  * 2. Obtiene el conteo y la suma total de facturas pendientes.
+ * Excluye las facturas de los dueños del espacio.
  */
 export const getPendingBillingSummary = async () => {
+  // UUIDs de los dueños a excluir
+  const ownerIds = [
+    "f6195c35-be7b-40a6-b7d5-1a8f56d7f313",
+    "88290aa9-537d-4c18-98f2-8089195cb695",
+  ];
+
   const { data, error, count } = await supabase
     .from("facturas")
     .select("monto_total", { count: "exact" })
-    .eq("estado", "pendiente");
+    .eq("estado", "pendiente")
+    .not("usuario_id", "in", `(${ownerIds.join(",")})`);
 
   if (error) throw error;
 
