@@ -401,6 +401,56 @@ export const getDailyBookingStats = async (days = 7) => {
 };
 
 /**
+ * 5b. Obtiene las horas reservadas por día para una semana específica.
+ * @param {number} weekOffset - Offset de semanas (0 = semana actual, -1 = semana pasada, 1 = próxima semana)
+ * @returns {Promise<{data: Array, weekStart: string, weekEnd: string}>}
+ */
+export const getWeeklyBookingStats = async (weekOffset = 0) => {
+  // Calcular inicio y fin de la semana (Lunes a Domingo)
+  const weekStart = dayjs()
+    .add(weekOffset, "week")
+    .startOf("week")
+    .add(1, "day") // dayjs startOf('week') es Domingo, sumamos 1 para Lunes
+    .startOf("day");
+  const weekEnd = weekStart.add(6, "day").endOf("day");
+
+  // Ajuste: si el día actual es Domingo, dayjs lo considera inicio de semana
+  // así que necesitamos manejar este caso
+  const adjustedWeekStart = dayjs().day() === 0
+    ? weekStart.subtract(1, "week")
+    : weekStart;
+  const adjustedWeekEnd = dayjs().day() === 0
+    ? weekEnd.subtract(1, "week")
+    : weekEnd;
+
+  const { data, error } = await supabase.rpc("get_daily_booking_stats", {
+    start_date: adjustedWeekStart.toISOString(),
+    end_date: adjustedWeekEnd.toISOString(),
+  });
+
+  if (error) throw error;
+
+  // Crear array con todos los días de la semana, incluyendo los que no tienen datos
+  const fullWeekData = [];
+  for (let i = 0; i < 7; i++) {
+    const currentDay = adjustedWeekStart.add(i, "day").format("YYYY-MM-DD");
+    const existingData = (data || []).find(
+      (item) => dayjs(item.dia).format("YYYY-MM-DD") === currentDay,
+    );
+    fullWeekData.push({
+      dia: currentDay,
+      horas_reservadas: existingData ? existingData.horas_reservadas : 0,
+    });
+  }
+
+  return {
+    data: fullWeekData,
+    weekStart: adjustedWeekStart.format("YYYY-MM-DD"),
+    weekEnd: adjustedWeekEnd.format("YYYY-MM-DD"),
+  };
+};
+
+/**
  * 6. Obtiene las horas reservadas por consultorio para el mes actual.
  */
 export const getOccupancyByConsultorio = async () => {

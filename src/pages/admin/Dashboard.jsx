@@ -1,14 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useUIStore } from "@/stores/uiStore";
-import { fetchAdminDashboardData } from "@/services/adminService";
+import {
+  fetchAdminDashboardData,
+  getWeeklyBookingStats,
+} from "@/services/adminService";
 import { StatCard } from "@/components/admin/StatCard";
 import dayjs from "dayjs";
+import "dayjs/locale/es";
+
+dayjs.locale("es");
 // --- Importaciones de Componentes Shadcn UI ---
 import {
   Alert,
   AlertDescription,
   AlertTitle,
   Badge,
+  Button,
   Card,
   CardContent,
   CardHeader,
@@ -22,7 +29,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui";
-import { Users, Wallet, Library, Clock, Terminal } from "lucide-react";
+import {
+  Users,
+  Wallet,
+  Library,
+  Clock,
+  Terminal,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { DailyBookingsChart } from "@/components/admin/charts/DailyBookingsChart";
 import { ConsultorioOccupancyChart } from "@/components/admin/charts/ConsultorioOccupancyChart";
 
@@ -30,6 +45,11 @@ const AdminDashboardPage = () => {
   const { loading, error, startLoading, stopLoading, setError, clearError } =
     useUIStore();
   const [dashboardData, setDashboardData] = useState(null);
+
+  // Estados para navegación de semanas
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [weeklyData, setWeeklyData] = useState(null);
+  const [weeklyLoading, setWeeklyLoading] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -49,6 +69,42 @@ const AdminDashboardPage = () => {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Se ejecuta solo una vez al montar el componente
+
+  // Efecto para cargar datos de la semana seleccionada
+  const loadWeeklyData = useCallback(async () => {
+    setWeeklyLoading(true);
+    try {
+      const result = await getWeeklyBookingStats(weekOffset);
+      setWeeklyData(result);
+    } catch (err) {
+      console.error("Error al cargar datos semanales:", err);
+    } finally {
+      setWeeklyLoading(false);
+    }
+  }, [weekOffset]);
+
+  useEffect(() => {
+    loadWeeklyData();
+  }, [loadWeeklyData]);
+
+  // Handlers de navegación
+  const goToPreviousWeek = () => setWeekOffset((prev) => prev - 1);
+  const goToNextWeek = () => setWeekOffset((prev) => prev + 1);
+  const goToCurrentWeek = () => setWeekOffset(0);
+
+  // Formatear rango de fechas de la semana
+  const getWeekRangeLabel = () => {
+    if (!weeklyData) return "Cargando...";
+    const start = dayjs(weeklyData.weekStart);
+    const end = dayjs(weeklyData.weekEnd);
+
+    // Si es la misma semana y mismo mes
+    if (start.month() === end.month()) {
+      return `${start.format("D")} - ${end.format("D [de] MMMM")}`;
+    }
+    // Si es diferente mes
+    return `${start.format("D [de] MMM")} - ${end.format("D [de] MMM")}`;
+  };
 
   // --- Renderizado Condicional ---
 
@@ -196,19 +252,60 @@ const AdminDashboardPage = () => {
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Horas Reservadas (Últimos 7 Días)</span>
-              <span className="text-2xl font-bold text-green-600">
-                {dashboardData.dailyBookingStats.reduce(
-                  (total, day) => total + day.horas_reservadas,
-                  0
-                )}h
-              </span>
+            <CardTitle className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2">
+                <span>Horas Reservadas</span>
+                {weekOffset !== 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={goToCurrentWeek}
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    Ir a esta semana
+                  </Button>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={goToPreviousWeek}
+                  disabled={weeklyLoading}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="min-w-[160px] text-center text-sm font-medium capitalize">
+                  {getWeekRangeLabel()}
+                </span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={goToNextWeek}
+                  disabled={weeklyLoading}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                <span className="ml-2 text-2xl font-bold text-green-600">
+                  {weeklyData?.data?.reduce(
+                    (total, day) => total + day.horas_reservadas,
+                    0
+                  ) || 0}
+                  h
+                </span>
+              </div>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {/* Renderiza el gráfico de barras */}
-            <DailyBookingsChart data={dashboardData.dailyBookingStats} />
+            {weeklyLoading ? (
+              <Skeleton className="h-[350px] w-full" />
+            ) : weeklyData?.data ? (
+              <DailyBookingsChart data={weeklyData.data} />
+            ) : (
+              <Skeleton className="h-[350px] w-full" />
+            )}
           </CardContent>
         </Card>
         <Card>
