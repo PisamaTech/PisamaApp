@@ -22,7 +22,11 @@ export const ReservationTypeTrendChart = ({ data }) => {
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       const item = payload[0].payload;
-      const total = (item.total_eventual || 0) + (item.total_fija || 0);
+      const eventual = item.total_eventual || 0;
+      const fija = item.total_fija || 0;
+      const total = eventual + fija;
+      const pctEventual = total > 0 ? Math.round((eventual / total) * 100) : 0;
+      const pctFija = total > 0 ? Math.round((fija / total) * 100) : 0;
       return (
         <div
           style={{
@@ -36,10 +40,10 @@ export const ReservationTypeTrendChart = ({ data }) => {
             {dayjs().month(item.mes - 1).format("MMMM")}
           </p>
           <p style={{ margin: "4px 0 0 0", fontSize: "12px", color: "#92d050" }}>
-            Eventuales: {item.total_eventual || 0}
+            Eventuales: {eventual} ({pctEventual}%)
           </p>
           <p style={{ margin: "4px 0 0 0", fontSize: "12px", color: "#5b9bd5" }}>
-            Fijas: {item.total_fija || 0}
+            Fijas: {fija} ({pctFija}%)
           </p>
           <p style={{ margin: "4px 0 0 0", fontSize: "12px", color: "#6b7280", fontWeight: "500" }}>
             Total: {total}
