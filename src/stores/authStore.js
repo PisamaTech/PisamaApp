@@ -102,7 +102,7 @@ export const useAuthStore = create(
         firstName,
         lastName,
         phone,
-        profession
+        profession,
       ) => {
         const { startLoading, setError, clearError, showToast, stopLoading } =
           useUIStore.getState();
@@ -281,6 +281,6 @@ export const useAuthStore = create(
     {
       name: "auth-storage", // Nombre de la clave en localStorage
       getStorage: () => localStorage, // Usar localStorage como almacenamiento
-    }
-  )
+    },
+  ),
 );
