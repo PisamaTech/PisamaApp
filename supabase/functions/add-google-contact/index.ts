@@ -36,14 +36,20 @@ serve(async (req) => {
 
     const accessToken = await getAccessToken();
 
-    // Format display name: "nombre + apellido + profesion + 'Consultorio'"
+    // Format display name: "nombre + apellido + - + profesion + Consultorio"
     const fullName = `${firstName || ""} ${lastName || ""}`.trim();
-    const professionSuffix = profession ? ` ${profession}` : "";
+    const capitalizedProfession = profession
+      ? profession.charAt(0).toUpperCase() + profession.slice(1).toLowerCase()
+      : "";
+    const professionSuffix = capitalizedProfession
+      ? ` - ${capitalizedProfession}`
+      : "";
     const displayName = `${fullName}${professionSuffix} Consultorio`.trim();
 
     const contactBody = {
       names: [
         {
+          unstructuredName: displayName,
           givenName: firstName || "",
           familyName: `${lastName || ""}${professionSuffix} Consultorio`.trim(),
         },
