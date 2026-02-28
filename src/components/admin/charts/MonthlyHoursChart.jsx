@@ -14,10 +14,16 @@ import "dayjs/locale/es";
 dayjs.locale("es");
 
 export const MonthlyHoursChart = ({ data }) => {
-  // Mapeamos los datos numéricos de mes a nombres cortos
+  // Mapeamos los datos numéricos de mes a nombres cortos y calculamos horas facturadas
   const formattedData = data.map((item) => ({
     ...item,
-    name: dayjs().month(item.mes - 1).format("MMM"), // "Ene", "Feb", etc.
+    name: dayjs()
+      .month(item.mes - 1)
+      .format("MMM"), // "Ene", "Feb", etc.
+    horas_facturadas:
+      (item.horas_activas || 0) +
+      (item.horas_utilizadas || 0) +
+      (item.horas_penalizadas || 0),
   }));
 
   return (
@@ -51,11 +57,42 @@ export const MonthlyHoursChart = ({ data }) => {
             Como "Activas" suele incluir "Utilizadas", quizás sea mejor agruparlas o apilarlas con cuidado.
             El requerimiento dice: "incluir las horas activas, utilizadas y penalizadas".
             Vamos a ponerlas lado a lado para comparar. */}
-        <Bar dataKey="horas_activas" name="Activas" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-        <Bar dataKey="horas_utilizadas" name="Utilizadas" fill="#22c55e" radius={[4, 4, 0, 0]} />
-        <Bar dataKey="horas_penalizadas" name="Penalizadas" fill="#f97316" radius={[4, 4, 0, 0]} />
-        <Bar dataKey="horas_canceladas" name="Canceladas" fill="#ef4444" radius={[4, 4, 0, 0]} />
-        <Bar dataKey="horas_reagendadas" name="Reagendadas" fill="#a855f7" radius={[4, 4, 0, 0]} />
+        <Bar
+          dataKey="horas_activas"
+          name="Activas"
+          fill="#3b82f6"
+          radius={[4, 4, 0, 0]}
+        />
+        <Bar
+          dataKey="horas_utilizadas"
+          name="Utilizadas"
+          fill="#22c55e"
+          radius={[4, 4, 0, 0]}
+        />
+        <Bar
+          dataKey="horas_penalizadas"
+          name="Penalizadas"
+          fill="#f97316"
+          radius={[4, 4, 0, 0]}
+        />
+        <Bar
+          dataKey="horas_facturadas"
+          name="Facturadas"
+          fill="#0ea5e9"
+          radius={[4, 4, 0, 0]}
+        />
+        <Bar
+          dataKey="horas_canceladas"
+          name="Canceladas"
+          fill="#ef4444"
+          radius={[4, 4, 0, 0]}
+        />
+        <Bar
+          dataKey="horas_reagendadas"
+          name="Reagendadas"
+          fill="#a855f7"
+          radius={[4, 4, 0, 0]}
+        />
       </BarChart>
     </ResponsiveContainer>
   );

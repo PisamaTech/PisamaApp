@@ -1,6 +1,9 @@
 import { supabase } from "@/supabase/supabase.config"; // Asegúrate que la ruta es correcta
 import dayjs from "dayjs";
+import "dayjs/locale/es";
 import { createNotification } from "./notificationService";
+
+dayjs.locale("es");
 
 /**
  * Obtiene una lista paginada de todos los usuarios, con opción de búsqueda.
@@ -447,20 +450,12 @@ export const getDailyBookingStats = async (days = 7) => {
  */
 export const getWeeklyBookingStats = async (weekOffset = 0) => {
   // Calcular inicio y fin de la semana seleccionada (Lunes a Domingo)
-  const weekStart = dayjs()
+  // Con locale 'es', startOf('week') es Lunes
+  const adjustedWeekStart = dayjs()
     .add(weekOffset, "week")
     .startOf("week")
-    .add(1, "day") // dayjs startOf('week') es Domingo, sumamos 1 para Lunes
     .startOf("day");
-  const weekEnd = weekStart.add(6, "day").endOf("day");
-
-  // Ajuste: si el día actual es Domingo, dayjs lo considera inicio de semana
-  const adjustedWeekStart = dayjs().day() === 0
-    ? weekStart.subtract(1, "week")
-    : weekStart;
-  const adjustedWeekEnd = dayjs().day() === 0
-    ? weekEnd.subtract(1, "week")
-    : weekEnd;
+  const adjustedWeekEnd = adjustedWeekStart.add(6, "day").endOf("day");
 
   // Calcular la semana anterior para comparación
   const prevWeekStart = adjustedWeekStart.subtract(1, "week");
@@ -752,7 +747,7 @@ export const sendNotificationToUsers = async (userIds, notificationData) => {
 export const fetchMonthlyInvoiceStats = async (year) => {
   const { data, error } = await supabase.rpc(
     "get_monthly_invoice_stats_by_reservations",
-    { year_input: year }
+    { year_input: year },
   );
 
   if (error) throw error;
@@ -760,7 +755,12 @@ export const fetchMonthlyInvoiceStats = async (year) => {
   // Asegurar que todos los meses estén presentes (incluso sin datos)
   const monthlyStats = {};
   for (let m = 1; m <= 12; m++) {
-    monthlyStats[m] = { mes: m, monto_total: 0, cantidad_reservas: 0, costo_promedio: 0 };
+    monthlyStats[m] = {
+      mes: m,
+      monto_total: 0,
+      cantidad_reservas: 0,
+      costo_promedio: 0,
+    };
   }
 
   (data || []).forEach((row) => {
@@ -791,7 +791,12 @@ export const fetchMonthlyPaymentStats = async (year) => {
   // Asegurar que todos los meses estén presentes (incluso sin datos)
   const monthlyStats = {};
   for (let m = 1; m <= 12; m++) {
-    monthlyStats[m] = { mes: m, monto_total: 0, cantidad_pagos: 0, pago_promedio: 0 };
+    monthlyStats[m] = {
+      mes: m,
+      monto_total: 0,
+      cantidad_pagos: 0,
+      pago_promedio: 0,
+    };
   }
 
   (data || []).forEach((row) => {

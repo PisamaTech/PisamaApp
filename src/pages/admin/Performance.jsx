@@ -7,6 +7,7 @@ import { MonthlyPaymentsChart } from "@/components/admin/charts/MonthlyPaymentsC
 import { ReservationTypeTrendChart } from "@/components/admin/charts/ReservationTypeTrendChart";
 import { PeakHoursHeatmap } from "@/components/admin/charts/PeakHoursHeatmap";
 import { TopUsersTable } from "@/components/admin/stats/TopUsersTable";
+import { MonthlyHoursTable } from "@/components/admin/stats/MonthlyHoursTable";
 import { StatCard } from "@/components/admin/StatCard";
 import {
   Select,
@@ -83,10 +84,17 @@ const PerformancePage = () => {
   // Calcular métricas basadas en facturación mensual (excluyendo dueños)
   const calcularMetricasFacturacion = () => {
     if (!data.monthlyInvoices) return { ticketPromedio: 0, ingresosReales: 0 };
-    const totalMonto = data.monthlyInvoices.reduce((sum, m) => sum + (m.monto_total || 0), 0);
-    const totalReservas = data.monthlyInvoices.reduce((sum, m) => sum + (m.cantidad_reservas || 0), 0);
+    const totalMonto = data.monthlyInvoices.reduce(
+      (sum, m) => sum + (m.monto_total || 0),
+      0,
+    );
+    const totalReservas = data.monthlyInvoices.reduce(
+      (sum, m) => sum + (m.cantidad_reservas || 0),
+      0,
+    );
     return {
-      ticketPromedio: totalReservas > 0 ? Math.round(totalMonto / totalReservas) : 0,
+      ticketPromedio:
+        totalReservas > 0 ? Math.round(totalMonto / totalReservas) : 0,
       ingresosReales: totalMonto,
     };
   };
@@ -157,26 +165,44 @@ const PerformancePage = () => {
           <CardHeader>
             <CardTitle>Horas Mensuales</CardTitle>
             <CardDescription>
-              Comparativa de horas activas, utilizadas, penalizadas y reagendadas.
+              Comparativa de horas activas, utilizadas, penalizadas y
+              reagendadas.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <MonthlyHoursChart data={data.monthlyHours} />
+            <MonthlyHoursTable data={data.monthlyHours} />
           </CardContent>
         </Card>
 
-        {/* Tipos de Reserva */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Tipos de Reserva</CardTitle>
-            <CardDescription>
-              Distribución mensual de reservas eventuales vs. fijas.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ReservationTypeTrendChart data={data.reservationTypes} />
-          </CardContent>
-        </Card>
+        {/* Columna Derecha: Tipos de Reserva y Top Clientes */}
+        <div className="flex flex-col gap-6">
+          {/* Tipos de Reserva */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Tipos de Reserva</CardTitle>
+              <CardDescription>
+                Distribución mensual de reservas eventuales vs. fijas.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ReservationTypeTrendChart data={data.reservationTypes} />
+            </CardContent>
+          </Card>
+
+          {/* Top Clientes */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Top Clientes</CardTitle>
+              <CardDescription>
+                Top 10 usuarios por facturación.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TopUsersTable data={data.topUsers} />
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Facturación y Pagos Mensuales */}
@@ -206,10 +232,9 @@ const PerformancePage = () => {
         </Card>
       </div>
 
-      {/* Mapa de Calor y Top Usuarios */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Heatmap (Ocupa 2 columnas) */}
-        <Card className="lg:col-span-2">
+      {/* Mapa de Calor */}
+      <div className="grid gap-6 grid-cols-1">
+        <Card>
           <CardHeader>
             <CardTitle>Mapa de Calor de Horarios</CardTitle>
             <CardDescription>
@@ -218,17 +243,6 @@ const PerformancePage = () => {
           </CardHeader>
           <CardContent>
             <PeakHoursHeatmap data={data.heatmap} />
-          </CardContent>
-        </Card>
-
-        {/* Top Usuarios */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Clientes VIP</CardTitle>
-            <CardDescription>Top 10 usuarios por facturación.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <TopUsersTable data={data.topUsers} />
           </CardContent>
         </Card>
       </div>
