@@ -78,7 +78,7 @@ export const MonthlyHoursChart = ({ data }) => {
         <Bar
           dataKey="horas_facturadas"
           name="Facturadas"
-          fill="#0ea5e9"
+          fill="#1a1a1a"
           radius={[4, 4, 0, 0]}
         />
         <Bar

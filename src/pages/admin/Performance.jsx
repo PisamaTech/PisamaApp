@@ -100,6 +100,15 @@ const PerformancePage = () => {
   };
   const { ticketPromedio, ingresosReales } = calcularMetricasFacturacion();
 
+  const calcularTotalPagos = () => {
+    if (!data.monthlyPayments) return 0;
+    return data.monthlyPayments.reduce(
+      (sum, m) => sum + (m.monto_total || 0),
+      0,
+    );
+  };
+  const totalPagos = calcularTotalPagos();
+
   return (
     <div className="container mx-auto p-4 md:p-8 space-y-8">
       {/* Header y Selector de Año */}
@@ -209,10 +218,18 @@ const PerformancePage = () => {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Facturación Mensual</CardTitle>
-            <CardDescription>
-              Montos totales facturados por mes durante {year}.
-            </CardDescription>
+            <div className="flex items-start justify-between">
+              <div>
+                <CardTitle>Facturación Mensual</CardTitle>
+                <CardDescription>
+                  Montos totales facturados por mes durante {year}.
+                </CardDescription>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold">${ingresosReales.toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">Total {year}</p>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <MonthlyInvoiceChart data={data.monthlyInvoices} />
@@ -221,10 +238,18 @@ const PerformancePage = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Pagos Recibidos</CardTitle>
-            <CardDescription>
-              Transferencias bancarias recibidas por mes durante {year}.
-            </CardDescription>
+            <div className="flex items-start justify-between">
+              <div>
+                <CardTitle>Pagos Recibidos</CardTitle>
+                <CardDescription>
+                  Transferencias bancarias recibidas por mes durante {year}.
+                </CardDescription>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold">${totalPagos.toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">Total {year}</p>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <MonthlyPaymentsChart data={data.monthlyPayments} />
