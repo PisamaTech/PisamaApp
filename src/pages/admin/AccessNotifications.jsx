@@ -20,6 +20,7 @@ import {
   AlertTriangle,
   ArrowLeft,
   BellRing,
+  CalendarSearch,
   CheckCircle2,
   Clock,
   User,
@@ -218,6 +219,20 @@ const AccessNotificationsPage = () => {
                     {dayjs(log.access_time).tz(TIMEZONE).format("HH:mm")}
                   </span>
                 </CardDescription>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="mt-2 text-xs text-muted-foreground hover:text-foreground"
+                  onClick={() => {
+                    const dateParam = dayjs(log.access_time)
+                      .tz(TIMEZONE)
+                      .format("YYYY-MM-DD");
+                    navigate(`/calendario_diario?date=${dateParam}`);
+                  }}
+                >
+                  <CalendarSearch className="h-3 w-3 mr-1" />
+                  Ver en calendario
+                </Button>
               </CardHeader>
               <CardContent className="mt-auto pt-4 border-t bg-muted/10">
                 <div className="flex gap-3">

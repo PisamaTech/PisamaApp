@@ -3,6 +3,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/es";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { useEffect, useState, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import "../components/calendar/calendarStyles.css";
 import { useUIStore } from "@/stores/uiStore";
 import { useAuthStore } from "@/stores/authStore";
@@ -41,6 +42,8 @@ dayjs.locale("es");
 const localizer = dayjsLocalizer(dayjs);
 
 export const CalendarDiario = () => {
+  const [searchParams] = useSearchParams();
+
   const {
     selectedSlot,
     selectedEvent,
@@ -79,7 +82,20 @@ export const CalendarDiario = () => {
 
   const { handleReservation } = useReservationHandler(resetReservationState);
   const { events } = useEventStore(); // Usa el store de Zustand
-  const [currentDate, setCurrentDate] = useState(new Date());
+
+  // Leer fecha desde URL params (ej: ?date=2024-01-15)
+  const getInitialDate = () => {
+    const dateParam = searchParams.get("date");
+    if (dateParam) {
+      const parsed = dayjs(dateParam);
+      if (parsed.isValid()) {
+        return parsed.toDate();
+      }
+    }
+    return new Date();
+  };
+
+  const [currentDate, setCurrentDate] = useState(getInitialDate);
   const [showOnlyMyReservations, setShowOnlyMyReservations] = useState(false);
 
   // Cargar eventos iniciales al montar el componente
