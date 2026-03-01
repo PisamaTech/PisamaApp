@@ -850,6 +850,26 @@ export const fetchHeatmapData = async (startDate, endDate) => {
 };
 
 /**
+ * Obtiene datos del mapa de calor filtrado por consultorio.
+ * @param {string} startDate - Fecha inicio ISO.
+ * @param {string} endDate - Fecha fin ISO.
+ * @param {number} consultorioId - ID del consultorio.
+ */
+export const fetchHeatmapByConsultorio = async (
+  startDate,
+  endDate,
+  consultorioId,
+) => {
+  const { data, error } = await supabase.rpc("get_heatmap_by_consultorio", {
+    start_date: startDate,
+    end_date: endDate,
+    p_consultorio_id: consultorioId,
+  });
+  if (error) throw error;
+  return data || [];
+};
+
+/**
  * Obtiene el top de usuarios (VIP) basado en facturación por año.
  * @param {number} year - Año a consultar.
  * @param {number} limit - Cantidad de usuarios a traer.
@@ -945,7 +965,7 @@ export const fetchPerformanceData = async (year) => {
     fetchMonthlyHoursStats(year),
     fetchReservationTypeStats(year),
     fetchHeatmapData(startOfYear, endOfYear),
-    fetchTopUsers(year, 10),
+    fetchTopUsers(year, 30),
     fetchKpiStats(startOfYear, endOfYear),
     fetchMonthlyInvoiceStats(year),
     fetchMonthlyPaymentStats(year),

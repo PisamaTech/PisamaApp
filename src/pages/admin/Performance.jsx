@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import { useUIStore } from "@/stores/uiStore";
-import { fetchPerformanceData } from "@/services/adminService";
+import {
+  fetchPerformanceData,
+  fetchHeatmapByConsultorio,
+} from "@/services/adminService";
+import { resources } from "@/utils/constants";
 import { MonthlyHoursChart } from "@/components/admin/charts/MonthlyHoursChart";
 import { MonthlyInvoiceChart } from "@/components/admin/charts/MonthlyInvoiceChart";
 import { MonthlyPaymentsChart } from "@/components/admin/charts/MonthlyPaymentsChart";
@@ -39,6 +43,11 @@ const PerformancePage = () => {
   const [year, setYear] = useState(dayjs().year());
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
+  const [selectedConsultorio, setSelectedConsultorio] = useState(
+    resources[0].id,
+  );
+  const [consultorioHeatmap, setConsultorioHeatmap] = useState([]);
+  const [loadingConsultorio, setLoadingConsultorio] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -57,6 +66,30 @@ const PerformancePage = () => {
 
     loadData();
   }, [year, startLoading, stopLoading]);
+
+  // Cargar heatmap por consultorio cuando cambia el año o consultorio seleccionado
+  useEffect(() => {
+    const loadConsultorioHeatmap = async () => {
+      setLoadingConsultorio(true);
+      try {
+        const startDate = dayjs().year(year).startOf("year").toISOString();
+        const endDate = dayjs().year(year).endOf("year").toISOString();
+        const result = await fetchHeatmapByConsultorio(
+          startDate,
+          endDate,
+          selectedConsultorio,
+        );
+        setConsultorioHeatmap(result);
+      } catch (err) {
+        console.error("Error cargando heatmap por consultorio:", err);
+        setConsultorioHeatmap([]);
+      } finally {
+        setLoadingConsultorio(false);
+      }
+    };
+
+    loadConsultorioHeatmap();
+  }, [year, selectedConsultorio]);
 
   if (error) {
     return (
@@ -257,8 +290,8 @@ const PerformancePage = () => {
         </Card>
       </div>
 
-      {/* Mapa de Calor */}
-      <div className="grid gap-6 grid-cols-1">
+      {/* Mapas de Calor */}
+      <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Mapa de Calor de Horarios</CardTitle>
@@ -268,6 +301,43 @@ const PerformancePage = () => {
           </CardHeader>
           <CardContent>
             <PeakHoursHeatmap data={data.heatmap} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-start justify-between">
+              <div>
+                <CardTitle>Mapa de Calor por Consultorio</CardTitle>
+                <CardDescription>
+                  Intensidad de reservas filtrado por consultorio.
+                </CardDescription>
+              </div>
+              <Select
+                value={selectedConsultorio.toString()}
+                onValueChange={(val) => setSelectedConsultorio(parseInt(val))}
+              >
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Consultorio" />
+                </SelectTrigger>
+                <SelectContent>
+                  {resources.map((r) => (
+                    <SelectItem key={r.id} value={r.id.toString()}>
+                      {r.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {loadingConsultorio ? (
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                Cargando...
+              </div>
+            ) : (
+              <PeakHoursHeatmap data={consultorioHeatmap} />
+            )}
           </CardContent>
         </Card>
       </div>
