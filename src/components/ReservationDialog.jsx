@@ -271,7 +271,7 @@ export const ReservationDialog = ({
         </DialogHeader>
         <Separator />
         <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="space-y-3 sm:space-y-4">
+          <div className="space-y-2 sm:space-y-3">
             {/* --- Añade el selector de usuario condicional --- */}
             {isAdminBookingMode && (
               <div className="p-3 sm:p-4 bg-yellow-50 border border-yellow-200 rounded-md space-y-2">
@@ -323,7 +323,7 @@ export const ReservationDialog = ({
               </div>
             )}
             {/* Fecha */}
-            <div className="space-y-1 sm:space-y-2">
+            <div className="space-y-1">
               <Label htmlFor="date" className="text-xs sm:text-sm">Fecha de reserva</Label>
               <Input id="date" type="date" {...register("date")} required className="text-xs sm:text-sm h-8 sm:h-10" />
               {errors.date && (
@@ -353,7 +353,7 @@ export const ReservationDialog = ({
             </datalist>
             <div className="flex flex-row justify-between gap-3 sm:gap-4">
               {/* Hora de inicio */}
-              <div className="space-y-1 sm:space-y-2 w-full">
+              <div className="space-y-1 w-full">
                 <Label htmlFor="startTime" className="text-xs sm:text-sm">Hora de inicio</Label>
                 <Input
                   id="startTime"
@@ -374,7 +374,7 @@ export const ReservationDialog = ({
               </div>
 
               {/* Hora de fin */}
-              <div className="space-y-1 sm:space-y-2 w-full">
+              <div className="space-y-1 w-full">
                 <Label htmlFor="endTime" className="text-xs sm:text-sm">Hora de finalización</Label>
                 <Input
                   id="endTime"
@@ -395,7 +395,7 @@ export const ReservationDialog = ({
               </div>
             </div>
             {/* Consultorio */}
-            <div className="space-y-1 sm:space-y-2">
+            <div className="space-y-1">
               <Label htmlFor="resourceId" className="text-xs sm:text-sm">Consultorio</Label>
               <Select
                 onValueChange={(value) => setValue("resourceId", Number(value))}
@@ -422,7 +422,7 @@ export const ReservationDialog = ({
             </div>
 
             {/* Tipo de reserva */}
-            <div className="space-y-1 sm:space-y-2">
+            <div className="space-y-1">
               <Label htmlFor="tipo" className="text-xs sm:text-sm">Tipo de reserva</Label>
               <ToggleGroup
                 type="single"
@@ -472,7 +472,7 @@ export const ReservationDialog = ({
               )}
             </div>
             {/* Uso de camilla */}
-            <div className="space-y-1 sm:space-y-2">
+            <div className="space-y-1">
               <Label htmlFor="usaCamilla" className="text-xs sm:text-sm">¿Utilizarás la camilla?</Label>
               <div className="flex items-center gap-3 h-8 sm:h-10">
                 <span className={`text-xs sm:text-sm ${watch("usaCamilla") === "No" ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
@@ -499,7 +499,7 @@ export const ReservationDialog = ({
           </div>
 
           {/* Botones */}
-          <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row justify-end gap-2 w-full">
+          <div className="mt-2 sm:mt-3 flex flex-col sm:flex-row justify-end gap-2 w-full">
             <Button type="submit" className="text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-auto">Confirmar</Button>
             <Button variant="outline" onClick={onCancel} type="button" className="text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-auto">
               Cancelar
