@@ -1,7 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
+import dayjs from "dayjs";
+import "dayjs/locale/es";
 import { useUIStore } from "@/stores/uiStore";
+
+dayjs.locale("es");
 import {
   fetchAllUsers,
+  fetchAllProfessions,
   updateUserPaymentMethod,
 } from "@/services/adminService";
 import { updateUserAccessName } from "@/services/accessControlService";
@@ -19,7 +24,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, Copy, Check, X } from "lucide-react";
+import { Edit, Copy, Check, X, Filter, ChevronDown } from "lucide-react";
 import {
   Pagination,
   PaginationContent,
@@ -51,6 +56,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const UserManagementPage = () => {
   const { loading, startLoading, stopLoading, showToast } = useUIStore();
@@ -58,9 +69,14 @@ const UserManagementPage = () => {
   const [users, setUsers] = useState([]);
   const [totalUsers, setTotalUsers] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 500); // 500ms de retraso
+
+  // Estados para filtros
+  const [allProfessions, setAllProfessions] = useState([]);
+  const [selectedProfessions, setSelectedProfessions] = useState([]);
+  const [reservationFilter, setReservationFilter] = useState("all"); // "all" | "with" | "without"
 
   // Estados para el modal de edición de modalidad de pago
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -77,14 +93,35 @@ const UserManagementPage = () => {
     [totalUsers, itemsPerPage]
   );
 
+  // Cargar profesiones al montar el componente
+  useEffect(() => {
+    const loadProfessions = async () => {
+      try {
+        const professions = await fetchAllProfessions();
+        setAllProfessions(professions);
+      } catch {
+        console.error("Error al cargar profesiones");
+      }
+    };
+    loadProfessions();
+  }, []);
+
   useEffect(() => {
     const loadUsers = async () => {
       startLoading();
       try {
+        // Convertir el filtro de reservación a boolean o null
+        const hasReservation =
+          reservationFilter === "all"
+            ? null
+            : reservationFilter === "with";
+
         const { data, count } = await fetchAllUsers(
           currentPage,
           itemsPerPage,
-          debouncedSearchTerm
+          debouncedSearchTerm,
+          selectedProfessions,
+          hasReservation
         );
         setUsers(data);
         setTotalUsers(count);
@@ -103,6 +140,8 @@ const UserManagementPage = () => {
     currentPage,
     debouncedSearchTerm,
     itemsPerPage,
+    selectedProfessions,
+    reservationFilter,
     startLoading,
     stopLoading,
     showToast,
@@ -111,6 +150,30 @@ const UserManagementPage = () => {
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
     setCurrentPage(1); // Resetea a la página 1 al buscar
+  };
+
+  const handleItemsPerPageChange = (value) => {
+    setItemsPerPage(Number(value));
+    setCurrentPage(1);
+  };
+
+  const toggleProfession = (profession) => {
+    setSelectedProfessions((prev) =>
+      prev.includes(profession)
+        ? prev.filter((p) => p !== profession)
+        : [...prev, profession]
+    );
+    setCurrentPage(1);
+  };
+
+  const clearProfessionFilter = () => {
+    setSelectedProfessions([]);
+    setCurrentPage(1);
+  };
+
+  const handleReservationFilterChange = (value) => {
+    setReservationFilter(value);
+    setCurrentPage(1);
   };
 
   const openEditModal = (user) => {
@@ -216,17 +279,122 @@ const UserManagementPage = () => {
         </p>
       </div>
       <Separator />
-      <div className="flex items-center justify-between">
-        <Input
-          placeholder="Buscar por nombre, apellido o email..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-          className="w-full md:max-w-sm"
-        />
-        <div className="hidden md:block text-sm text-gray-500">
-          Total de usuarios:{" "}
-          <span className="font-medium text-gray-900">{totalUsers}</span>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col md:flex-row md:items-center gap-3">
+          <Input
+            placeholder="Buscar por nombre, apellido o email..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="w-full md:max-w-sm"
+          />
+
+          {/* Filtro por Profesión */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="justify-between min-w-[180px]">
+                <Filter className="h-4 w-4 mr-2" />
+                {selectedProfessions.length > 0
+                  ? `${selectedProfessions.length} profesión(es)`
+                  : "Filtrar profesión"}
+                <ChevronDown className="h-4 w-4 ml-2" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-0" align="start">
+              <div className="p-3 border-b">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-sm">Profesiones</span>
+                  {selectedProfessions.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearProfessionFilter}
+                      className="h-auto py-1 px-2 text-xs"
+                    >
+                      Limpiar
+                    </Button>
+                  )}
+                </div>
+              </div>
+              <div className="max-h-60 overflow-y-auto p-2">
+                {allProfessions.length > 0 ? (
+                  allProfessions.map((profession) => (
+                    <div
+                      key={profession}
+                      className="flex items-center space-x-2 py-1.5 px-2 hover:bg-accent rounded cursor-pointer"
+                      onClick={() => toggleProfession(profession)}
+                    >
+                      <Checkbox
+                        checked={selectedProfessions.includes(profession)}
+                        onCheckedChange={() => toggleProfession(profession)}
+                      />
+                      <span className="text-sm">{profession}</span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground p-2">
+                    No hay profesiones disponibles
+                  </p>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Filtro por Primera Reserva */}
+          <Select
+            value={reservationFilter}
+            onValueChange={handleReservationFilterChange}
+          >
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="1ra Reserva" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="with">Con reservas</SelectItem>
+              <SelectItem value="without">Sin reservas</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Selector de items por página */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground whitespace-nowrap">Mostrar:</span>
+            <Select
+              value={String(itemsPerPage)}
+              onValueChange={handleItemsPerPageChange}
+            >
+              <SelectTrigger className="w-20">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="hidden md:block text-sm text-gray-500 ml-auto">
+            Total de usuarios:{" "}
+            <span className="font-medium text-gray-900">{totalUsers}</span>
+          </div>
         </div>
+
+        {/* Badges de filtros activos */}
+        {selectedProfessions.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {selectedProfessions.map((profession) => (
+              <Badge
+                key={profession}
+                variant="secondary"
+                className="cursor-pointer hover:bg-secondary/80"
+                onClick={() => toggleProfession(profession)}
+              >
+                {profession}
+                <X className="h-3 w-3 ml-1" />
+              </Badge>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Vista de Escritorio (Tabla) */}
@@ -242,12 +410,13 @@ const UserManagementPage = () => {
               <TableHead>Profesión</TableHead>
               <TableHead>Modalidad de Pago</TableHead>
               <TableHead className="text-center">1ra Reserva</TableHead>
+              <TableHead>Registro</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center">
+                <TableCell colSpan={9} className="h-24 text-center">
                   Cargando...
                 </TableCell>
               </TableRow>
@@ -319,11 +488,14 @@ const UserManagementPage = () => {
                       <X className="h-5 w-5 text-red-500 mx-auto" />
                     )}
                   </TableCell>
+                  <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                    {dayjs(user.created_at).format("DD/MM/YYYY")}
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center">
+                <TableCell colSpan={9} className="h-24 text-center">
                   No se encontraron usuarios.
                 </TableCell>
               </TableRow>

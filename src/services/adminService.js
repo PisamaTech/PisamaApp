@@ -6,18 +6,47 @@ import { createNotification } from "./notificationService";
 dayjs.locale("es");
 
 /**
- * Obtiene una lista paginada de todos los usuarios, con opción de búsqueda.
+ * Obtiene todas las profesiones únicas de los usuarios.
+ * @returns {Promise<string[]>} Array de profesiones únicas ordenadas alfabéticamente.
+ */
+export const fetchAllProfessions = async () => {
+  try {
+    const { data, error } = await supabase
+      .from("user_profiles")
+      .select("profession")
+      .not("profession", "is", null)
+      .not("profession", "eq", "");
+
+    if (error) throw error;
+
+    const uniqueProfessions = [
+      ...new Set(data.map((u) => u.profession).filter(Boolean)),
+    ].sort((a, b) => a.localeCompare(b, "es"));
+
+    return uniqueProfessions;
+  } catch (error) {
+    console.error("Error al obtener las profesiones:", error);
+    throw new Error(`No se pudieron obtener las profesiones: ${error.message}`);
+  }
+};
+
+/**
+ * Obtiene una lista paginada de todos los usuarios, con opción de búsqueda y filtros.
  * Esta función es para el panel de administración.
  *
  * @param {number} page - La página actual para la paginación.
  * @param {number} itemsPerPage - Cuántos usuarios por página.
  * @param {string} searchTerm - El término de búsqueda para filtrar por nombre, apellido o email.
+ * @param {string[]} professions - Array de profesiones para filtrar (opcional).
+ * @param {boolean|null} hasReservation - Filtrar por si ha reservado antes (true/false/null para todos).
  * @returns {Promise<{data: Array<object>, count: number}>} Un objeto con los usuarios y el conteo total.
  */
 export const fetchAllUsers = async (
   page = 1,
   itemsPerPage = 10,
   searchTerm = "",
+  professions = [],
+  hasReservation = null,
 ) => {
   try {
     const offset = (page - 1) * itemsPerPage;
@@ -30,6 +59,16 @@ export const fetchAllUsers = async (
       query = query.or(
         `firstName.ilike.%${searchTerm}%,lastName.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`,
       );
+    }
+
+    // Filtrar por profesiones si se especificaron
+    if (professions.length > 0) {
+      query = query.in("profession", professions);
+    }
+
+    // Filtrar por estado de primera reserva
+    if (hasReservation !== null) {
+      query = query.eq("ha_reservado_antes", hasReservation);
     }
 
     // Aplica orden y paginación
