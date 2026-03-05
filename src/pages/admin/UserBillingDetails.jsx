@@ -27,6 +27,7 @@ import {
   formatPaymentType,
   getPaymentTypeBadgeVariant,
 } from "@/utils/paymentHelpers";
+import { RegisterPaymentModal } from "@/components/admin/RegisterPaymentModal";
 
 // --- Importaciones de Componentes Shadcn UI ---
 import {
@@ -95,12 +96,12 @@ const UserBillingDetailsPage = () => {
 
   const totalHistoryPages = useMemo(
     () => Math.ceil(totalInvoices / itemsPerPage),
-    [totalInvoices, itemsPerPage]
+    [totalInvoices, itemsPerPage],
   );
 
   const totalPaymentPages = useMemo(
     () => Math.ceil(totalPayments / itemsPerPage),
-    [totalPayments, itemsPerPage]
+    [totalPayments, itemsPerPage],
   );
 
   // --- Lógica de Paginación para la VISTA PREVIA ---
@@ -114,7 +115,7 @@ const UserBillingDetailsPage = () => {
   const totalPreviewPages = useMemo(() => {
     if (!currentPeriodData?.calculatedBookings) return 0;
     return Math.ceil(
-      currentPeriodData.calculatedBookings.length / itemsPerPage
+      currentPeriodData.calculatedBookings.length / itemsPerPage,
     );
   }, [currentPeriodData, itemsPerPage]);
 
@@ -135,12 +136,70 @@ const UserBillingDetailsPage = () => {
     loadUserProfile();
   }, [userId]);
 
-  // Efecto para cargar datos
+  // Extracción de la lógica de carga para poder refrescar tras un nuevo pago
+  const loadFinancialData = async () => {
+    if (!userId || !userProfile) return;
+
+    // 1. Totales de pagos y facturación
+    try {
+      const totalPagos = await fetchUserTotalPayments(userId);
+      setTotalPagosUsuario(totalPagos);
+    } catch (err) {
+      console.error("Error al cargar total de pagos:", err);
+    }
+
+    try {
+      const totalFacturado = await fetchUserTotalInvoiced(userId);
+      setTotalFacturadoUsuario(totalFacturado);
+    } catch (err) {
+      console.error("Error al cargar total facturado:", err);
+    }
+
+    // 2. Pagos paginados (Historial)
+    try {
+      const { data: payments, count } = await fetchUserPayments(
+        userId,
+        paymentsCurrentPage,
+        itemsPerPage,
+      );
+      setRecentPayments(payments);
+      setTotalPayments(count);
+    } catch (err) {
+      console.error("Error al cargar pagos:", err);
+    }
+
+    // 3. Historial de facturas
+    clearError();
+    startLoading("Cargando facturas...");
+    try {
+      const { data, count } = await fetchUserInvoices(
+        userId,
+        historyCurrentPage,
+        itemsPerPage,
+      );
+      data.sort((a, b) => {
+        const timeA = a?.periodo_inicio
+          ? new Date(a.periodo_inicio)
+          : new Date(0);
+        const timeB = b?.periodo_inicio
+          ? new Date(b.periodo_inicio)
+          : new Date(0);
+        return timeB - timeA;
+      });
+      setInvoices(data);
+      setTotalInvoices(count);
+    } catch (err) {
+      setError(err);
+    } finally {
+      stopLoading();
+    }
+  };
+
+  // Efecto para cargar vista previa (independiente de carga financiera para optimizar)
   useEffect(() => {
-    const loadData = async () => {
+    const loadPreview = async () => {
       if (!userId || !userProfile) return;
 
-      // Determinar el rango del período actual para la vista previa
       const today = dayjs();
       let periodStart, periodEnd;
       if (userProfile.modalidad_pago === "semanal") {
@@ -152,12 +211,11 @@ const UserBillingDetailsPage = () => {
       }
       setCurrentPeriodRange({ start: periodStart, end: periodEnd });
 
-      // Cargar vista previa
       setIsLoadingPreview(true);
       try {
         const previewData = await fetchCurrentPeriodPreview(
           userId,
-          userProfile
+          userProfile,
         );
         previewData.calculatedBookings.sort((a, b) => {
           const timeA = a?.start_time ? new Date(a.start_time) : new Date(0);
@@ -170,63 +228,13 @@ const UserBillingDetailsPage = () => {
       } finally {
         setIsLoadingPreview(false);
       }
-
-      // Cargar total de pagos del usuario
-      try {
-        const totalPagos = await fetchUserTotalPayments(userId);
-        setTotalPagosUsuario(totalPagos);
-      } catch (err) {
-        console.error("Error al cargar total de pagos:", err);
-      }
-
-      // Cargar total facturado del usuario
-      try {
-        const totalFacturado = await fetchUserTotalInvoiced(userId);
-        setTotalFacturadoUsuario(totalFacturado);
-      } catch (err) {
-        console.error("Error al cargar total facturado:", err);
-      }
-
-      // Cargar pagos paginados
-      try {
-        const { data: payments, count } = await fetchUserPayments(
-          userId,
-          paymentsCurrentPage,
-          itemsPerPage
-        );
-        setRecentPayments(payments);
-        setTotalPayments(count);
-      } catch (err) {
-        console.error("Error al cargar pagos:", err);
-      }
-
-      // Cargar historial de facturas
-      clearError();
-      startLoading("Cargando facturas...");
-      try {
-        const { data, count } = await fetchUserInvoices(
-          userId,
-          historyCurrentPage,
-          itemsPerPage
-        );
-        data.sort((a, b) => {
-          const timeA = a?.periodo_inicio
-            ? new Date(a.periodo_inicio)
-            : new Date(0);
-          const timeB = b?.periodo_inicio
-            ? new Date(b.periodo_inicio)
-            : new Date(0);
-          return timeB - timeA;
-        });
-        setInvoices(data);
-        setTotalInvoices(count);
-      } catch (err) {
-        setError(err);
-      } finally {
-        stopLoading();
-      }
     };
-    loadData();
+    loadPreview();
+  }, [userId, userProfile]);
+
+  // Efecto principal para historial y totales
+  useEffect(() => {
+    loadFinancialData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, historyCurrentPage, paymentsCurrentPage, userProfile]);
 
@@ -357,7 +365,7 @@ const UserBillingDetailsPage = () => {
               >
                 {totalPagosUsuario - totalFacturadoUsuario >= 0 ? "+" : "-"}$
                 {Math.abs(
-                  totalPagosUsuario - totalFacturadoUsuario
+                  totalPagosUsuario - totalFacturadoUsuario,
                 ).toLocaleString("es-UY")}
               </p>
               <p className="text-xs text-muted-foreground">
@@ -513,7 +521,14 @@ const UserBillingDetailsPage = () => {
         {/* Columna Derecha: Historial de Pagos */}
         <Card className="shadow-md">
           <CardHeader>
-            <CardTitle className="text-xl">Historial de Pagos</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xl">Historial de Pagos</CardTitle>
+              <RegisterPaymentModal
+                userId={userId}
+                userName={userName}
+                onSuccess={loadFinancialData}
+              />
+            </div>
             <Separator />
             <CardDescription className="py-2">
               Últimos pagos registrados.
@@ -549,7 +564,7 @@ const UserBillingDetailsPage = () => {
                             <TableCell className="text-right font-medium text-green-600">
                               $
                               {parseFloat(payment.monto).toLocaleString(
-                                "es-UY"
+                                "es-UY",
                               )}
                             </TableCell>
                             <TableCell className="text-sm text-muted-foreground overflow-hidden">
@@ -558,7 +573,7 @@ const UserBillingDetailsPage = () => {
                             <TableCell>
                               <Badge
                                 variant={getPaymentTypeBadgeVariant(
-                                  payment.tipo
+                                  payment.tipo,
                                 )}
                               >
                                 {formatPaymentType(payment.tipo)}
@@ -595,7 +610,7 @@ const UserBillingDetailsPage = () => {
                             <p className="text-lg font-black text-green-600">
                               $
                               {parseFloat(payment.monto).toLocaleString(
-                                "es-UY"
+                                "es-UY",
                               )}
                             </p>
                           </div>
