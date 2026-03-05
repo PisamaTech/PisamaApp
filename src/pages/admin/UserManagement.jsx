@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit } from "lucide-react";
+import { Edit, Copy, Check, X } from "lucide-react";
 import {
   Pagination,
   PaginationContent,
@@ -45,6 +45,12 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const UserManagementPage = () => {
   const { loading, startLoading, stopLoading, showToast } = useUIStore();
@@ -184,6 +190,23 @@ const UserManagementPage = () => {
     }
   };
 
+  const copyUserId = async (userId) => {
+    try {
+      await navigator.clipboard.writeText(userId);
+      showToast({
+        type: "success",
+        title: "Copiado",
+        message: "ID copiado al portapapeles.",
+      });
+    } catch {
+      showToast({
+        type: "error",
+        title: "Error",
+        message: "No se pudo copiar el ID.",
+      });
+    }
+  };
+
   return (
     <div className="container mx-auto p-4 md:p-8 space-y-6">
       <div className="space-y-1">
@@ -211,25 +234,46 @@ const UserManagementPage = () => {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>ID</TableHead>
               <TableHead>Nombre Completo</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Nombre Acceso</TableHead>
               <TableHead>Teléfono</TableHead>
               <TableHead>Profesión</TableHead>
               <TableHead>Modalidad de Pago</TableHead>
-              <TableHead>Rol</TableHead>
+              <TableHead className="text-center">1ra Reserva</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center">
+                <TableCell colSpan={8} className="h-24 text-center">
                   Cargando...
                 </TableCell>
               </TableRow>
             ) : users.length > 0 ? (
               users.map((user) => (
                 <TableRow key={user.id}>
+                  <TableCell>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => copyUserId(user.id)}
+                            className="h-8 px-2 font-mono text-xs hover:bg-accent"
+                          >
+                            <Copy className="h-3 w-3 mr-1" />
+                            {user.id.slice(0, 8)}...
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="font-mono text-xs">{user.id}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </TableCell>
                   <TableCell className="font-medium">
                     {user.firstName} {user.lastName}
                   </TableCell>
@@ -268,19 +312,18 @@ const UserManagementPage = () => {
                       </Button>
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={user.role === "admin" ? "default" : "secondary"}
-                      className="capitalize"
-                    >
-                      {user.role}
-                    </Badge>
+                  <TableCell className="text-center">
+                    {user.ha_reservado_antes ? (
+                      <Check className="h-5 w-5 text-green-600 mx-auto" />
+                    ) : (
+                      <X className="h-5 w-5 text-red-500 mx-auto" />
+                    )}
                   </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center">
+                <TableCell colSpan={8} className="h-24 text-center">
                   No se encontraron usuarios.
                 </TableCell>
               </TableRow>
@@ -310,15 +353,40 @@ const UserManagementPage = () => {
                     {user.email}
                   </p>
                 </div>
-                <Badge
-                  variant={user.role === "admin" ? "default" : "secondary"}
-                  className="capitalize shrink-0 ml-2 shadow-sm"
-                >
-                  {user.role}
-                </Badge>
+                <div className="flex items-center gap-2 shrink-0 ml-2">
+                  {user.ha_reservado_antes ? (
+                    <div className="flex items-center gap-1 text-green-600">
+                      <Check className="h-4 w-4" />
+                      <span className="text-xs font-medium">Reservó</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1 text-red-500">
+                      <X className="h-4 w-4" />
+                      <span className="text-xs">Sin reservas</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-sm text-slate-700 border-t border-slate-300 pt-3">
+                <div className="col-span-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                        ID Usuario
+                      </p>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyUserId(user.id)}
+                        className="h-auto px-0 py-1 font-mono text-xs hover:bg-transparent hover:text-slate-600"
+                      >
+                        <Copy className="h-3 w-3 mr-1" />
+                        {user.id.slice(0, 12)}...
+                      </Button>
+                    </div>
+                  </div>
+                </div>
                 <div className="col-span-2">
                   <div className="flex items-center justify-between">
                     <div>
