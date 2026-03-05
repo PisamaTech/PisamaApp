@@ -16,8 +16,12 @@ import {
   SelectTrigger,
   SelectValue,
   Separator,
+  ToggleGroup,
+  ToggleGroupItem,
+  Switch,
 } from "./ui";
 import { BookCheck } from "lucide-react";
+import camillaIcon from "@/assets/massage-table-50.png";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { reservationSchema } from "@/validations/validationSchemas";
@@ -420,29 +424,43 @@ export const ReservationDialog = ({
             {/* Tipo de reserva */}
             <div className="space-y-1 sm:space-y-2">
               <Label htmlFor="tipo" className="text-xs sm:text-sm">Tipo de reserva</Label>
-              <Select
-                onValueChange={(value) => setValue("tipo", value)}
-                defaultValue={ReservationType.EVENTUAL}
+              <ToggleGroup
+                type="single"
+                value={tipoReserva}
+                onValueChange={(value) => {
+                  if (value) setValue("tipo", value);
+                }}
+                className="w-full justify-start"
               >
-                <SelectTrigger className="w-full text-xs sm:text-sm h-8 sm:h-10">
-                  <SelectValue placeholder="Selecciona un tipo de reserva" />
-                </SelectTrigger>
-                <SelectContent>
-                  {[ReservationType.EVENTUAL, ReservationType.FIJA].map(
-                    (tipo) => (
-                      <SelectItem key={tipo} value={tipo} className="text-xs sm:text-sm">
-                        {tipo}
-                      </SelectItem>
-                    )
-                  )}
-                </SelectContent>
-              </Select>
+                <ToggleGroupItem
+                  value={ReservationType.EVENTUAL}
+                  className="flex-1 text-xs sm:text-sm data-[state=on]:text-white"
+                  style={{
+                    backgroundColor: tipoReserva === ReservationType.EVENTUAL ? "#92d050" : undefined,
+                    color: tipoReserva === ReservationType.EVENTUAL ? "white" : "#92d050",
+                    fontWeight: tipoReserva === ReservationType.EVENTUAL ? 600 : 500,
+                  }}
+                >
+                  Eventual
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value={ReservationType.FIJA}
+                  className="flex-1 text-xs sm:text-sm data-[state=on]:text-white"
+                  style={{
+                    backgroundColor: tipoReserva === ReservationType.FIJA ? "#5b9bd5" : undefined,
+                    color: tipoReserva === ReservationType.FIJA ? "white" : "#5b9bd5",
+                    fontWeight: tipoReserva === ReservationType.FIJA ? 600 : 500,
+                  }}
+                >
+                  Fija
+                </ToggleGroupItem>
+              </ToggleGroup>
               {errors.tipo && (
                 <p className="text-xs sm:text-sm text-red-500">{errors.tipo.message}</p>
               )}
               {/* Mensaje condicional para reservas fijas */}
               {tipoReserva === ReservationType.FIJA && (
-                <div className="text-xs sm:text-sm text-blue-600 mt-2">
+                <div className="text-xs sm:text-sm text-[#5b9bd5] mt-2">
                   Las reservas fijas se agendan por un plazo de 4 meses.
                   <br />
                   Se le enviará un mensaje un mes antes del vencimiento para
@@ -456,21 +474,22 @@ export const ReservationDialog = ({
             {/* Uso de camilla */}
             <div className="space-y-1 sm:space-y-2">
               <Label htmlFor="usaCamilla" className="text-xs sm:text-sm">¿Utilizarás la camilla?</Label>
-              <Select
-                onValueChange={(value) => setValue("usaCamilla", value)}
-                defaultValue="No"
-              >
-                <SelectTrigger className="w-full text-xs sm:text-sm h-8 sm:h-10">
-                  <SelectValue placeholder="Selecciona si utilizarás camilla" />
-                </SelectTrigger>
-                <SelectContent>
-                  {["No", "Sí"].map((opcion) => (
-                    <SelectItem key={opcion} value={opcion} className="text-xs sm:text-sm">
-                      {opcion}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-3 h-8 sm:h-10">
+                <span className={`text-xs sm:text-sm ${watch("usaCamilla") === "No" ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
+                  No
+                </span>
+                <Switch
+                  id="usaCamilla"
+                  checked={watch("usaCamilla") === "Sí"}
+                  onCheckedChange={(checked) => setValue("usaCamilla", checked ? "Sí" : "No")}
+                />
+                <span className={`text-xs sm:text-sm ${watch("usaCamilla") === "Sí" ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
+                  Sí
+                </span>
+                {watch("usaCamilla") === "Sí" && (
+                  <img src={camillaIcon} alt="Icono de Camilla" className="w-5 h-6 sm:w-6 sm:h-7" />
+                )}
+              </div>
               {errors.usaCamilla && (
                 <p className="text-xs sm:text-sm text-red-500">
                   {errors.usaCamilla.message}
