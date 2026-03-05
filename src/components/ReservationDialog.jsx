@@ -351,7 +351,7 @@ export const ReservationDialog = ({
               <option value="22:00">22:00</option>
               <option value="23:00">23:00</option>
             </datalist>
-            <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4">
+            <div className="flex flex-row justify-between gap-3 sm:gap-4">
               {/* Hora de inicio */}
               <div className="space-y-1 sm:space-y-2 w-full">
                 <Label htmlFor="startTime" className="text-xs sm:text-sm">Hora de inicio</Label>

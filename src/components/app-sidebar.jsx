@@ -13,6 +13,7 @@ import {
   SidebarMenuSubItem,
   SidebarMenuSubButton,
   SidebarSeparator,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { NavUser } from "./nav-user";
 import { HeaderMenu } from "./HeaderMenu";
@@ -23,6 +24,14 @@ export function AppSidebar() {
   const { profile } = useAuthStore();
   const location = useLocation();
   const [openSubmenu, setOpenSubmenu] = useState(true); // Default to open
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  // Cerrar el sidebar en móvil al hacer click en un elemento del menú
+  const handleMenuClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
 
   const data = {
     user: {
@@ -72,7 +81,7 @@ export function AppSidebar() {
                                     asChild
                                     isActive={isSubActive}
                                   >
-                                    <Link to={subItem.url}>
+                                    <Link to={subItem.url} onClick={handleMenuClick}>
                                       <subItem.icon />
                                       <span>{subItem.title}</span>
                                     </Link>
@@ -90,7 +99,7 @@ export function AppSidebar() {
                   return (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton asChild isActive={isActive}>
-                        <Link to={item.url}>
+                        <Link to={item.url} onClick={handleMenuClick}>
                           <item.icon />
                           <span>{item.title}</span>
                         </Link>
