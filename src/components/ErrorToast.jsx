@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { AlertCircle, CheckCircle2, X } from "lucide-react";
+import { AlertCircle, CheckCircle2, AlertTriangle, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   AlertDialog,
@@ -16,7 +16,18 @@ export default function ErrorToast() {
   const { toast, hideToast } = useUIStore(); // <--- Obtengo el estado y la función del store UI
   const { isOpen, type, title, message } = toast; // <--- Desestructura las propiedades
 
-  const Icon = type === "error" ? AlertCircle : CheckCircle2;
+  // Determinar ícono según el tipo
+  const getIcon = () => {
+    switch (type) {
+      case "error":
+        return AlertCircle;
+      case "warning":
+        return AlertTriangle;
+      default:
+        return CheckCircle2;
+    }
+  };
+  const Icon = getIcon();
 
   // ✅ SAFETY: Forzar limpieza de pointer-events al cerrar
   useEffect(() => {
@@ -42,6 +53,8 @@ export default function ErrorToast() {
             "p-3 sm:p-4 bg-gradient-to-br",
             type === "error"
               ? "bg-gradient-to-b from-red-500 to-red-600"
+              : type === "warning"
+              ? "bg-gradient-to-b from-amber-500 to-amber-600"
               : "bg-gradient-to-b from-green-500 to-green-600"
           )}
         >
@@ -63,6 +76,8 @@ export default function ErrorToast() {
                 "transition-colors text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-auto",
                 type === "error"
                   ? "bg-red-500 hover:bg-red-600"
+                  : type === "warning"
+                  ? "bg-amber-500 hover:bg-amber-600"
                   : "bg-green-500 hover:bg-green-600"
               )}
             >

@@ -254,17 +254,20 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
         // Preparar el toast específico
         let toastTitle = "Acción Completada";
         let toastMessage = "La operación se realizó con éxito.";
+        let toastType = "success"; // Por defecto es éxito (verde)
 
         switch (result.actionType) {
           case "PENALIZED":
             toastTitle = "Reserva Penalizada";
             toastMessage =
               "Cancelaste con menos de 24hs. La reserva fue PENALIZADA, por lo que deberás pagarla. Pero puedes reagendarla por un plazo de 6 días a partir de la fecha de la reserva original, sin costo adicional.";
+            toastType = "warning"; // Ámbar para penalizaciones
             break;
           case "RESCHEDULE_PENALIZED":
             toastTitle = "Reserva reagendada Penalizada";
             toastMessage =
               "Cancelaste con menos de 24hs. La reserva ya era una reserva REAGENDADA, por lo que deberás pagarla, sin otra posibilidad de reagendarla.";
+            toastType = "warning"; // Ámbar para penalizaciones
             break;
           case "CANCELLED":
             toastTitle = "Reserva Cancelada";
@@ -275,11 +278,13 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
             toastTitle = "Reagendamiento Cancelado";
             toastMessage =
               "Se canceló la reserva reagendada. La reserva original que fue PENALIZADA ha sido reactivada, por lo que puedes volver a reagendarla por un plazo de 6 días a partir de la fecha de la reserva original, sin costo adicional.";
+            toastType = "warning"; // Ámbar para penalizaciones
             break;
           case "SERIES_CANCELLED_WITH_PENALTY":
             toastTitle = "Serie Cancelada con Penalización";
             toastMessage =
               "La serie fue cancelada. La primera reserva fue PENALIZADA, por haberla cancelado con menos de 24 horas de anticipación. El resto de las reservas fueron CANCELADAS sin costo.";
+            toastType = "warning"; // Ámbar para penalizaciones
             break;
           case "SERIES_CANCELLED":
             toastTitle = "Serie Cancelada";
@@ -299,7 +304,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
         // Mostrar toast después de cerrar diálogos
         setTimeout(() => {
           showToast({
-            type: "success",
+            type: toastType,
             title: toastTitle,
             message: toastMessage,
           });
@@ -516,6 +521,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
               </div>
             </div>
 
+            {/* Hora de reserva | ¿Utilizarás la camilla? */}
             <div className="flex flex-row justify-between gap-3 sm:gap-4">
               <div className="space-y-1 sm:space-y-2 w-full">
                 <Label htmlFor="startTime" className="text-xs sm:text-sm">
@@ -532,19 +538,20 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                 />
               </div>
               <div className="space-y-1 sm:space-y-2 w-full">
-                <Label htmlFor="id" className="text-xs sm:text-sm">
-                  Identificador de reserva
+                <Label htmlFor="usaCamilla" className="text-xs sm:text-sm">
+                  ¿Utilizarás la camilla?
                 </Label>
                 <Input
-                  id="id"
+                  id="usaCamilla"
                   type="text"
-                  value={selectedEvent.id}
+                  value={selectedEvent.usaCamilla ? "Sí" : "No"}
                   disabled
                   className="text-xs sm:text-sm h-8 sm:h-10"
                 />
               </div>
             </div>
 
+            {/* Tipo de reserva | Estado de reserva */}
             <div className="flex flex-row justify-between gap-3 sm:gap-4">
               <div className="space-y-1 sm:space-y-2 w-full">
                 <Label htmlFor="tipo" className="text-xs sm:text-sm">
@@ -563,21 +570,6 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                 />
               </div>
               <div className="space-y-1 sm:space-y-2 w-full">
-                <Label htmlFor="usaCamilla" className="text-xs sm:text-sm">
-                  ¿Utilizarás la camilla?
-                </Label>
-                <Input
-                  id="usaCamilla"
-                  type="text"
-                  value={selectedEvent.usaCamilla ? "Sí" : "No"}
-                  disabled
-                  className="text-xs sm:text-sm h-8 sm:h-10"
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-row justify-between gap-3 sm:gap-4">
-              <div className="space-y-1 sm:space-y-2 w-full">
                 <Label htmlFor="estado" className="text-xs sm:text-sm">
                   Estado de reserva
                 </Label>
@@ -591,6 +583,10 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                   }`}
                 />
               </div>
+            </div>
+
+            {/* Fecha de creación | Fecha de cancelación (si existe) */}
+            <div className="flex flex-row justify-between gap-3 sm:gap-4">
               <div className="space-y-1 sm:space-y-2 w-full">
                 <Label htmlFor="fechaCreacion" className="text-xs sm:text-sm">
                   Fecha de creación
@@ -605,10 +601,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                   className="text-xs sm:text-sm h-8 sm:h-10"
                 />
               </div>
-            </div>
-
-            {selectedEvent.fecha_cancelacion && (
-              <div className="flex flex-row justify-between gap-3 sm:gap-4">
+              {selectedEvent.fecha_cancelacion && (
                 <div className="space-y-1 sm:space-y-2 w-full">
                   <Label
                     htmlFor="fechaCancelacion"
@@ -626,6 +619,24 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                     className="text-xs sm:text-sm h-8 sm:h-10"
                   />
                 </div>
+              )}
+            </div>
+
+            {/* Identificador de reserva | ¿Fue Reagendada? (si hay fecha_cancelacion) */}
+            <div className="flex flex-row justify-between gap-3 sm:gap-4">
+              <div className="space-y-1 sm:space-y-2 w-full">
+                <Label htmlFor="id" className="text-xs sm:text-sm">
+                  Identificador de reserva
+                </Label>
+                <Input
+                  id="id"
+                  type="text"
+                  value={selectedEvent.id}
+                  disabled
+                  className="text-xs sm:text-sm h-8 sm:h-10"
+                />
+              </div>
+              {selectedEvent.fecha_cancelacion && (
                 <div className="space-y-1 sm:space-y-2 w-full">
                   <Label htmlFor="fueReagendada" className="text-xs sm:text-sm">
                     ¿Fue Reagendada?
@@ -638,6 +649,86 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                     className="text-xs sm:text-sm h-8 sm:h-10"
                   />
                 </div>
+              )}
+            </div>
+
+            {/* Mostrar reagendamiento y/o permite reagendar */}
+            {(selectedEvent.reagendamiento_de_id ||
+              selectedEvent.estado === "penalizada") && (
+              <div className="flex flex-row justify-between gap-3 sm:gap-4">
+                {/* Reagendamiento de reserva - 25% del ancho cuando ambos, 100% si solo este */}
+                {selectedEvent.reagendamiento_de_id && (
+                  <div
+                    className={`space-y-1 sm:space-y-2 ${
+                      selectedEvent.estado === "penalizada" ? "w-1/4" : "w-full"
+                    }`}
+                  >
+                    <Label
+                      htmlFor="reagendamientoDeId"
+                      className="text-xs sm:text-sm"
+                    >
+                      Reagendamiento de
+                    </Label>
+                    <Input
+                      id="reagendamientoDeId"
+                      type="text"
+                      value={`#${selectedEvent.reagendamiento_de_id}`}
+                      disabled
+                      className="text-xs sm:text-sm h-8 sm:h-10 bg-orange-100 font-medium"
+                    />
+                  </div>
+                )}
+
+                {/* Permite reagendar hasta - 75% del ancho cuando ambos, 100% si solo este */}
+                {selectedEvent.estado === "penalizada" && (
+                  <div
+                    className={`space-y-1 sm:space-y-2 ${
+                      selectedEvent.reagendamiento_de_id ? "w-3/4" : "w-full"
+                    }`}
+                  >
+                    <Label
+                      htmlFor="permiteReagendamiento"
+                      className="text-xs sm:text-sm"
+                    >
+                      Permite reagendar hasta
+                    </Label>
+                    {/* Priorizar: si es reagendamiento, nunca puede reagendar */}
+                    {selectedEvent.reagendamiento_de_id ? (
+                      <Input
+                        id="permiteReagendamiento"
+                        type="text"
+                        value="No permite - Ya era un reagendamiento"
+                        disabled
+                        className="text-xs sm:text-sm h-8 sm:h-10 bg-red-100 text-red-700 font-medium"
+                      />
+                    ) : selectedEvent.permite_reagendar_hasta ? (
+                      <Input
+                        id="permiteReagendamiento"
+                        type="text"
+                        value={`${dayjs(
+                          selectedEvent.permite_reagendar_hasta,
+                        ).format("DD/MM/YYYY")}${
+                          dayjs().isAfter(
+                            dayjs(selectedEvent.permite_reagendar_hasta),
+                            "day",
+                          )
+                            ? " - Plazo vencido. Ya no se puede reagendar."
+                            : ""
+                        }`}
+                        disabled
+                        className="text-xs sm:text-sm h-8 sm:h-10"
+                      />
+                    ) : (
+                      <Input
+                        id="permiteReagendamiento"
+                        type="text"
+                        value="Sin fecha de reagendamiento"
+                        disabled
+                        className="text-xs sm:text-sm h-8 sm:h-10"
+                      />
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
@@ -716,33 +807,6 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                     </TooltipProvider>
                   </div>
                 </div>
-              </div>
-            )}
-
-            {selectedEvent.estado === "penalizada" && (
-              <div className="space-y-1 sm:space-y-2 w-full">
-                <Label
-                  htmlFor="permiteReagendamiento"
-                  className="text-xs sm:text-sm"
-                >
-                  Permite reagendar hasta
-                </Label>
-                <Input
-                  id="permiteReagendamiento"
-                  type="text"
-                  value={`${dayjs(selectedEvent.permite_reagendar_hasta).format(
-                    "DD/MM/YYYY",
-                  )}${
-                    dayjs().isAfter(
-                      dayjs(selectedEvent.permite_reagendar_hasta),
-                      "day",
-                    )
-                      ? " - Plazo vencido. Ya no se puede reagendar."
-                      : ""
-                  }`}
-                  disabled
-                  className="text-xs sm:text-sm h-8 sm:h-10"
-                />
               </div>
             )}
           </div>
