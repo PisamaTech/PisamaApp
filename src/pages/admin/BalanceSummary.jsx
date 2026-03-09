@@ -45,8 +45,8 @@ const BalanceSummaryPage = () => {
   const [appliedFilters, setAppliedFilters] = useState({ userId: "todos" });
 
   // Estados de ordenamiento
-  const [sortField, setSortField] = useState(null);
-  const [sortDirection, setSortDirection] = useState("desc");
+  const [sortField, setSortField] = useState("saldo");
+  const [sortDirection, setSortDirection] = useState("asc");
 
   // Ordenar datos
   const sortedData = useMemo(() => {
@@ -124,7 +124,7 @@ const BalanceSummaryPage = () => {
         totalFacturado: acc.totalFacturado + Number(user.total_facturado || 0),
         saldoTotal: acc.saldoTotal + Number(user.saldo_disponible || 0),
       }),
-      { totalPagos: 0, totalFacturado: 0, saldoTotal: 0 }
+      { totalPagos: 0, totalFacturado: 0, saldoTotal: 0 },
     );
   }, [balanceData]);
 
@@ -299,14 +299,22 @@ const BalanceSummaryPage = () => {
                       ${Number(user.total_pagos || 0).toLocaleString("es-UY")}
                     </TableCell>
                     <TableCell className="text-right font-medium text-orange-600">
-                      ${Number(user.total_facturado || 0).toLocaleString("es-UY")}
+                      $
+                      {Number(user.total_facturado || 0).toLocaleString(
+                        "es-UY",
+                      )}
                     </TableCell>
                     <TableCell className="text-right">
                       <Badge
-                        variant={getBalanceVariant(Number(user.saldo_disponible))}
+                        variant={getBalanceVariant(
+                          Number(user.saldo_disponible),
+                        )}
                         className="font-medium"
                       >
-                        ${Number(user.saldo_disponible || 0).toLocaleString("es-UY")}
+                        $
+                        {Number(user.saldo_disponible || 0).toLocaleString(
+                          "es-UY",
+                        )}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -365,7 +373,8 @@ const BalanceSummaryPage = () => {
                     variant={getBalanceVariant(Number(user.saldo_disponible))}
                     className="capitalize shrink-0 shadow-sm font-medium"
                   >
-                    ${Number(user.saldo_disponible || 0).toLocaleString("es-UY")}
+                    $
+                    {Number(user.saldo_disponible || 0).toLocaleString("es-UY")}
                   </Badge>
                 </div>
 
@@ -383,7 +392,10 @@ const BalanceSummaryPage = () => {
                       Facturado
                     </p>
                     <p className="font-bold text-orange-700">
-                      ${Number(user.total_facturado || 0).toLocaleString("es-UY")}
+                      $
+                      {Number(user.total_facturado || 0).toLocaleString(
+                        "es-UY",
+                      )}
                     </p>
                   </div>
                 </div>
