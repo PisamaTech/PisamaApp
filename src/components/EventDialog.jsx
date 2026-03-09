@@ -16,7 +16,8 @@ import {
 } from "@/components/ui";
 import dayjs from "dayjs";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { CalendarClock, RefreshCw, ShieldCheck } from "lucide-react";
+import { CalendarClock, RefreshCw, ShieldCheck, CalendarPlus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/authStore";
 import { ReservationStatus, ReservationType } from "@/utils/constants";
 import { ConfirmCancelDialog } from "./ConfirmEventDialog";
@@ -35,6 +36,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [actionToConfirm, setActionToConfirm] = useState(null);
   const [futureEventsCount, setFutureEventsCount] = useState(0);
+  const navigate = useNavigate();
 
   const {
     loading,
@@ -43,6 +45,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
     stopLoading,
     setError,
     clearError,
+    startReagendamientoMode,
   } = useUIStore();
 
   const {
@@ -655,12 +658,12 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
             {/* Mostrar reagendamiento y/o permite reagendar */}
             {(selectedEvent.reagendamiento_de_id ||
               selectedEvent.estado === "penalizada") && (
-              <div className="flex flex-row justify-between gap-3 sm:gap-4">
-                {/* Reagendamiento de reserva - 25% del ancho cuando ambos, 100% si solo este */}
+              <div className="flex flex-col sm:flex-row justify-between gap-2 sm:gap-4">
+                {/* Reagendamiento de reserva */}
                 {selectedEvent.reagendamiento_de_id && (
                   <div
-                    className={`space-y-1 sm:space-y-2 ${
-                      selectedEvent.estado === "penalizada" ? "w-1/4" : "w-full"
+                    className={`space-y-1 sm:space-y-2 w-full ${
+                      selectedEvent.estado === "penalizada" ? "sm:w-1/3" : ""
                     }`}
                   >
                     <Label
@@ -679,11 +682,11 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                   </div>
                 )}
 
-                {/* Permite reagendar hasta - 75% del ancho cuando ambos, 100% si solo este */}
+                {/* Permite reagendar hasta */}
                 {selectedEvent.estado === "penalizada" && (
                   <div
-                    className={`space-y-1 sm:space-y-2 ${
-                      selectedEvent.reagendamiento_de_id ? "w-3/4" : "w-full"
+                    className={`space-y-1 sm:space-y-2 w-full ${
+                      selectedEvent.reagendamiento_de_id ? "sm:w-2/3" : ""
                     }`}
                   >
                     <Label
@@ -813,7 +816,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
 
           <DialogFooter>
             <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row justify-end gap-2 w-full">
-              {/* --- NUEVO BOTÓN PARA DESPENALIZAR --- */}
+              {/* --- BOTÓN PARA DESPENALIZAR (solo admin) --- */}
               {userRole === "admin" &&
                 selectedEvent.estado === ReservationStatus.PENALIZADA && (
                   <Button
@@ -823,6 +826,29 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                   >
                     <ShieldCheck className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                     Despenalizar Reserva
+                  </Button>
+                )}
+
+              {/* --- BOTÓN PARA REAGENDAR (reserva penalizada que permite reagendamiento) --- */}
+              {selectedEvent.estado === ReservationStatus.PENALIZADA &&
+                canCancel &&
+                !selectedEvent.reagendamiento_de_id &&
+                selectedEvent.permite_reagendar_hasta &&
+                !dayjs().isAfter(
+                  dayjs(selectedEvent.permite_reagendar_hasta),
+                  "day",
+                ) && (
+                  <Button
+                    onClick={() => {
+                      startReagendamientoMode(selectedEvent);
+                      onOpenChange(false);
+                      navigate("/calendario_diario");
+                    }}
+                    className="bg-orange-500 hover:bg-orange-600 text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-auto"
+                    disabled={loading}
+                  >
+                    <CalendarPlus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                    Reagendar Reserva
                   </Button>
                 )}
 
