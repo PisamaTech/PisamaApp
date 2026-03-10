@@ -270,7 +270,16 @@ export const fetchAccessLogs = async (
     query = query.eq("status", filters.status);
   }
 
-  // Filtro por notificado
+  // Filtro por resolución
+  if (filters.resolution && filters.resolution !== "todos") {
+    if (filters.resolution === "pending") {
+      query = query.is("resolution_type", null);
+    } else {
+      query = query.eq("resolution_type", filters.resolution);
+    }
+  }
+
+  // Filtro legacy por notificado (mantener compatibilidad)
   if (filters.notified !== undefined && filters.notified !== "todos") {
     query = query.eq("notified", filters.notified === "si");
   }
@@ -545,17 +554,39 @@ export const fetchUnresolvedAccessLogs = async () => {
 };
 
 /**
+ * Tipos de resolución para infracciones de acceso
+ */
+export const AccessResolutionType = {
+  NOTIFIED: "notified",
+  IGNORED: "ignored",
+};
+
+/**
+ * Marca un registro de acceso como resuelto (notificado u omitido).
+ * @param {string} logId - ID del registro en access_logs
+ * @param {string} resolutionType - Tipo de resolución: 'notified' o 'ignored'
+ * @returns {Promise<void>}
+ */
+export const resolveAccessLog = async (logId, resolutionType) => {
+  const { error } = await supabase
+    .from("access_logs")
+    .update({
+      notified: resolutionType === AccessResolutionType.NOTIFIED,
+      resolution_type: resolutionType,
+    })
+    .eq("id", logId);
+
+  if (error) throw error;
+};
+
+/**
+ * @deprecated Usar resolveAccessLog en su lugar
  * Marca un registro de acceso como notificado.
  * @param {string} logId - ID del registro en access_logs
  * @returns {Promise<void>}
  */
 export const markAccessAsNotified = async (logId) => {
-  const { error } = await supabase
-    .from("access_logs")
-    .update({ notified: true })
-    .eq("id", logId);
-
-  if (error) throw error;
+  return resolveAccessLog(logId, AccessResolutionType.NOTIFIED);
 };
 
 /**
@@ -603,4 +634,61 @@ export const fetchUserAccessLogs = async (
   }
 
   return { data: data || [], count: count || 0 };
+};
+
+/**
+ * Obtiene estadísticas de infracciones (sin_reserva) agrupadas por usuario.
+ * Solo incluye usuarios que tienen al menos una infracción.
+ * @returns {Promise<Array>} Lista de usuarios con sus estadísticas
+ */
+export const fetchInfractionStats = async () => {
+  // Obtener todos los logs con status sin_reserva
+  const { data: logs, error } = await supabase
+    .from("access_logs")
+    .select("user_id, resolution_type")
+    .eq("status", AccessMatchStatus.NO_RESERVATION)
+    .not("user_id", "is", null);
+
+  if (error) throw error;
+  if (!logs || logs.length === 0) return [];
+
+  // Agrupar por usuario
+  const userStats = new Map();
+  logs.forEach((log) => {
+    if (!userStats.has(log.user_id)) {
+      userStats.set(log.user_id, {
+        total: 0,
+        notified: 0,
+        ignored: 0,
+        pending: 0,
+      });
+    }
+    const stats = userStats.get(log.user_id);
+    stats.total++;
+    if (log.resolution_type === AccessResolutionType.NOTIFIED) {
+      stats.notified++;
+    } else if (log.resolution_type === AccessResolutionType.IGNORED) {
+      stats.ignored++;
+    } else {
+      stats.pending++;
+    }
+  });
+
+  // Obtener datos de usuarios
+  const userIds = [...userStats.keys()];
+  const { data: users } = await supabase
+    .from("user_profiles")
+    .select("id, firstName, lastName, email")
+    .in("id", userIds);
+
+  // Combinar datos
+  const result = (users || []).map((user) => ({
+    ...user,
+    stats: userStats.get(user.id),
+  }));
+
+  // Ordenar por total de infracciones (mayor a menor)
+  result.sort((a, b) => b.stats.total - a.stats.total);
+
+  return result;
 };

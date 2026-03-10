@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useUIStore } from "@/stores/uiStore";
 import {
   fetchUnresolvedAccessLogs,
-  markAccessAsNotified,
+  resolveAccessLog,
+  AccessResolutionType,
+  fetchInfractionStats,
 } from "@/services/accessControlService";
 import { createNotification } from "@/services/notificationService";
 import {
@@ -15,6 +17,12 @@ import {
   Button,
   Badge,
   Separator,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui";
 import {
   AlertTriangle,
@@ -25,6 +33,9 @@ import {
   Clock,
   User,
   XCircle,
+  BarChart3,
+  Bell,
+  BellOff,
 } from "lucide-react";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -42,13 +53,18 @@ const AccessNotificationsPage = () => {
   const { startLoading, stopLoading, showToast } = useUIStore();
   const [logs, setLogs] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
+  const [userStats, setUserStats] = useState([]);
 
   // Cargar datos
-  const loadLogs = async () => {
+  const loadData = async () => {
     try {
       setLoadingData(true);
-      const data = await fetchUnresolvedAccessLogs();
-      setLogs(data);
+      const [logsData, statsData] = await Promise.all([
+        fetchUnresolvedAccessLogs(),
+        fetchInfractionStats(),
+      ]);
+      setLogs(logsData);
+      setUserStats(statsData);
     } catch (error) {
       showToast({
         type: "error",
@@ -61,7 +77,7 @@ const AccessNotificationsPage = () => {
   };
 
   useEffect(() => {
-    loadLogs();
+    loadData();
   }, []);
 
   // Handler para notificar usuario
@@ -88,10 +104,25 @@ const AccessNotificationsPage = () => {
       });
 
       // 2. Marcar como notificado
-      await markAccessAsNotified(log.id);
+      await resolveAccessLog(log.id, AccessResolutionType.NOTIFIED);
 
-      // 3. Actualizar UI
+      // 3. Actualizar UI y estadísticas
       setLogs((prev) => prev.filter((l) => l.id !== log.id));
+      // Actualizar estadísticas del usuario
+      setUserStats((prev) =>
+        prev.map((u) =>
+          u.id === log.user_id
+            ? {
+                ...u,
+                stats: {
+                  ...u.stats,
+                  notified: u.stats.notified + 1,
+                  pending: u.stats.pending - 1,
+                },
+              }
+            : u,
+        ),
+      );
 
       showToast({
         type: "success",
@@ -113,8 +144,23 @@ const AccessNotificationsPage = () => {
   const handleIgnore = async (log) => {
     try {
       startLoading("Actualizando...");
-      await markAccessAsNotified(log.id);
+      await resolveAccessLog(log.id, AccessResolutionType.IGNORED);
       setLogs((prev) => prev.filter((l) => l.id !== log.id));
+      // Actualizar estadísticas del usuario
+      setUserStats((prev) =>
+        prev.map((u) =>
+          u.id === log.user_id
+            ? {
+                ...u,
+                stats: {
+                  ...u.stats,
+                  ignored: u.stats.ignored + 1,
+                  pending: u.stats.pending - 1,
+                },
+              }
+            : u,
+        ),
+      );
       showToast({
         type: "success",
         title: "Registro omitido",
@@ -178,12 +224,17 @@ const AccessNotificationsPage = () => {
                 No hay accesos sin reserva pendientes de revisión.
               </p>
             </div>
-            <Button variant="outline" onClick={() => loadLogs()}>
+            <Button variant="outline" onClick={() => loadData()}>
               Actualizar
             </Button>
           </CardContent>
         </Card>
       ) : (
+        <>
+        <h2 className="text-xl font-semibold flex items-center gap-2">
+          <AlertTriangle className="h-5 w-5 text-orange-500" />
+          Pendientes de revisión ({logs.length})
+        </h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {logs.map((log) => (
             <Card key={log.id} className="overflow-hidden flex flex-col">
@@ -262,6 +313,133 @@ const AccessNotificationsPage = () => {
             </Card>
           ))}
         </div>
+        </>
+      )}
+
+      {/* Estadísticas por usuario */}
+      {userStats.length > 0 && (
+        <>
+          <Separator />
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              Historial de infracciones por usuario
+            </h2>
+
+            {/* Vista Desktop - Tabla */}
+            <div className="hidden md:block">
+              <Card>
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Usuario</TableHead>
+                        <TableHead className="text-center">Total</TableHead>
+                        <TableHead className="text-center">Notificadas</TableHead>
+                        <TableHead className="text-center">Omitidas</TableHead>
+                        <TableHead className="text-center">Pendientes</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {userStats.map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-2">
+                              <User className="h-4 w-4 text-muted-foreground" />
+                              {user.firstName} {user.lastName}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center font-semibold">
+                            {user.stats.total}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Badge
+                              variant="outline"
+                              className="gap-1 bg-orange-50 text-orange-700 border-orange-200"
+                            >
+                              <Bell className="h-3 w-3" />
+                              {user.stats.notified}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Badge
+                              variant="outline"
+                              className="gap-1 bg-slate-50 text-slate-600 border-slate-200"
+                            >
+                              <BellOff className="h-3 w-3" />
+                              {user.stats.ignored}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {user.stats.pending > 0 ? (
+                              <Badge
+                                variant="outline"
+                                className="gap-1 bg-yellow-50 text-yellow-700 border-yellow-200"
+                              >
+                                <Clock className="h-3 w-3" />
+                                {user.stats.pending}
+                              </Badge>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Vista Móvil - Cards */}
+            <div className="md:hidden space-y-3">
+              {userStats.map((user) => (
+                <Card key={user.id} className="overflow-hidden">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      {user.firstName} {user.lastName}
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      Total: {user.stats.total} infracción
+                      {user.stats.total !== 1 ? "es" : ""}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="flex gap-2 flex-wrap">
+                      <Badge
+                        variant="outline"
+                        className="gap-1 bg-orange-50 text-orange-700 border-orange-200"
+                      >
+                        <Bell className="h-3 w-3" />
+                        {user.stats.notified} notificada
+                        {user.stats.notified !== 1 ? "s" : ""}
+                      </Badge>
+                      <Badge
+                        variant="outline"
+                        className="gap-1 bg-slate-50 text-slate-600 border-slate-200"
+                      >
+                        <BellOff className="h-3 w-3" />
+                        {user.stats.ignored} omitida
+                        {user.stats.ignored !== 1 ? "s" : ""}
+                      </Badge>
+                      {user.stats.pending > 0 && (
+                        <Badge
+                          variant="outline"
+                          className="gap-1 bg-yellow-50 text-yellow-700 border-yellow-200"
+                        >
+                          <Clock className="h-3 w-3" />
+                          {user.stats.pending} pendiente
+                          {user.stats.pending !== 1 ? "s" : ""}
+                        </Badge>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

@@ -4,6 +4,7 @@ import { useUIStore } from "@/stores/uiStore";
 import {
   fetchAccessLogs,
   AccessMatchStatus,
+  AccessResolutionType,
 } from "@/services/accessControlService";
 import { fetchAllUsers } from "@/services/adminService";
 import { UserCombobox } from "@/components/admin/UserCombobox";
@@ -68,6 +69,8 @@ import {
   ArrowDown,
   ArrowUpDown,
   Bell,
+  BellOff,
+  Clock,
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -98,7 +101,7 @@ const AccessControlPage = () => {
   const [filters, setFilters] = useState({
     userId: "todos",
     status: "todos",
-    notified: "todos",
+    resolution: "todos",
     dateRange: { from: undefined, to: undefined },
     mariOnly: false,
   });
@@ -165,7 +168,7 @@ const AccessControlPage = () => {
     const defaultFilters = {
       userId: "todos",
       status: "todos",
-      notified: "todos",
+      resolution: "todos",
       dateRange: { from: undefined, to: undefined },
       mariOnly: false,
     };
@@ -288,6 +291,42 @@ const AccessControlPage = () => {
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
+  };
+
+  // Badge de resolución
+  const getResolutionBadge = (log) => {
+    if (log.resolution_type === AccessResolutionType.NOTIFIED) {
+      return (
+        <Badge
+          variant="outline"
+          className="gap-1 bg-orange-50 text-orange-700 border-orange-200"
+        >
+          <Bell className="h-3 w-3" /> Notificado
+        </Badge>
+      );
+    }
+    if (log.resolution_type === AccessResolutionType.IGNORED) {
+      return (
+        <Badge
+          variant="outline"
+          className="gap-1 bg-slate-50 text-slate-600 border-slate-200"
+        >
+          <BellOff className="h-3 w-3" /> Omitido
+        </Badge>
+      );
+    }
+    // Pendiente o sin resolución
+    if (log.status === AccessMatchStatus.NO_RESERVATION) {
+      return (
+        <Badge
+          variant="outline"
+          className="gap-1 bg-yellow-50 text-yellow-700 border-yellow-200"
+        >
+          <Clock className="h-3 w-3" /> Pendiente
+        </Badge>
+      );
+    }
+    return <Badge variant="secondary">-</Badge>;
   };
 
   // Componente DateRangePicker
@@ -426,16 +465,17 @@ const AccessControlPage = () => {
               </SelectContent>
             </Select>
             <Select
-              value={filters.notified}
-              onValueChange={(value) => handleFilterChange("notified", value)}
+              value={filters.resolution}
+              onValueChange={(value) => handleFilterChange("resolution", value)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Notificado" />
+                <SelectValue placeholder="Resolución" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="todos">Todos</SelectItem>
-                <SelectItem value="si">Notificado</SelectItem>
-                <SelectItem value="no">No notificado</SelectItem>
+                <SelectItem value="todos">Todas las resoluciones</SelectItem>
+                <SelectItem value="notified">Notificado</SelectItem>
+                <SelectItem value="ignored">Omitido</SelectItem>
+                <SelectItem value="pending">Pendiente</SelectItem>
               </SelectContent>
             </Select>
             <div className="flex gap-2">
@@ -487,7 +527,7 @@ const AccessControlPage = () => {
                       <TableHead>Usuario (App)</TableHead>
                       <TableHead>Reserva</TableHead>
                       <SortableTableHead label="Estado" field="status" />
-                      <TableHead>Notificado</TableHead>
+                      <TableHead>Resolución</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -522,15 +562,7 @@ const AccessControlPage = () => {
                             )}
                           </TableCell>
                           <TableCell>{getStatusBadge(log.status)}</TableCell>
-                          <TableCell>
-                            {log.notified ? (
-                              <Badge variant="outline" className="gap-1">
-                                <Bell className="h-3 w-3" /> Sí
-                              </Badge>
-                            ) : (
-                              <Badge variant="secondary">No</Badge>
-                            )}
-                          </TableCell>
+                          <TableCell>{getResolutionBadge(log)}</TableCell>
                         </TableRow>
                       ))
                     ) : (
@@ -582,15 +614,9 @@ const AccessControlPage = () => {
                       )}
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-muted-foreground">
-                          Notificado:
+                          Resolución:
                         </span>
-                        {log.notified ? (
-                          <Badge variant="outline" className="gap-1">
-                            <Bell className="h-3 w-3" /> Sí
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary">No</Badge>
-                        )}
+                        {getResolutionBadge(log)}
                       </div>
                     </div>
                   ))
