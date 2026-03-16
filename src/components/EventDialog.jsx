@@ -775,7 +775,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                               variant="destructive"
                               className="bg-orange-400 hover:bg-orange-600/50 text-xs sm:text-sm h-8 sm:h-10 w-full"
                               disabled={
-                                !isOwner ||
+                                !canCancel ||
                                 loading ||
                                 (selectedEvent.recurrence_end_date &&
                                   dayjs(selectedEvent.recurrence_end_date).diff(
@@ -789,7 +789,7 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                             </Button>
                           </span>
                         </TooltipTrigger>
-                        {(!isOwner ||
+                        {(!canCancel ||
                           (selectedEvent.recurrence_end_date &&
                             dayjs(selectedEvent.recurrence_end_date).diff(
                               dayjs(),
@@ -797,9 +797,9 @@ export const EventDialog = ({ open, onOpenChange, selectedEvent }) => {
                             ) > 45)) && (
                           <TooltipContent className="text-xs">
                             <p>
-                              El botón está desactivado porque no es el usuario
-                              que realizó la reserva <br />O la fecha de
-                              finalización de la reserva FIJA es mayor a 45
+                              El botón está desactivado porque no sos el usuario
+                              que realizó la reserva ni sos administrador, <br />
+                              o la fecha de finalización de la reserva FIJA es mayor a 45
                               días. <br />
                               Recién 45 días antes de la fecha de finalización,
                               podrá extender por 4 meses.

@@ -508,18 +508,18 @@ export const revertReagendamiento = async (
  * 4. Si no hay conflictos, llama a la RPC para extender y crear la serie.
  *
  * @param {string} oldRecurrenceId - El ID de la recurrencia que expira.
- * @param {string} userId - El ID del usuario.
+ * @param {string} requestingUserId - El ID del usuario que solicita la renovación (puede ser admin o el dueño).
  * @returns {Promise<object>} El resultado de la RPC si la operación es exitosa.
  * @throws {Error} Si se encuentran conflictos o si falla la RPC.
  */
-export const renewAndValidateSeries = async (oldRecurrenceId, userId) => {
+export const renewAndValidateSeries = async (oldRecurrenceId, requestingUserId) => {
   // --- 1. Obtener el patrón de la serie antigua ---
   // Necesitamos una reserva de la serie para saber la hora, duración, consultorio, etc.
+  // No filtramos por usuario_id porque el admin también puede renovar series de otros usuarios
   const { data: baseEventPattern, error: patternError } = await supabase
     .from("reservas")
     .select("*")
     .eq("recurrence_id", oldRecurrenceId)
-    .eq("usuario_id", userId)
     .order("start_time", { ascending: false })
     .limit(1)
     .single();
@@ -574,11 +574,12 @@ export const renewAndValidateSeries = async (oldRecurrenceId, userId) => {
   // --- 4. Llamar a la RPC de creación y extensión ---
   // Si no hubo conflictos, procedemos a llamar a la función que invoca la RPC.
   // Es importante pasarle el 'oldRecurrenceId' que es el que se mantiene.
+  // Usamos el usuario_id del dueño de la serie, no del que hace la acción (puede ser admin)
   const result = await extendAndCreateSeries(
     oldRecurrenceId,
     newRecurrenceEndDate,
     newEvents,
-    userId
+    baseEventPattern.usuario_id
   );
 
   return result; // Devuelve el resultado de la RPC (ej. { status: 'success', ... })
